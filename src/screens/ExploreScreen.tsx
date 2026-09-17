@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -15,37 +15,71 @@ type Props = TabScreenProps<'Explore'>;
 
 export default function ExploreScreen({ navigation }: Props) {
   const { savedIds, toggleSaved } = useSaved();
-  const savedActivities = activities.filter((a) => savedIds.has(a.id));
+  const [query, setQuery] = useState('');
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return activities;
+    return activities.filter((activity) => {
+      const haystack = [
+        activity.title,
+        activity.blurb,
+        activity.category,
+        ...activity.tags,
+      ]
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [query]);
+
+  const isSearching = query.trim().length > 0;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.paddedTop}>
-          <TopBar loreBalance={1240} searchPlaceholder="Search activities near you..." />
+          <TopBar
+            loreBalance={1240}
+            searchPlaceholder="Search activities, sidequests..."
+            searchValue={query}
+            onSearchChange={setQuery}
+          />
           <PillHeader title="EXPLORE" />
         </View>
 
         <View style={styles.paddedTop}>
-          <SectionPill label="Nearby" count={activities.length} />
+          <SectionPill
+            label={isSearching ? `Results for "${query.trim()}"` : 'Nearby'}
+            count={filtered.length}
+          />
         </View>
-        <FlatList
-          horizontal
-          data={activities}
-          keyExtractor={(item) => item.id}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.carouselContent}
-          renderItem={({ item }) => (
-            <ActivityCarouselCard
-              activity={item}
-              saved={savedIds.has(item.id)}
-              onToggleSave={() => toggleSaved(item.id)}
-              onPress={() => navigation.navigate('ActivityDetail', { activityId: item.id })}
-            />
-          )}
-        />
+
+        {filtered.length > 0 ? (
+          <FlatList
+            horizontal
+            data={filtered}
+            keyExtractor={(item) => item.id}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.carouselContent}
+            renderItem={({ item }) => (
+              <ActivityCarouselCard
+                activity={item}
+                saved={savedIds.has(item.id)}
+                onToggleSave={() => toggleSaved(item.id)}
+                onPress={() => navigation.navigate('ActivityDetail', { activityId: item.id })}
+              />
+            )}
+          />
+        ) : (
+          <View style={[styles.emptyCarousel, styles.paddedTop]}>
+            <Text style={styles.emptyText}>No lore matches that search. Try something else.</Text>
+          </View>
+        )}
 
         <View style={styles.quickActionRow}>
           <View style={styles.quickActionSpacer} />
@@ -58,31 +92,6 @@ export default function ExploreScreen({ navigation }: Props) {
             <MaterialCommunityIcons name="view-grid-outline" size={18} color={colors.orange} />
           </Pressable>
         </View>
-
-        <View style={styles.paddedTop}>
-          <SectionPill label="Saved" count={savedActivities.length} />
-        </View>
-        {savedActivities.length > 0 ? (
-          <FlatList
-            horizontal
-            data={savedActivities}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.carouselContent}
-            renderItem={({ item }) => (
-              <ActivityCarouselCard
-                activity={item}
-                saved
-                onToggleSave={() => toggleSaved(item.id)}
-                onPress={() => navigation.navigate('ActivityDetail', { activityId: item.id })}
-              />
-            )}
-          />
-        ) : (
-          <View style={[styles.emptyCarousel, styles.paddedTop]}>
-            <Text style={styles.emptyText}>Bookmark an activity to see it here.</Text>
-          </View>
-        )}
       </ScrollView>
     </SafeAreaView>
   );

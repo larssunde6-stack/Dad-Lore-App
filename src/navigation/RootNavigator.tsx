@@ -4,7 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ExploreScreen from '../screens/ExploreScreen';
-import SavedScreen from '../screens/SavedScreen';
+import MapScreen from '../screens/MapScreen';
+import LoreScreen from '../screens/LoreScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ActivityDetailScreen from '../screens/ActivityDetailScreen';
 import { colors } from '../theme/theme';
@@ -15,13 +16,15 @@ const Tab = createBottomTabNavigator<TabParamList>();
 
 const tabIcon: Record<keyof TabParamList, keyof typeof MaterialCommunityIcons.glyphMap> = {
   Explore: 'compass-outline',
-  Saved: 'bookmark-outline',
+  Map: 'map-outline',
+  Lore: 'notebook-outline',
   Profile: 'account-outline',
 };
 
 const tabIconActive: Record<keyof TabParamList, keyof typeof MaterialCommunityIcons.glyphMap> = {
   Explore: 'compass',
-  Saved: 'bookmark',
+  Map: 'map',
+  Lore: 'book-open-page-variant-outline',
   Profile: 'account',
 };
 
@@ -48,7 +51,8 @@ function TabNavigator() {
       })}
     >
       <Tab.Screen name="Explore" component={ExploreScreen} />
-      <Tab.Screen name="Saved" component={SavedScreen} />
+      <Tab.Screen name="Map" component={MapScreen} />
+      <Tab.Screen name="Lore" component={LoreScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

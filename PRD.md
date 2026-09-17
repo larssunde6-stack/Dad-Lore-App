@@ -58,24 +58,36 @@ calibrate against.
 ## 5. Scope
 
 ### In scope for v1
-- Browse nearby activities (currently: static/curated list; see §8).
-- Search UI and category/filter affordances (search itself is currently a
-  placeholder — needs a real implementation, see §6).
-- Save/bookmark activities for later.
+- Browse and **search** nearby "lore to do" (currently: static/curated
+  list, client-side search; see §8 for the real-data decision).
+- A **Map** view of nearby lore, sorted by distance, handing off to
+  Google/Apple Maps for actual directions rather than building navigation.
+- Save/bookmark lore to do for later.
+- A **private, personal "completed lore" diary** — explicitly never shown
+  to other users — separate from the public browsable lore feed. Includes
+  a "summarize my lore" action (currently mocked; see §6 and §11 Phase 2/3).
 - View full activity detail (description, tags, "what you'll need," stats).
+- A **Report** action on published lore, plus a moderation word-filter
+  utility (not yet wired to any submission input — see Out of scope).
 - Basic profile: lore points, activity history, badges (currently mocked;
   needs to be driven by real usage once a backend exists).
 - Everything required to legally and technically submit to the App Store
   and Play Store (see §10, §11).
 
 ### Out of scope for v1
-- Social features (friends, sharing activity completions, comments).
+- Social features (friends, sharing completed lore with other users —
+  completed lore is private by design, see above).
 - Ratings/reviews from other users.
 - Multi-user groups or family accounts.
-- User-submitted activities (all activities are curated/admin-managed in v1
-  — see the open decision in §8).
+- **User-submitted lore** — there's a Report action and a moderation word
+  filter, but no way to actually publish new lore yet. All public lore is
+  curated/admin-managed in v1 (see the open decision in §8). Building a
+  submission form is deliberately deferred until there's a backend to
+  publish to and enforce moderation server-side.
 - Push notifications / re-engagement campaigns.
 - Monetization of any kind (see open decision in §8).
+- Real AI-generated lore summaries (the "summarize my lore" action is
+  mocked with pre-written text — see §11 Phase 2/3 for why).
 
 ## 6. Core Features / User Stories
 
@@ -83,19 +95,28 @@ Mapped to what's already built in `src/screens/`:
 
 | Screen | User story | Status |
 |---|---|---|
-| Explore | As a young person, I want to browse nearby activities grouped by relevance, so I can quickly find something worth doing. | Frontend built (`ExploreScreen.tsx`), data is hardcoded (`src/data/activities.ts`). |
-| Explore | As a young person, I want to search for activities, so I can find something specific. | UI built (`TopBar.tsx` search bar); **not functional yet** — no real search/filtering logic. |
-| Explore / Detail | As a young person, I want to bookmark an activity, so I can come back to it later. | Functional in-memory (`SavedContext.tsx`) — resets on app restart, needs persistence. |
-| Saved | As a young person, I want to see everything I've saved in one place. | Frontend built (`SavedScreen.tsx`). |
-| Activity Detail | As a young person, I want full details on an activity (what it takes, how long, difficulty) before committing. | Frontend built (`ActivityDetailScreen.tsx`), static placeholder copy. |
+| Explore | As a young person, I want to browse nearby lore grouped by relevance, so I can quickly find something worth doing. | Frontend built (`ExploreScreen.tsx`), data is hardcoded (`src/data/activities.ts`). |
+| Explore | As a young person, I want to search for lore ideas (activities, sidequests), so I can find something specific. | **Functional** client-side search (`TopBar.tsx` + `ExploreScreen.tsx`) — filters the local dataset by title/blurb/tags/category. Real once there's a real dataset. |
+| Explore / Detail | As a young person, I want to bookmark lore, so I can come back to it later. | Functional in-memory (`SavedContext.tsx`) — resets on app restart, needs persistence. |
+| Map | As a young person, I want to see the closest lore to me on a map, and get directions without the app building its own navigation. | Frontend built (`MapScreen.tsx`) — real device geolocation (`expo-location`) sorts a list by distance; "Directions" hands off to Google/Apple Maps via `Linking`. Map visual is a decorative banner, not an interactive map (see §7). |
+| Lore (To Do) | As a young person, I want my saved lore in one place. | Frontend built (`LoreScreen.tsx`, "To Do" segment) — same data as the old Saved screen. |
+| Lore (Completed) | As a young person, I want a private log of lore I've actually done, that nobody else can see. | Frontend built (`LoreScreen.tsx`, "Completed" segment) with seeded entries (`src/data/completedLore.ts`) — explicitly not a social feed. Includes a "Summarize My Lore" action; **the summary is pre-written per seed entry, not a live AI call** (see §11 Phase 2/3 for why). |
+| Activity Detail | As a young person, I want full details on a lore listing (what it takes, how long, difficulty) before committing. | Frontend built (`ActivityDetailScreen.tsx`), static placeholder copy. |
+| Activity Detail | As a young person, I want to report lore that's inappropriate or unsafe. | Frontend built (`ReportModal.tsx`) — shows a confirmation on submit but **doesn't persist anywhere**; there's no backend yet to send it to. |
 | Profile | As a young person, I want to see my lore points, badges, and history, so progress feels earned. | Frontend built (`ProfileScreen.tsx`), all values hardcoded — needs a backend to be real. |
 
 **New for publishing (not yet built):**
-- Persisted user identity (even if anonymous/device-based) so saves and
-  lore points survive app restarts and reinstalls.
-- Real search/filter logic against the activity dataset.
-- An admin-side way to add/edit/remove activities (even a simple internal
-  tool) since v1 assumes curated content, not user-submitted.
+- Persisted user identity (even if anonymous/device-based) so saves,
+  completed lore, and lore points survive app restarts and reinstalls.
+- A real dataset behind search/browse/map (currently the same 11-item
+  placeholder list everywhere — see §8's data-source decision).
+- An admin-side way to add/edit/remove lore (even a simple internal tool)
+  since v1 assumes curated content, not user-submitted.
+- **Server-side enforcement for Report and the moderation word filter**
+  (`src/utils/moderation.ts`, wrapping the `bad-words` package) — both
+  exist client-side only right now; see §10 and §11 Phase 2 for why that's
+  not sufficient on its own once real users can publish content.
+- **A real "summarize my lore" endpoint** — see §11 Phase 2/3.
 
 ## 7. Platform & Technical Approach
 
@@ -143,7 +164,9 @@ revisit once there's usage data.
   Android devices, not just flagship iPhones.
 - **Accessibility**: text contrast against the dark theme, tap targets
   ≥ 44x44pt, screen-reader labels on icon-only buttons (bookmark, filter,
-  bell) — not yet audited.
+  bell) — not yet audited. An accessibility statement is now shown at the
+  bottom of Profile (`AccessibilityStatement.tsx`), honestly describing
+  this current state rather than claiming a finished audit.
 - **Offline behavior**: undefined today (everything is local placeholder
   data, so it "works offline" by accident). Needs an explicit decision once
   a backend exists — e.g. cache last-seen activities for offline viewing.
@@ -172,6 +195,17 @@ Required regardless of which open decisions above get picked:
 - **App Store review guidelines / Play Store policy**: review both before
   submission — e.g. location use, ads, and any account-deletion
   requirements (Apple requires in-app account deletion if accounts exist).
+- **User-generated content (UGC)**: once lore can be published (not yet —
+  see §5 Out of scope) plus reporting exists, this app is squarely a UGC
+  product under App Store review guideline 1.2. Combined with a
+  minors-inclusive audience (above), Phase 2 needs, at minimum: real
+  server-side moderation enforcement (the client-side word filter landing
+  now is a first-pass convenience, not a security boundary — trivially
+  bypassed by anyone calling the API directly once one exists), a way to
+  block/mute abusive accounts, a published content policy, and a way for
+  Apple's reviewers to see the report mechanism actually working
+  end-to-end. Don't discover this requirement during review — design for
+  it from the start of Phase 2.
 
 ## 11. Release Roadmap (Phased)
 
@@ -182,9 +216,51 @@ phase belongs in that phase's own plan when it's time, not here.
   Detail), placeholder data, design system.
 - **Phase 1 — This document**: PRD, scope, and open decisions.
 - **Phase 2 — Backend & auth**: pick and stand up a backend (Supabase or
-  alternative), persist saves/profile, resolve the data-source decision.
+  alternative), persist saves/profile/completed lore, resolve the
+  data-source decision, and move Report + the moderation filter from
+  client-side-only to actually enforced server-side (see §10 UGC note).
+  **Security & Auth Requirements checklist** (none of this is built yet —
+  there's no backend or auth today — this is the spec for when there is):
+  1. **No session/auth tokens in `localStorage` or `AsyncStorage` in
+     plaintext.** `localStorage` (web) is readable by any script on the
+     page, so an XSS bug becomes a full account-takeover bug. Use
+     `expo-secure-store` for native, and for the web target prefer
+     httpOnly + Secure + SameSite cookies issued by the backend (JS can't
+     read those at all — that's the actual mitigation, not just a
+     different storage API).
+  2. **Authorization must be enforced server-side, always.** A client-side
+     `role === 'admin'` check (hiding a button, gating a screen) is a UX
+     convenience, never a security boundary — trivially bypassed by
+     editing the client or calling the API directly. Every
+     admin/moderator-only mutation (the activity-management tool from §6,
+     resolving a report) must re-check permission on the backend on every
+     request.
+  3. **2FA/OTP** available at minimum, required for any admin/moderator
+     accounts once they exist.
+  4. **Rate limiting on every endpoint**, with login and password-reset
+     specifically prioritized — the standard targets for credential
+     stuffing and account enumeration, and need tighter limits than
+     average endpoints.
+  5. **Password rules**: prioritize minimum length (current NIST guidance:
+     length beats forced-complexity rules that mostly just frustrate
+     users) over mandatory symbol/number composition requirements.
+  6. **Password breach check**: check new/changed passwords against known
+     breach data before accepting them — the standard, privacy-preserving
+     approach is the Have I Been Pwned "Pwned Passwords" API via
+     k-anonymity (hash the password, send only the first 5 hex characters
+     of the hash, check the returned suffix list locally — the real
+     password/full hash never leaves the client).
+- **Phase 2/3 — Real AI lore summaries**: the "Summarize My Lore" action in
+  the Completed diary is currently mocked (pre-written text per seed
+  entry) rather than a live call to an LLM. Calling an LLM directly from
+  the client would mean shipping its API key inside the app bundle, which
+  is extractable from the compiled app — a real credential leak, and
+  exactly what the security checklist above exists to prevent. Real
+  summarization needs a backend endpoint that holds the key server-side
+  and proxies the request.
 - **Phase 3 — Real data & search**: replace placeholder activities with
-  real (curated or API-sourced) data; implement functional search/filter.
+  real (curated or API-sourced) data; the search/filter logic already
+  built in Phase 0 just needs a real dataset behind it.
 - **Phase 4 — Store readiness**: production app icon/splash, screenshots,
   store listing copy, EAS Build/Submit configuration, privacy policy and
   terms pages, developer accounts.
@@ -203,6 +279,11 @@ phase belongs in that phase's own plan when it's time, not here.
   before real users are on the app, not after.
 - Account deletion flow will be required by Apple the moment any account
   system exists — worth designing into Phase 2, not bolting on later.
+- A source referenced during planning (an Instagram Reel with app-launch
+  advice) could not be accessed — this environment's network policy blocks
+  Instagram. Nothing from it is reflected in this document; if it has
+  concrete advice worth incorporating, it needs to be shared directly
+  (a transcript, a screenshot, a summary) rather than linked.
 
 ---
 
@@ -242,3 +323,15 @@ built this way:
 - **Analytics vs. Crash Reporting** — analytics (e.g. usage dashboards)
   tell you *what users do*; crash reporting (e.g. Sentry) tells you *what
   broke*. Different tools, both useful, neither in place yet.
+- **UGC (User-Generated Content)** — content published by users rather
+  than the app's own team (posts, submissions, comments). Apps with UGC
+  face extra App Store / Play Store scrutiny: a working report mechanism,
+  a way to block abusive users, and a published content policy are all
+  expected. This app isn't there yet (no submission flow exists), but
+  Report + a moderation filter have landed ahead of it.
+- **k-anonymity (password breach checking)** — a way to check if a
+  password has leaked without ever sending the actual password anywhere.
+  The password is hashed locally, only the first few characters of that
+  hash are sent to a breach-checking service, and the match happens
+  locally against the results — the service never sees the real password
+  or even the full hash.

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 
@@ -7,9 +7,17 @@ type Props = {
   loreBalance: number;
   showSearch?: boolean;
   searchPlaceholder?: string;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
 };
 
-export default function TopBar({ loreBalance, showSearch = true, searchPlaceholder }: Props) {
+export default function TopBar({
+  loreBalance,
+  showSearch = true,
+  searchPlaceholder,
+  searchValue = '',
+  onSearchChange,
+}: Props) {
   return (
     <View style={styles.row}>
       <View style={[styles.balanceChip, shadow.soft]}>
@@ -20,12 +28,22 @@ export default function TopBar({ loreBalance, showSearch = true, searchPlacehold
       </View>
 
       {showSearch ? (
-        <Pressable style={[styles.searchBar, shadow.soft]}>
+        <View style={[styles.searchBar, shadow.soft]}>
           <MaterialCommunityIcons name="magnify" size={17} color={colors.textMuted} />
-          <Text style={styles.searchPlaceholder} numberOfLines={1}>
-            {searchPlaceholder}
-          </Text>
-        </Pressable>
+          <TextInput
+            style={styles.searchInput}
+            value={searchValue}
+            onChangeText={onSearchChange}
+            placeholder={searchPlaceholder}
+            placeholderTextColor={colors.textMuted}
+            returnKeyType="search"
+          />
+          {searchValue.length > 0 ? (
+            <Pressable onPress={() => onSearchChange?.('')} hitSlop={8}>
+              <MaterialCommunityIcons name="close-circle-outline" size={16} color={colors.textMuted} />
+            </Pressable>
+          ) : null}
+        </View>
       ) : (
         <View style={styles.spacer} />
       )}
@@ -84,11 +102,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginRight: spacing.sm,
   },
-  searchPlaceholder: {
-    color: colors.textMuted,
+  searchInput: {
+    flex: 1,
+    color: colors.textPrimary,
     fontSize: 12.5,
     marginLeft: 6,
-    flexShrink: 1,
+    paddingVertical: 0,
   },
   bellButton: {
     width: 34,

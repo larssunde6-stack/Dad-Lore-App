@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
+import ReportModal from '../components/ReportModal';
 import { activities } from '../data/activities';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
@@ -19,6 +20,7 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
   const activity = activities.find((a) => a.id === activityId) ?? activities[0];
   const { savedIds, toggleSaved } = useSaved();
   const saved = savedIds.has(activity.id);
+  const [reportVisible, setReportVisible] = useState(false);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -28,13 +30,18 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
             <Pressable onPress={() => navigation.goBack()} style={styles.backButton} hitSlop={10}>
               <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textPrimary} />
             </Pressable>
-            <Pressable onPress={() => toggleSaved(activity.id)} style={styles.backButton} hitSlop={10}>
-              <MaterialCommunityIcons
-                name={saved ? 'bookmark' : 'bookmark-outline'}
-                size={20}
-                color={saved ? colors.orange : colors.textPrimary}
-              />
-            </Pressable>
+            <View style={styles.heroRightButtons}>
+              <Pressable onPress={() => setReportVisible(true)} style={styles.backButton} hitSlop={10}>
+                <MaterialCommunityIcons name="flag-outline" size={18} color={colors.textPrimary} />
+              </Pressable>
+              <Pressable onPress={() => toggleSaved(activity.id)} style={styles.backButton} hitSlop={10}>
+                <MaterialCommunityIcons
+                  name={saved ? 'bookmark' : 'bookmark-outline'}
+                  size={20}
+                  color={saved ? colors.orange : colors.textPrimary}
+                />
+              </Pressable>
+            </View>
           </View>
 
           <View style={styles.heroIcon}>
@@ -107,6 +114,12 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
       <View style={styles.bottomBar}>
         <PrimaryButton label="Start This Adventure" icon="compass-outline" style={styles.ctaButton} />
       </View>
+
+      <ReportModal
+        visible={reportVisible}
+        onClose={() => setReportVisible(false)}
+        activityTitle={activity.title}
+      />
     </SafeAreaView>
   );
 }
@@ -142,6 +155,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  heroRightButtons: {
+    flexDirection: 'row',
+    gap: spacing.sm,
   },
   heroIcon: {
     width: 76,

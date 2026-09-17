@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
 import TopBar from '../components/TopBar';
 import PillHeader from '../components/PillHeader';
+import AccessibilityStatement from '../components/AccessibilityStatement';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 
 const stats = [
@@ -94,6 +95,8 @@ export default function ProfileScreen() {
           variant="outline"
           style={styles.logoutButton}
         />
+
+        <AccessibilityStatement />
       </ScrollView>
     </SafeAreaView>
   );
