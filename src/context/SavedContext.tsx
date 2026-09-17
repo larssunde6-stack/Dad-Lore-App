@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from './AuthContext';
 
 type SavedContextValue = {
   savedIds: Set<string>;
@@ -8,21 +10,71 @@ type SavedContextValue = {
 const SavedContext = createContext<SavedContextValue | undefined>(undefined);
 
 export function SavedProvider({ children }: { children: React.ReactNode }) {
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set(['2', '6']));
+  const { userId } = useAuth();
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
-  const toggleSaved = (id: string) => {
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+
+    (async () => {
+      const { data, error } = await supabase
+        .from('saved_lore')
+        .select('activity_id')
+        .eq('user_id', userId);
+
+      if (!cancelled && !error && data) {
+        setSavedIds(new Set(data.map((row) => row.activity_id as string)));
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const toggleSaved = async (id: string) => {
+    if (!userId) return;
+
+    const wasSaved = savedIds.has(id);
+
+    // Optimistic update, reverted below if the write fails.
     setSavedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
+      if (wasSaved) {
         next.delete(id);
       } else {
         next.add(id);
       }
       return next;
     });
+
+    if (wasSaved) {
+      const { error } = await supabase
+        .from('saved_lore')
+        .delete()
+        .eq('user_id', userId)
+        .eq('activity_id', id);
+      if (error) {
+        console.warn('Failed to unsave lore:', error.message);
+        setSavedIds((prev) => new Set(prev).add(id));
+      }
+    } else {
+      const { error } = await supabase
+        .from('saved_lore')
+        .insert({ user_id: userId, activity_id: id });
+      if (error) {
+        console.warn('Failed to save lore:', error.message);
+        setSavedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }
+    }
   };
 
-  const value = useMemo(() => ({ savedIds, toggleSaved }), [savedIds]);
+  const value = useMemo(() => ({ savedIds, toggleSaved }), [savedIds, userId]);
 
   return <SavedContext.Provider value={value}>{children}</SavedContext.Provider>;
 }

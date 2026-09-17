@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ActivityCarouselCard from '../components/ActivityCarouselCard';
 import TopBar from '../components/TopBar';
 import PillHeader from '../components/PillHeader';
 import SectionPill from '../components/SectionPill';
-import { activities } from '../data/activities';
+import { useActivities } from '../hooks/useActivities';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
 import { TabScreenProps } from '../navigation/types';
@@ -15,6 +15,7 @@ type Props = TabScreenProps<'Explore'>;
 
 export default function ExploreScreen({ navigation }: Props) {
   const { savedIds, toggleSaved } = useSaved();
+  const { activities, loading, error } = useActivities();
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
@@ -31,7 +32,7 @@ export default function ExploreScreen({ navigation }: Props) {
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [query]);
+  }, [query, activities]);
 
   const isSearching = query.trim().length > 0;
 
@@ -59,7 +60,15 @@ export default function ExploreScreen({ navigation }: Props) {
           />
         </View>
 
-        {filtered.length > 0 ? (
+        {loading ? (
+          <View style={[styles.emptyCarousel, styles.paddedTop]}>
+            <ActivityIndicator color={colors.orange} />
+          </View>
+        ) : error ? (
+          <View style={[styles.emptyCarousel, styles.paddedTop]}>
+            <Text style={styles.emptyText}>Couldn't load lore: {error}</Text>
+          </View>
+        ) : filtered.length > 0 ? (
           <FlatList
             horizontal
             data={filtered}

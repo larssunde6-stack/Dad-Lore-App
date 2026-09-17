@@ -95,43 +95,68 @@ Mapped to what's already built in `src/screens/`:
 
 | Screen | User story | Status |
 |---|---|---|
-| Explore | As a young person, I want to browse nearby lore grouped by relevance, so I can quickly find something worth doing. | Frontend built (`ExploreScreen.tsx`), data is hardcoded (`src/data/activities.ts`). |
-| Explore | As a young person, I want to search for lore ideas (activities, sidequests), so I can find something specific. | **Functional** client-side search (`TopBar.tsx` + `ExploreScreen.tsx`) — filters the local dataset by title/blurb/tags/category. Real once there's a real dataset. |
-| Explore / Detail | As a young person, I want to bookmark lore, so I can come back to it later. | Functional in-memory (`SavedContext.tsx`) — resets on app restart, needs persistence. |
-| Map | As a young person, I want to see the closest lore to me on a map, and get directions without the app building its own navigation. | Frontend built (`MapScreen.tsx`) — real device geolocation (`expo-location`) sorts a list by distance; "Directions" hands off to Google/Apple Maps via `Linking`. Map visual is a decorative banner, not an interactive map (see §7). |
-| Lore (To Do) | As a young person, I want my saved lore in one place. | Frontend built (`LoreScreen.tsx`, "To Do" segment) — same data as the old Saved screen. |
-| Lore (Completed) | As a young person, I want a private log of lore I've actually done, that nobody else can see. | Frontend built (`LoreScreen.tsx`, "Completed" segment) with seeded entries (`src/data/completedLore.ts`) — explicitly not a social feed. Includes a "Summarize My Lore" action; **the summary is pre-written per seed entry, not a live AI call** (see §11 Phase 2/3 for why). |
-| Activity Detail | As a young person, I want full details on a lore listing (what it takes, how long, difficulty) before committing. | Frontend built (`ActivityDetailScreen.tsx`), static placeholder copy. |
-| Activity Detail | As a young person, I want to report lore that's inappropriate or unsafe. | Frontend built (`ReportModal.tsx`) — shows a confirmation on submit but **doesn't persist anywhere**; there's no backend yet to send it to. |
-| Profile | As a young person, I want to see my lore points, badges, and history, so progress feels earned. | Frontend built (`ProfileScreen.tsx`), all values hardcoded — needs a backend to be real. |
+| Explore | As a young person, I want to browse nearby lore grouped by relevance, so I can quickly find something worth doing. | **Live**: `ExploreScreen.tsx` reads from Supabase's `activities` table via `useActivities.ts`, not a hardcoded import. Content is still curated (same 11 rows, now in Postgres instead of `src/data/activities.ts`) — the data-source decision in §8 is about where content comes from long-term, not whether it's live. |
+| Explore | As a young person, I want to search for lore ideas (activities, sidequests), so I can find something specific. | **Functional** client-side search (`TopBar.tsx` + `ExploreScreen.tsx`) — filters the now-live dataset by title/blurb/tags/category. |
+| Explore / Detail | As a young person, I want to bookmark lore, so I can come back to it later. | **Live**: `SavedContext.tsx` reads/writes Supabase's `saved_lore` table, scoped to an anonymous identity via Row Level Security. Survives app restarts; does not yet survive a reinstall or a new device (that needs real accounts, not just anonymous ones). |
+| Map | As a young person, I want to see the closest lore to me on a map, and get directions without the app building its own navigation. | Frontend built (`MapScreen.tsx`) — real device geolocation (`expo-location`) sorts the live `activities` list by distance; "Directions" hands off to Google/Apple Maps via `Linking`. Map visual is a decorative banner, not an interactive map (see §7). |
+| Lore (To Do) | As a young person, I want my saved lore in one place. | Frontend built (`LoreScreen.tsx`, "To Do" segment) — same Supabase-backed data as the Explore/Detail bookmark row above. |
+| Lore (Completed) | As a young person, I want a private log of lore I've actually done, that nobody else can see. | **Live**: `LoreScreen.tsx` reads/writes Supabase's `completed_lore` table. Row Level Security — not just app UI — is what actually enforces "nobody else can see this." The original 5 seed entries are inserted once per new anonymous identity on first load, rather than hardcoded. Includes a "Summarize My Lore" action; **the summary is still pre-written per entry, not a live AI call** (see §11 Phase 2/3 for why). |
+| Activity Detail | As a young person, I want full details on a lore listing (what it takes, how long, difficulty) before committing. | Frontend built (`ActivityDetailScreen.tsx`), static placeholder copy; the activity data itself is live (see Explore row). |
+| Activity Detail | As a young person, I want to report lore that's inappropriate or unsafe. | **Live**: `ReportModal.tsx` inserts into Supabase's `reports` table (activity id, reason, reporter's anonymous user id). Nobody, including the reporter, can read reports back through the app — only a future moderator tool using the `service_role` key can, matching the UGC note in §10. |
+| Profile | As a young person, I want to see my lore points, badges, and history, so progress feels earned. | Frontend built (`ProfileScreen.tsx`), all values still hardcoded — this screen wasn't part of this backend pass; lore points aren't computed from real activity yet. |
 
 **New for publishing (not yet built):**
-- Persisted user identity (even if anonymous/device-based) so saves,
-  completed lore, and lore points survive app restarts and reinstalls.
-- A real dataset behind search/browse/map (currently the same 11-item
-  placeholder list everywhere — see §8's data-source decision).
+- ~~Persisted user identity~~ — **done**: anonymous Supabase auth
+  (`AuthContext.tsx`) gives every device a stable identity that saves,
+  completed lore, and reports are scoped to via Row Level Security. Real
+  accounts (email/password, cross-device sync) are still future work —
+  see the Security & Auth checklist under §11 Phase 2.
+- Lore points/badges on Profile are still hardcoded — not derived from
+  real `completed_lore` rows yet.
+- A real *editorial* dataset behind search/browse/map — the data now
+  lives in Postgres instead of a TS file, but it's still the same 11
+  curated placeholder rows (see §8's data-source decision, which is
+  unchanged by this pass).
 - An admin-side way to add/edit/remove lore (even a simple internal tool)
-  since v1 assumes curated content, not user-submitted.
-- **Server-side enforcement for Report and the moderation word filter**
-  (`src/utils/moderation.ts`, wrapping the `bad-words` package) — both
-  exist client-side only right now; see §10 and §11 Phase 2 for why that's
-  not sufficient on its own once real users can publish content.
+  since v1 assumes curated content, not user-submitted. Right now content
+  changes happen by editing `supabase/migrations/0001_init.sql` and
+  re-running it, or directly in the Supabase Table Editor.
+- **Server-side enforcement for Report**: **done** — the `reports` table's
+  Row Level Security policy only allows `INSERT`, from nobody but the
+  authenticated (including anonymous) user, with no `SELECT`. The
+  moderation word filter (`src/utils/moderation.ts`, wrapping `bad-words`)
+  is still client-side only and still unattached to any input — there's
+  still no lore-submission form for it to guard.
 - **A real "summarize my lore" endpoint** — see §11 Phase 2/3.
 
 ## 7. Platform & Technical Approach
 
 - **Framework**: Expo (SDK 57) + React Native — already in place, supports
   iOS and Android from one codebase.
-- **Backend**: none yet. **Supabase is the leading candidate** — it pairs
-  well with Expo/React Native, includes Postgres, auth, and storage out of
-  the box, and has a generous free tier for a pre-revenue app. This should
-  be confirmed (not assumed) in the Phase 2 plan, evaluated against
-  alternatives (Firebase, a custom Node/Express API) before committing.
+- **Backend**: **Supabase — confirmed and live** (`src/lib/supabase.ts`).
+  Auth is **anonymous-only for now** (`supabase.auth.signInAnonymously()`
+  via `AuthContext.tsx`) — every device gets a stable identity with no
+  email/password, matching the "no login requirement, minimal data
+  collection" recommendation in §10. Real accounts (email/password, 2FA,
+  cross-device sync) remain future work under the Security & Auth
+  checklist in §11 Phase 2. Data access is authorized entirely through
+  Postgres **Row Level Security** policies (`supabase/migrations/
+  0001_init.sql`) — the actual server-side enforcement the checklist
+  calls for, not a placeholder for it.
+- **Session storage caveat**: Supabase's React Native integration stores
+  the session in `AsyncStorage`. On native this is app-sandboxed; on this
+  app's **web** build target, `AsyncStorage` is backed by `localStorage`
+  — exactly what the checklist warns about for token storage. Accepted
+  for now because these are low-stakes anonymous sessions with no
+  password; revisit with the httpOnly-cookie approach the checklist
+  already specs the moment real accounts exist.
 - **Distribution**: EAS Build + EAS Submit (Expo's managed build/submit
   pipeline) is the standard path from this codebase to both stores without
   needing a Mac for iOS builds.
-- **State**: currently local React state/context only (`SavedContext.tsx`).
-  Will need to move to backend-synced state once accounts exist.
+- **State**: `SavedContext.tsx` now reads/writes Supabase directly rather
+  than holding local-only state, while keeping the same `savedIds`/
+  `toggleSaved` interface every screen already used — no screen changes
+  needed beyond the ones that fetch activities/completed lore.
 
 ## 8. Open Decisions
 
@@ -215,41 +240,40 @@ phase belongs in that phase's own plan when it's time, not here.
 - **Phase 0 — Done**: Frontend prototype (Explore, Saved, Profile, Activity
   Detail), placeholder data, design system.
 - **Phase 1 — This document**: PRD, scope, and open decisions.
-- **Phase 2 — Backend & auth**: pick and stand up a backend (Supabase or
-  alternative), persist saves/profile/completed lore, resolve the
-  data-source decision, and move Report + the moderation filter from
-  client-side-only to actually enforced server-side (see §10 UGC note).
-  **Security & Auth Requirements checklist** (none of this is built yet —
-  there's no backend or auth today — this is the spec for when there is):
-  1. **No session/auth tokens in `localStorage` or `AsyncStorage` in
-     plaintext.** `localStorage` (web) is readable by any script on the
-     page, so an XSS bug becomes a full account-takeover bug. Use
-     `expo-secure-store` for native, and for the web target prefer
-     httpOnly + Secure + SameSite cookies issued by the backend (JS can't
-     read those at all — that's the actual mitigation, not just a
-     different storage API).
-  2. **Authorization must be enforced server-side, always.** A client-side
-     `role === 'admin'` check (hiding a button, gating a screen) is a UX
-     convenience, never a security boundary — trivially bypassed by
-     editing the client or calling the API directly. Every
-     admin/moderator-only mutation (the activity-management tool from §6,
-     resolving a report) must re-check permission on the backend on every
-     request.
-  3. **2FA/OTP** available at minimum, required for any admin/moderator
-     accounts once they exist.
-  4. **Rate limiting on every endpoint**, with login and password-reset
-     specifically prioritized — the standard targets for credential
-     stuffing and account enumeration, and need tighter limits than
-     average endpoints.
-  5. **Password rules**: prioritize minimum length (current NIST guidance:
-     length beats forced-complexity rules that mostly just frustrate
-     users) over mandatory symbol/number composition requirements.
-  6. **Password breach check**: check new/changed passwords against known
-     breach data before accepting them — the standard, privacy-preserving
-     approach is the Have I Been Pwned "Pwned Passwords" API via
-     k-anonymity (hash the password, send only the first 5 hex characters
-     of the hash, check the returned suffix list locally — the real
-     password/full hash never leaves the client).
+- **Phase 2 — Backend & auth**:
+  - **Landed**: Supabase confirmed as the backend. Anonymous auth
+    (`AuthContext.tsx`) gives every device a stable identity. Schema +
+    Row Level Security live in `supabase/migrations/0001_init.sql`:
+    `activities` (public read-only), `saved_lore` and `completed_lore`
+    (per-user via RLS — this is the real "nobody else can see this"
+    enforcement for the diary, not just app UI), and `reports`
+    (insert-only, unreadable by anyone through the client). `SavedContext`,
+    `useActivities`, the Completed diary, and `ReportModal` all read/write
+    Supabase now instead of local/hardcoded data.
+  - **Still open**: the data-source decision in §8 (this pass moved the
+    same curated rows into Postgres — it didn't resolve curated-vs-API),
+    lore points/badges on Profile aren't computed from real data yet, and
+    there's still no admin tool (content changes go through the SQL
+    migration file or the Supabase dashboard directly).
+  - **Security & Auth Requirements checklist** — status per item now that
+    anonymous auth is live:
+  1. **No session/auth tokens in `localStorage` in plaintext.** **Partially
+     accepted, not resolved**: Supabase's session sits in `AsyncStorage`,
+     which is `localStorage`-backed on this app's web target. Tracked as a
+     documented tradeoff in §7 (low-stakes anonymous session, no
+     password) — revisit with httpOnly cookies the moment real accounts
+     exist.
+  2. **Authorization enforced server-side, always.** **Done** for
+     everything this pass touches — Postgres RLS policies are the
+     enforcement, not a client-side check. Still applies to any future
+     admin/moderator tooling (§6), which doesn't exist yet.
+  3. **2FA/OTP** — not applicable yet; there are no password-based accounts
+     to protect. Required the moment admin/moderator accounts are added.
+  4. **Rate limiting on every endpoint** — not yet addressed; Supabase
+     provides some platform-level protection, but login/password-reset
+     rate limiting specifically doesn't apply until real accounts exist.
+  5. **Password rules** — not applicable yet (no passwords).
+  6. **Password breach check** — not applicable yet (no passwords).
 - **Phase 2/3 — Real AI lore summaries**: the "Summarize My Lore" action in
   the Completed diary is currently mocked (pre-written text per seed
   entry) rather than a live call to an LLM. Calling an LLM directly from
@@ -284,6 +308,12 @@ phase belongs in that phase's own plan when it's time, not here.
   Instagram. Nothing from it is reflected in this document; if it has
   concrete advice worth incorporating, it needs to be shared directly
   (a transcript, a screenshot, a summary) rather than linked.
+- This build environment's network policy also blocks `supabase.co`, so
+  the Phase 2 backend work (schema, RLS, anonymous auth, live reads/
+  writes) was written and typechecked here but **could not be verified
+  against the live project from this session** — that verification needs
+  to happen on a machine that can actually reach Supabase (see §11 Phase
+  2 and the SQL migration file's own instructions).
 
 ---
 
@@ -297,8 +327,20 @@ built this way:
   have a clear target instead of drifting.
 - **Backend** — the server + database your app talks to over the internet
   for anything that needs to persist or be shared (accounts, saved data,
-  content). Without one, everything lives only on one device and resets
-  when the app is reinstalled — which is where this app is today.
+  content). As of Phase 2, this app has one (Supabase) — saves, the
+  completed-lore diary, and reports now persist across app restarts on
+  the same device.
+- **Row Level Security (RLS)** — Postgres rules that decide which rows a
+  given request is allowed to read or write, enforced by the database
+  itself. This is what actually makes "you can only see your own saved
+  lore" or "you can't read other people's diary" true — not the app
+  choosing not to show a screen, which a modified or fake client could
+  ignore. Every table this app added in Phase 2 has RLS policies.
+- **Anonymous auth** — an account with no email or password: Supabase
+  hands the device a stable identity (a UUID under the hood) it can use
+  to own rows via RLS, without collecting any personal information. This
+  app uses anonymous auth for everyone right now; real accounts (email/
+  password, sign-in on a second device) are separate, later work.
 - **Supabase** — a hosted backend service (Postgres database + auth + file
   storage + auto-generated APIs) that lets you stand up a real backend
   without writing and hosting a server yourself. One of several options;

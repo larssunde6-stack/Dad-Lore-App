@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
 import ReportModal from '../components/ReportModal';
-import { activities } from '../data/activities';
+import { useActivities } from '../hooks/useActivities';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
 import { RootStackScreenProps } from '../navigation/types';
@@ -17,10 +17,34 @@ const difficultyColor: Record<string, string> = {
 
 export default function ActivityDetailScreen({ route, navigation }: RootStackScreenProps<'ActivityDetail'>) {
   const { activityId } = route.params;
-  const activity = activities.find((a) => a.id === activityId) ?? activities[0];
+  const { activities, loading, error } = useActivities();
   const { savedIds, toggleSaved } = useSaved();
-  const saved = savedIds.has(activity.id);
   const [reportVisible, setReportVisible] = useState(false);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.centeredSafe} edges={['top']}>
+        <ActivityIndicator color={colors.orange} />
+      </SafeAreaView>
+    );
+  }
+
+  const activity = activities.find((a) => a.id === activityId);
+
+  if (error || !activity) {
+    return (
+      <SafeAreaView style={styles.centeredSafe} edges={['top']}>
+        <Text style={styles.errorText}>
+          {error ? `Couldn't load lore: ${error}` : "That lore couldn't be found."}
+        </Text>
+        <Pressable onPress={() => navigation.goBack()} style={styles.backButton} hitSlop={10}>
+          <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textPrimary} />
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
+
+  const saved = savedIds.has(activity.id);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -118,6 +142,7 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
       <ReportModal
         visible={reportVisible}
         onClose={() => setReportVisible(false)}
+        activityId={activity.id}
         activityTitle={activity.title}
       />
     </SafeAreaView>
@@ -128,6 +153,19 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  centeredSafe: {
+    flex: 1,
+    backgroundColor: colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+  },
+  errorText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
   },
   content: {
     paddingBottom: 120,

@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import TopBar from '../components/TopBar';
 import PillHeader from '../components/PillHeader';
-import { activities, HOME_BASE, Coords } from '../data/activities';
+import { HOME_BASE, Coords } from '../data/activities';
+import { useActivities } from '../hooks/useActivities';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 import { openInMaps } from '../utils/openInMaps';
 import { TabScreenProps } from '../navigation/types';
@@ -28,6 +29,7 @@ function haversineMiles(a: Coords, b: Coords): number {
 }
 
 export default function MapScreen({ navigation }: Props) {
+  const { activities, loading, error } = useActivities();
   const [location, setLocation] = useState<Coords>(HOME_BASE);
   const [usingDeviceLocation, setUsingDeviceLocation] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
@@ -65,7 +67,7 @@ export default function MapScreen({ navigation }: Props) {
         distanceMiles: haversineMiles(location, activity.coords),
       }))
       .sort((a, b) => a.distanceMiles - b.distanceMiles);
-  }, [location]);
+  }, [location, activities]);
 
   const nearestRadius = sorted.length ? Math.ceil(sorted[sorted.length - 1].distanceMiles) : 0;
 
@@ -100,6 +102,17 @@ export default function MapScreen({ navigation }: Props) {
               </Text>
             </View>
           </View>
+        }
+        ListEmptyComponent={
+          loading ? (
+            <View style={styles.stateWrap}>
+              <ActivityIndicator color={colors.orange} />
+            </View>
+          ) : error ? (
+            <View style={styles.stateWrap}>
+              <Text style={styles.rowMeta}>Couldn't load lore: {error}</Text>
+            </View>
+          ) : null
         }
         renderItem={({ item }) => (
           <Pressable
@@ -142,6 +155,10 @@ const styles = StyleSheet.create({
   },
   headerWrap: {
     marginBottom: spacing.md,
+  },
+  stateWrap: {
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
   },
   banner: {
     backgroundColor: colors.surface,

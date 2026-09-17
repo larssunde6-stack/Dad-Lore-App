@@ -1,30 +1,51 @@
 import React, { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 
 const REASONS = ['Inappropriate', 'Dangerous or Unsafe', 'Spam', 'Other'];
 
 type Props = {
   visible: boolean;
   onClose: () => void;
+  activityId: string;
   activityTitle: string;
 };
 
-export default function ReportModal({ visible, onClose, activityTitle }: Props) {
+export default function ReportModal({ visible, onClose, activityId, activityTitle }: Props) {
+  const { userId } = useAuth();
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleClose = () => {
     onClose();
     setTimeout(() => {
       setSelectedReason(null);
       setSubmitted(false);
+      setSubmitError(null);
     }, 250);
   };
 
-  const handleSubmit = () => {
-    if (!selectedReason) return;
+  const handleSubmit = async () => {
+    if (!selectedReason || submitting) return;
+    setSubmitting(true);
+    setSubmitError(null);
+
+    const { error } = await supabase.from('reports').insert({
+      activity_id: activityId,
+      reason: selectedReason,
+      reporter_user_id: userId,
+    });
+
+    setSubmitting(false);
+    if (error) {
+      setSubmitError(error.message);
+      return;
+    }
     setSubmitted(true);
   };
 
@@ -71,12 +92,22 @@ export default function ReportModal({ visible, onClose, activityTitle }: Props) 
                   </Pressable>
                 );
               })}
+              {submitError ? (
+                <Text style={styles.errorText}>Couldn't send that: {submitError}</Text>
+              ) : null}
               <Pressable
                 onPress={handleSubmit}
-                disabled={!selectedReason}
-                style={[styles.submitButton, !selectedReason && styles.submitButtonDisabled]}
+                disabled={!selectedReason || submitting}
+                style={[
+                  styles.submitButton,
+                  (!selectedReason || submitting) && styles.submitButtonDisabled,
+                ]}
               >
-                <Text style={styles.submitButtonText}>Submit Report</Text>
+                {submitting ? (
+                  <ActivityIndicator size="small" color={colors.textOnOrange} />
+                ) : (
+                  <Text style={styles.submitButtonText}>Submit Report</Text>
+                )}
               </Pressable>
             </>
           )}
@@ -168,6 +199,11 @@ const styles = StyleSheet.create({
   reasonText: {
     color: colors.textPrimary,
     fontSize: 13.5,
+  },
+  errorText: {
+    color: '#E6807A',
+    fontSize: 12,
+    marginBottom: spacing.sm,
   },
   submitButton: {
     backgroundColor: colors.orange,
