@@ -8,6 +8,7 @@ import MapScreen from '../screens/MapScreen';
 import LoreScreen from '../screens/LoreScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ActivityDetailScreen from '../screens/ActivityDetailScreen';
+import LegalScreen from '../screens/LegalScreen';
 import { colors } from '../theme/theme';
 import { RootStackParamList, TabParamList } from './types';
 

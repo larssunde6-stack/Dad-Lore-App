@@ -5,6 +5,7 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 export type RootStackParamList = {
   Tabs: undefined;
   ActivityDetail: { activityId: string };
+  Legal: undefined;
 };
 
 export type TabParamList = {

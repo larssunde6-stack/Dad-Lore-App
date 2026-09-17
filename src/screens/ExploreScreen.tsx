@@ -36,6 +36,20 @@ export default function ExploreScreen({ navigation }: Props) {
 
   const isSearching = query.trim().length > 0;
 
+  const handleSurpriseMe = () => {
+    if (activities.length === 0) return;
+    const pick = activities[Math.floor(Math.random() * activities.length)];
+    navigation.navigate('ActivityDetail', { activityId: pick.id });
+  };
+
+  const handleBoldSurprise = () => {
+    const boldOnes = activities.filter((a) => a.difficulty === 'Bold');
+    const pool = boldOnes.length > 0 ? boldOnes : activities;
+    if (pool.length === 0) return;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    navigation.navigate('ActivityDetail', { activityId: pick.id });
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView
@@ -92,13 +106,29 @@ export default function ExploreScreen({ navigation }: Props) {
 
         <View style={styles.quickActionRow}>
           <View style={styles.quickActionSpacer} />
-          <Pressable style={[styles.fab, shadow.glow]}>
+          <Pressable
+            onPress={handleSurpriseMe}
+            disabled={activities.length === 0}
+            style={({ pressed }) => [
+              styles.fab,
+              shadow.glow,
+              (activities.length === 0 || pressed) && styles.fabPressed,
+            ]}
+          >
             <MaterialCommunityIcons name="dice-multiple-outline" size={26} color={colors.textOnOrange} />
           </Pressable>
           <Text style={styles.fabLabel}>Surprise Me</Text>
           <View style={styles.quickActionSpacer} />
-          <Pressable style={[styles.viewAllBox, shadow.soft]}>
-            <MaterialCommunityIcons name="view-grid-outline" size={18} color={colors.orange} />
+          <Pressable
+            onPress={handleBoldSurprise}
+            disabled={activities.length === 0}
+            style={({ pressed }) => [
+              styles.viewAllBox,
+              shadow.soft,
+              (activities.length === 0 || pressed) && styles.fabPressed,
+            ]}
+          >
+            <MaterialCommunityIcons name="fire" size={18} color={colors.orange} />
           </Pressable>
         </View>
       </ScrollView>
@@ -137,6 +167,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.orange,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  fabPressed: {
+    opacity: 0.6,
   },
   fabLabel: {
     position: 'absolute',

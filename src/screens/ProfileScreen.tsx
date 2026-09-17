@@ -1,26 +1,33 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
 import TopBar from '../components/TopBar';
 import PillHeader from '../components/PillHeader';
 import AccessibilityStatement from '../components/AccessibilityStatement';
+import { useActivities } from '../hooks/useActivities';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
+import { Category } from '../data/activities';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 
-const stats = [
-  { label: 'Lore Points', value: '1,240', icon: 'fire' as const },
-  { label: 'Activities Done', value: '18', icon: 'check-decagram' as const },
-  { label: 'Badges Earned', value: '6', icon: 'medal' as const },
-];
+const LEVEL_SIZE = 250;
 
-const badges = [
-  { label: 'Fire Starter', icon: 'campfire' as const },
-  { label: 'Trail Blazer', icon: 'hiking' as const },
-  { label: 'Bonfire Boss', icon: 'food-steak' as const },
-  { label: 'Wheelman', icon: 'car-shift-pattern' as const },
-  { label: 'Lake Legend', icon: 'fish' as const },
-  { label: 'Road Scholar', icon: 'compass-outline' as const },
+type BadgeDef = {
+  category: Category;
+  label: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+};
+
+const badgeDefs: BadgeDef[] = [
+  { category: 'Outdoors', label: 'Trail Blazer', icon: 'hiking' },
+  { category: 'Bonfire Nights', label: 'Fire Starter', icon: 'campfire' },
+  { category: 'Behind the Wheel', label: 'Wheelman', icon: 'car-shift-pattern' },
+  { category: 'Backyard Games', label: 'Backyard Champ', icon: 'horseshoe' },
+  { category: 'Water', label: 'Lake Legend', icon: 'fish' },
+  { category: 'Roadside Legend', label: 'Road Scholar', icon: 'compass-outline' },
+  { category: 'Certified Bad Ideas', label: 'Chaos Agent', icon: 'alert-decagram-outline' },
 ];
 
 const menuItems = [
@@ -30,11 +37,64 @@ const menuItems = [
   { label: 'Help & Support', icon: 'help-circle-outline' as const },
 ];
 
+type CompletedStat = { activityTitle: string; loreEarned: number };
+
 export default function ProfileScreen() {
+  const { userId } = useAuth();
+  const { activities } = useActivities();
+  const [completed, setCompleted] = useState<CompletedStat[]>([]);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+
+    (async () => {
+      const { data, error } = await supabase
+        .from('completed_lore')
+        .select('activity_title, lore_earned')
+        .eq('user_id', userId);
+
+      if (!cancelled) {
+        if (!error && data) {
+          setCompleted(
+            data.map((row) => ({ activityTitle: row.activity_title, loreEarned: row.lore_earned }))
+          );
+        }
+        setStatsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const lorePoints = completed.reduce((sum, entry) => sum + entry.loreEarned, 0);
+  const activitiesDone = completed.length;
+
+  const completedCategories = new Set(
+    completed
+      .map((entry) => activities.find((a) => a.title === entry.activityTitle)?.category)
+      .filter((category): category is Category => Boolean(category))
+  );
+  const earnedBadgeCount = badgeDefs.filter((b) => completedCategories.has(b.category)).length;
+
+  const level = Math.floor(lorePoints / LEVEL_SIZE) + 1;
+  const pointsIntoLevel = lorePoints % LEVEL_SIZE;
+  const progressPct = Math.round((pointsIntoLevel / LEVEL_SIZE) * 100);
+  const pointsToNext = LEVEL_SIZE - pointsIntoLevel;
+
+  const stats = [
+    { label: 'Lore Points', value: lorePoints.toLocaleString(), icon: 'fire' as const },
+    { label: 'Activities Done', value: String(activitiesDone), icon: 'check-decagram' as const },
+    { label: 'Badges Earned', value: String(earnedBadgeCount), icon: 'medal' as const },
+  ];
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <TopBar loreBalance={1240} showSearch={false} />
+        <TopBar loreBalance={lorePoints} showSearch={false} />
         <PillHeader title="PROFILE" />
 
         <View style={styles.profileHeader}>
@@ -43,34 +103,47 @@ export default function ProfileScreen() {
             <View style={styles.avatarRing} />
           </View>
           <Text style={styles.name}>Jordan Sundberg</Text>
-          <Text style={styles.subtitle}>Level 4 · Lore in Progress</Text>
+          <Text style={styles.subtitle}>Level {level} · Lore in Progress</Text>
 
           <View style={styles.progressTrack}>
-            <View style={styles.progressFill} />
+            <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
           </View>
-          <Text style={styles.progressLabel}>260 lore points to Level 5</Text>
+          <Text style={styles.progressLabel}>{pointsToNext} lore points to Level {level + 1}</Text>
         </View>
 
-        <View style={styles.statsRow}>
-          {stats.map((stat) => (
-            <View key={stat.label} style={[styles.statCard, shadow.soft]}>
-              <MaterialCommunityIcons name={stat.icon} size={20} color={colors.orange} />
-              <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
-            </View>
-          ))}
-        </View>
+        {statsLoading ? (
+          <View style={styles.statsLoading}>
+            <ActivityIndicator color={colors.orange} />
+          </View>
+        ) : (
+          <View style={styles.statsRow}>
+            {stats.map((stat) => (
+              <View key={stat.label} style={[styles.statCard, shadow.soft]}>
+                <MaterialCommunityIcons name={stat.icon} size={20} color={colors.orange} />
+                <Text style={styles.statValue}>{stat.value}</Text>
+                <Text style={styles.statLabel}>{stat.label}</Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         <Text style={styles.sectionTitle}>Badges</Text>
         <View style={styles.badgeGrid}>
-          {badges.map((badge) => (
-            <View key={badge.label} style={styles.badgeItem}>
-              <View style={styles.badgeIcon}>
-                <MaterialCommunityIcons name={badge.icon} size={22} color={colors.orangeBright} />
+          {badgeDefs.map((badge) => {
+            const earned = completedCategories.has(badge.category);
+            return (
+              <View key={badge.label} style={[styles.badgeItem, !earned && styles.badgeItemLocked]}>
+                <View style={styles.badgeIcon}>
+                  <MaterialCommunityIcons
+                    name={badge.icon}
+                    size={22}
+                    color={earned ? colors.orangeBright : colors.textMuted}
+                  />
+                </View>
+                <Text style={styles.badgeLabel}>{badge.label}</Text>
               </View>
-              <Text style={styles.badgeLabel}>{badge.label}</Text>
-            </View>
-          ))}
+            );
+          })}
         </View>
 
         <Text style={styles.sectionTitle}>Settings</Text>
@@ -167,6 +240,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: spacing.xl,
   },
+  statsLoading: {
+    paddingVertical: spacing.xl,
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
   statCard: {
     flex: 1,
     alignItems: 'center',
@@ -204,6 +282,9 @@ const styles = StyleSheet.create({
     width: '33.33%',
     alignItems: 'center',
     marginBottom: spacing.lg,
+  },
+  badgeItemLocked: {
+    opacity: 0.4,
   },
   badgeIcon: {
     width: 56,
