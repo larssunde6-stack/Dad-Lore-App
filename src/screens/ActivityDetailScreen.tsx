@@ -80,8 +80,8 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
         <Text style={styles.sectionTitle}>The Lore</Text>
         <Text style={styles.description}>
           {activity.blurb} This is placeholder detail copy describing what makes this activity
-          worthy of a great dad story — the setup, the moment it goes sideways, and the retelling
-          that gets better every year.
+          worthy of future dad lore — the setup, the moment it goes sideways, and the retelling
+          that somehow gets better every time you tell it.
         </Text>
 
         <Text style={styles.sectionTitle}>Tags</Text>

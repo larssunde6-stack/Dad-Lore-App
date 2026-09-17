@@ -16,8 +16,8 @@ const stats = [
 const badges = [
   { label: 'Fire Starter', icon: 'campfire' as const },
   { label: 'Trail Blazer', icon: 'hiking' as const },
-  { label: 'Grill Master', icon: 'food-steak' as const },
-  { label: 'Fix-It Pro', icon: 'wrench' as const },
+  { label: 'Bonfire Boss', icon: 'food-steak' as const },
+  { label: 'Wheelman', icon: 'car-shift-pattern' as const },
   { label: 'Lake Legend', icon: 'fish' as const },
   { label: 'Road Scholar', icon: 'compass-outline' as const },
 ];
@@ -41,8 +41,8 @@ export default function ProfileScreen() {
             <MaterialCommunityIcons name="account" size={38} color={colors.orange} />
             <View style={styles.avatarRing} />
           </View>
-          <Text style={styles.name}>Mike Sundberg</Text>
-          <Text style={styles.subtitle}>Level 4 · Weekend Adventurer</Text>
+          <Text style={styles.name}>Jordan Sundberg</Text>
+          <Text style={styles.subtitle}>Level 4 · Lore in Progress</Text>
 
           <View style={styles.progressTrack}>
             <View style={styles.progressFill} />

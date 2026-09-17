@@ -6,12 +6,14 @@
 
 ## 1. Overview & Vision
 
-Dad Lore helps dads find nearby activities worth turning into a good story —
-the kind of thing that becomes "remember when we..." for years afterward.
-Instead of a generic "things to do" app, it frames every activity around a
-simple question: *will this make good Dad Lore?* Activities are rated,
-tagged, and organized around that idea (lore points, difficulty, tags like
-"Trailhead" or "Dad Voice Required").
+Dad Lore helps young people — teens and twenty-somethings, well before
+they're anyone's dad — find dumb, memorable stuff to do near them *now*
+that turns into the stories they'll tell their kids someday. The pitch
+isn't "activities for dads"; it's "go build the lore you'll be retelling
+as a dad, starting tonight." Instead of a generic "things to do" app, it
+frames every activity around one question: *will this be a good story
+someday?* Activities are rated, tagged, and organized around that idea
+(lore points, difficulty, tags like "Trailhead" or "Group Chat Material").
 
 The current build is a fully-designed frontend prototype: browse, search
 (UI only), save, and view activity detail, all running on placeholder data
@@ -20,20 +22,24 @@ backend yet.
 
 ## 2. Problem Statement
 
-Dads looking for something to do with their time often default to whatever's
-easiest — scrolling, errands, the couch — not because nothing's around, but
-because nothing surfaces the *stuff worth doing on purpose*. Generic local
-discovery apps (Yelp, Google Maps) are built for restaurants and services,
-not for "give me something bold enough to talk about later." Dad Lore fills
-that specific gap: curated, personality-driven activity discovery.
+Teens and young adults with a free night often default to whatever's
+easiest — scrolling, staying in, the same three hangout spots — not
+because nothing's around, but because nothing surfaces the *stuff worth
+doing on purpose while you still can*. Generic local discovery apps (Yelp,
+Google Maps) are built for restaurants and services, not for "give me
+something dumb enough to be a great story in twenty years." Dad Lore fills
+that specific gap: curated, personality-driven activity discovery aimed at
+people who aren't dads yet, but are quietly stockpiling material for when
+they are.
 
 ## 3. Target Users
 
-- **Primary**: Dads (broadly — new dads, veteran dads, weekend-adventure
-  dads) looking for activities near them, solo or with their kids.
+- **Primary**: Teens and young adults (roughly high school through mid-20s)
+  looking for something worth doing near them, solo or with friends —
+  before the "responsible adult" phase of life sets in.
 - **Secondary**: Anyone who enjoys the "collect stories, not stuff" framing
-  — could extend beyond dads post-launch, but v1 messaging and tone target
-  dads specifically.
+  regardless of age — actual dads included, just not the primary audience
+  the v1 tone and marketing are built around.
 
 ## 4. Goals & Success Metrics
 
@@ -77,12 +83,12 @@ Mapped to what's already built in `src/screens/`:
 
 | Screen | User story | Status |
 |---|---|---|
-| Explore | As a dad, I want to browse nearby activities grouped by relevance, so I can quickly find something worth doing. | Frontend built (`ExploreScreen.tsx`), data is hardcoded (`src/data/activities.ts`). |
-| Explore | As a dad, I want to search for activities, so I can find something specific. | UI built (`TopBar.tsx` search bar); **not functional yet** — no real search/filtering logic. |
-| Explore / Detail | As a dad, I want to bookmark an activity, so I can come back to it later. | Functional in-memory (`SavedContext.tsx`) — resets on app restart, needs persistence. |
-| Saved | As a dad, I want to see everything I've saved in one place. | Frontend built (`SavedScreen.tsx`). |
-| Activity Detail | As a dad, I want full details on an activity (what it takes, how long, difficulty) before committing. | Frontend built (`ActivityDetailScreen.tsx`), static placeholder copy. |
-| Profile | As a dad, I want to see my lore points, badges, and history, so progress feels earned. | Frontend built (`ProfileScreen.tsx`), all values hardcoded — needs a backend to be real. |
+| Explore | As a young person, I want to browse nearby activities grouped by relevance, so I can quickly find something worth doing. | Frontend built (`ExploreScreen.tsx`), data is hardcoded (`src/data/activities.ts`). |
+| Explore | As a young person, I want to search for activities, so I can find something specific. | UI built (`TopBar.tsx` search bar); **not functional yet** — no real search/filtering logic. |
+| Explore / Detail | As a young person, I want to bookmark an activity, so I can come back to it later. | Functional in-memory (`SavedContext.tsx`) — resets on app restart, needs persistence. |
+| Saved | As a young person, I want to see everything I've saved in one place. | Frontend built (`SavedScreen.tsx`). |
+| Activity Detail | As a young person, I want full details on an activity (what it takes, how long, difficulty) before committing. | Frontend built (`ActivityDetailScreen.tsx`), static placeholder copy. |
+| Profile | As a young person, I want to see my lore points, badges, and history, so progress feels earned. | Frontend built (`ProfileScreen.tsx`), all values hardcoded — needs a backend to be real. |
 
 **New for publishing (not yet built):**
 - Persisted user identity (even if anonymous/device-based) so saves and
@@ -149,6 +155,14 @@ Required regardless of which open decisions above get picked:
 - **Privacy Policy**: mandatory for both App Store and Play Store
   submission. Must disclose location use if/when a live location API is
   adopted, and any analytics/crash reporting SDKs added.
+- **Minors / COPPA**: the target audience (teens through mid-20s) includes
+  users under 18, and possibly under 13. This changes the compliance bar
+  significantly — COPPA (US) restricts data collection from under-13s,
+  and both stores require an accurate age rating plus extra scrutiny on
+  data collection, ads, and account creation for apps likely to be used
+  by minors. This should be explicitly designed for in Phase 2 (e.g.
+  no login requirement for core use, minimal data collection by default)
+  rather than discovered during store review.
 - **Terms of Service**: not strictly required by the stores but standard
   practice, especially before adding accounts or payments.
 - **Apple Developer Program account** ($99/year) — required for App Store
