@@ -7,7 +7,7 @@ import ExploreScreen from '../screens/ExploreScreen';
 import SavedScreen from '../screens/SavedScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ActivityDetailScreen from '../screens/ActivityDetailScreen';
-import { colors, shadow } from '../theme/theme';
+import { colors } from '../theme/theme';
 import { RootStackParamList, TabParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -36,12 +36,13 @@ function TabNavigator() {
         tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.tabBarLabel,
         tabBarIcon: ({ focused, color, size }) => (
-          <View style={focused ? [styles.iconWrapActive, shadow.glow] : styles.iconWrap}>
+          <View style={styles.iconWrap}>
             <MaterialCommunityIcons
               name={focused ? tabIconActive[route.name] : tabIcon[route.name]}
               color={color}
-              size={size - 2}
+              size={size}
             />
+            {focused ? <View style={styles.activeDot} /> : null}
           </View>
         ),
       })}
@@ -80,18 +81,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   iconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingTop: 4,
   },
-  iconWrapActive: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.orangeMuted,
+  activeDot: {
+    marginTop: 4,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.orange,
   },
 });

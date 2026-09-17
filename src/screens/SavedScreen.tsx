@@ -3,6 +3,9 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ActivityCard from '../components/ActivityCard';
+import TopBar from '../components/TopBar';
+import PillHeader from '../components/PillHeader';
+import SectionPill from '../components/SectionPill';
 import { activities } from '../data/activities';
 import { colors, fonts, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
@@ -17,8 +20,9 @@ export default function SavedScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>Your Legend Log</Text>
-        <Text style={styles.title}>Saved Activities</Text>
+        <TopBar loreBalance={1240} showSearch={false} />
+        <PillHeader title="SAVED" />
+        <SectionPill label="Your Legend Log" count={savedActivities.length} />
       </View>
 
       <FlatList
@@ -54,19 +58,6 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: spacing.lg,
-    marginTop: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  eyebrow: {
-    color: colors.orangeBright,
-    fontSize: 12,
-    ...fonts.label,
-    marginBottom: 6,
-  },
-  title: {
-    color: colors.textPrimary,
-    fontSize: 24,
-    ...fonts.display,
   },
   listContent: {
     paddingHorizontal: spacing.lg,

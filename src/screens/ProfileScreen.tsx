@@ -3,6 +3,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
+import TopBar from '../components/TopBar';
+import PillHeader from '../components/PillHeader';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 
 const stats = [
@@ -31,6 +33,9 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <TopBar loreBalance={1240} showSearch={false} />
+        <PillHeader title="PROFILE" />
+
         <View style={styles.profileHeader}>
           <View style={styles.avatar}>
             <MaterialCommunityIcons name="account" size={38} color={colors.orange} />
