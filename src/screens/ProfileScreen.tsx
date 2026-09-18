@@ -48,7 +48,10 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
   const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setStatsLoading(false);
+      return;
+    }
     let cancelled = false;
 
     (async () => {

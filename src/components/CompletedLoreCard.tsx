@@ -2,19 +2,34 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CompletedLoreEntry } from '../data/completedLore';
+import { supabase } from '../lib/supabase';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 
 export default function CompletedLoreCard({ entry }: { entry: CompletedLoreEntry }) {
   const [isSummarizing, setIsSummarizing] = useState(false);
-  const [showSummary, setShowSummary] = useState(false);
+  const [summaryText, setSummaryText] = useState<string | null>(null);
 
-  const handleSummarize = () => {
-    if (showSummary || isSummarizing) return;
+  const handleSummarize = async () => {
+    if (summaryText || isSummarizing) return;
     setIsSummarizing(true);
-    setTimeout(() => {
+
+    try {
+      const { data, error } = await supabase.functions.invoke<{ summary?: string; error?: string }>(
+        'summarize-lore',
+        { body: { note: entry.note } }
+      );
+      if (error || !data?.summary) {
+        throw error ?? new Error(data?.error ?? 'No summary returned');
+      }
+      setSummaryText(data.summary);
+    } catch {
+      // The Edge Function isn't deployed yet, or the call failed (no
+      // network, etc.) - fall back to the pre-written summary so the
+      // interaction still completes rather than dead-ending.
+      setSummaryText(entry.loreSummary);
+    } finally {
       setIsSummarizing(false);
-      setShowSummary(true);
-    }, 1100);
+    }
   };
 
   return (
@@ -37,13 +52,13 @@ export default function CompletedLoreCard({ entry }: { entry: CompletedLoreEntry
 
       <Text style={styles.note}>{entry.note}</Text>
 
-      {showSummary ? (
+      {summaryText ? (
         <View style={styles.summaryBox}>
           <View style={styles.summaryLabelRow}>
             <MaterialCommunityIcons name="creation" size={13} color={colors.orangeBright} />
             <Text style={styles.summaryLabel}>AI Lore Summary</Text>
           </View>
-          <Text style={styles.summaryText}>&ldquo;{entry.loreSummary}&rdquo;</Text>
+          <Text style={styles.summaryText}>&ldquo;{summaryText}&rdquo;</Text>
         </View>
       ) : (
         <Pressable

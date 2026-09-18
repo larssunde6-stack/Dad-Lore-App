@@ -86,8 +86,9 @@ calibrate against.
   publish to and enforce moderation server-side.
 - Push notifications / re-engagement campaigns.
 - Monetization of any kind (see open decision in §8).
-- Real AI-generated lore summaries (the "summarize my lore" action is
-  mocked with pre-written text — see §11 Phase 2/3 for why).
+- ~~Real AI-generated lore summaries~~ — **done, pending your deploy
+  step**: the Edge Function is written (`supabase/functions/
+  summarize-lore`); see §11 Phase 2/3 for the one-time activation steps.
 
 ## 6. Core Features / User Stories
 
@@ -100,7 +101,7 @@ Mapped to what's already built in `src/screens/`:
 | Explore / Detail | As a young person, I want to bookmark lore, so I can come back to it later. | **Live**: `SavedContext.tsx` reads/writes Supabase's `saved_lore` table, scoped to an anonymous identity via Row Level Security. Survives app restarts; does not yet survive a reinstall or a new device (that needs real accounts, not just anonymous ones). |
 | Map | As a young person, I want to see the closest lore to me on a map, and get directions without the app building its own navigation. | Frontend built (`MapScreen.tsx`) — real device geolocation (`expo-location`) sorts the live `activities` list by distance; "Directions" hands off to Google/Apple Maps via `Linking`. Map visual is a decorative banner, not an interactive map (see §7). |
 | Lore (To Do) | As a young person, I want my saved lore in one place. | Frontend built (`LoreScreen.tsx`, "To Do" segment) — same Supabase-backed data as the Explore/Detail bookmark row above. |
-| Lore (Completed) | As a young person, I want a private log of lore I've actually done, that nobody else can see. | **Live**: `LoreScreen.tsx` reads/writes Supabase's `completed_lore` table. Row Level Security — not just app UI — is what actually enforces "nobody else can see this." The original 5 seed entries are inserted once per new anonymous identity on first load, rather than hardcoded. Includes a "Summarize My Lore" action; **the summary is still pre-written per entry, not a live AI call** (see §11 Phase 2/3 for why). |
+| Lore (Completed) | As a young person, I want a private log of lore I've actually done, that nobody else can see. | **Live**: `LoreScreen.tsx` reads/writes Supabase's `completed_lore` table. Row Level Security — not just app UI — is what actually enforces "nobody else can see this." The original 5 seed entries are inserted once per new anonymous identity on first load, rather than hardcoded. Includes a "Summarize My Lore" action calling a real Edge Function (`supabase/functions/summarize-lore`) that proxies to Claude; **falls back to a pre-written per-entry summary if the function isn't deployed yet** (see §11 Phase 2/3 for the one-time deploy step). |
 | Activity Detail | As a young person, I want full details on a lore listing (what it takes, how long, difficulty) before committing. | Frontend built (`ActivityDetailScreen.tsx`), static placeholder copy; the activity data itself is live (see Explore row). |
 | Activity Detail | As a young person, I want to report lore that's inappropriate or unsafe. | **Live**: `ReportModal.tsx` inserts into Supabase's `reports` table (activity id, reason, reporter's anonymous user id). Nobody, including the reporter, can read reports back through the app — only a future moderator tool using the `service_role` key can, matching the UGC note in §10. |
 | Profile | As a young person, I want to see my lore points, badges, and history, so progress feels earned. | Frontend built (`ProfileScreen.tsx`), all values still hardcoded — this screen wasn't part of this backend pass; lore points aren't computed from real activity yet. |
@@ -127,7 +128,8 @@ Mapped to what's already built in `src/screens/`:
   moderation word filter (`src/utils/moderation.ts`, wrapping `bad-words`)
   is still client-side only and still unattached to any input — there's
   still no lore-submission form for it to guard.
-- **A real "summarize my lore" endpoint** — see §11 Phase 2/3.
+- ~~A real "summarize my lore" endpoint~~ — **done, pending your deploy
+  step**: see §11 Phase 2/3.
 
 ## 7. Platform & Technical Approach
 
@@ -274,14 +276,25 @@ phase belongs in that phase's own plan when it's time, not here.
      rate limiting specifically doesn't apply until real accounts exist.
   5. **Password rules** — not applicable yet (no passwords).
   6. **Password breach check** — not applicable yet (no passwords).
-- **Phase 2/3 — Real AI lore summaries**: the "Summarize My Lore" action in
-  the Completed diary is currently mocked (pre-written text per seed
-  entry) rather than a live call to an LLM. Calling an LLM directly from
-  the client would mean shipping its API key inside the app bundle, which
-  is extractable from the compiled app — a real credential leak, and
-  exactly what the security checklist above exists to prevent. Real
-  summarization needs a backend endpoint that holds the key server-side
-  and proxies the request.
+- **Phase 2/3 — Real AI lore summaries**: **code landed, not yet
+  deployed.** `supabase/functions/summarize-lore/index.ts` is a Supabase
+  Edge Function that proxies to the Claude API, holding the key
+  server-side rather than shipping it in the app bundle (a client-side
+  call would mean the key is extractable from the compiled app — exactly
+  what the security checklist above exists to prevent). It's deployed
+  with default JWT verification on, so only requests carrying a valid
+  Supabase session (anonymous sessions included) can call it.
+  `CompletedLoreCard.tsx` calls it via `supabase.functions.invoke`, and
+  falls back to the original pre-written per-entry summary if the call
+  fails (function not deployed yet, or a network hiccup) so the
+  interaction never dead-ends.
+  **To activate it:**
+  1. Get an API key from [console.anthropic.com](https://console.anthropic.com).
+  2. Install the Supabase CLI (`npm install -g supabase`), then
+     `supabase login` and `supabase link --project-ref <your-project-ref>`.
+  3. `supabase secrets set ANTHROPIC_API_KEY=sk-ant-...`
+  4. `supabase functions deploy summarize-lore`
+  After that, "Summarize My Lore" calls Claude for real.
 - **Phase 3 — Real data & search**: replace placeholder activities with
   real (curated or API-sourced) data; the search/filter logic already
   built in Phase 0 just needs a real dataset behind it.

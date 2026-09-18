@@ -53,7 +53,10 @@ export default function LoreScreen({ navigation }: Props) {
   const [completedLoading, setCompletedLoading] = useState(true);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setCompletedLoading(false);
+      return;
+    }
     let cancelled = false;
 
     (async () => {
