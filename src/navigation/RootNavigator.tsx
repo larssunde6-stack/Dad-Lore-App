@@ -68,6 +68,11 @@ export default function RootNavigator() {
         component={ActivityDetailScreen}
         options={{ animation: 'slide_from_right' }}
       />
+      <Stack.Screen
+        name="Legal"
+        component={LegalScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
     </Stack.Navigator>
   );
 }

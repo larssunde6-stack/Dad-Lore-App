@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Category } from '../data/activities';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
+import { TabScreenProps } from '../navigation/types';
 
 const LEVEL_SIZE = 250;
 
@@ -31,15 +32,16 @@ const badgeDefs: BadgeDef[] = [
 ];
 
 const menuItems = [
-  { label: 'Activity History', icon: 'history' as const },
-  { label: 'Notification Settings', icon: 'bell-outline' as const },
-  { label: 'Home Location', icon: 'map-marker-outline' as const },
-  { label: 'Help & Support', icon: 'help-circle-outline' as const },
+  { label: 'Activity History', icon: 'history' as const, route: null },
+  { label: 'Notification Settings', icon: 'bell-outline' as const, route: null },
+  { label: 'Home Location', icon: 'map-marker-outline' as const, route: null },
+  { label: 'Privacy & Terms', icon: 'shield-check-outline' as const, route: 'Legal' as const },
+  { label: 'Help & Support', icon: 'help-circle-outline' as const, route: null },
 ];
 
 type CompletedStat = { activityTitle: string; loreEarned: number };
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
   const { userId } = useAuth();
   const { activities } = useActivities();
   const [completed, setCompleted] = useState<CompletedStat[]>([]);
@@ -149,8 +151,14 @@ export default function ProfileScreen() {
         <Text style={styles.sectionTitle}>Settings</Text>
         <View style={styles.menu}>
           {menuItems.map((item, index) => (
-            <View
+            <Pressable
               key={item.label}
+              disabled={!item.route}
+              onPress={() => {
+                if (item.route === 'Legal') {
+                  navigation.navigate('Legal');
+                }
+              }}
               style={[styles.menuItem, index !== menuItems.length - 1 && styles.menuDivider]}
             >
               <View style={styles.menuLeft}>
@@ -158,7 +166,7 @@ export default function ProfileScreen() {
                 <Text style={styles.menuLabel}>{item.label}</Text>
               </View>
               <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textMuted} />
-            </View>
+            </Pressable>
           ))}
         </View>
 
