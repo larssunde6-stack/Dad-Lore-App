@@ -58,19 +58,27 @@ calibrate against.
 ## 5. Scope
 
 ### In scope for v1
+
+**MVP re-scope (current):** see §5a below — the diary and Map are paused,
+not removed, in favor of a leaner core loop.
+
 - Browse and **search** nearby "lore to do" (currently: static/curated
   list, client-side search; see §8 for the real-data decision).
-- A **Map** view of nearby lore, sorted by distance, handing off to
-  Google/Apple Maps for actual directions rather than building navigation.
+- ~~A **Map** view of nearby lore, sorted by distance, handing off to
+  Google/Apple Maps for actual directions rather than building
+  navigation.~~ **Paused for MVP** — see §5a.
 - Save/bookmark lore to do for later.
-- A **private, personal "completed lore" diary** — explicitly never shown
-  to other users — separate from the public browsable lore feed. Includes
-  a "summarize my lore" action (currently mocked; see §6 and §11 Phase 2/3).
+- **Mark an activity as done to earn XP**, landing it in the "Your Lore"
+  tab — see §5a. Replaces the private diary as the v1 core loop.
+- ~~A **private, personal "completed lore" diary** — explicitly never
+  shown to other users — separate from the public browsable lore feed.
+  Includes a "summarize my lore" action (currently mocked; see §6 and
+  §11 Phase 2/3).~~ **Paused for MVP** — see §5a.
 - View full activity detail (description, tags, "what you'll need," stats).
 - A **Report** action on published lore, plus a moderation word-filter
   utility (not yet wired to any submission input — see Out of scope).
-- Basic profile: lore points, activity history, badges (currently mocked;
-  needs to be driven by real usage once a backend exists).
+- Basic profile: lore points, activity history, badges — **live**, driven
+  by real `activity_completions` rows (see §5a, §6).
 - Everything required to legally and technically submit to the App Store
   and Play Store (see §10, §11).
 
@@ -90,6 +98,48 @@ calibrate against.
   step**: the Edge Function is written (`supabase/functions/
   summarize-lore`); see §11 Phase 2/3 for the one-time activation steps.
 
+## 5a. MVP Re-scope: Complete → Earn XP → Your Lore
+
+After Map and the private diary (notes + AI summary) were built out, the
+core loop got re-scoped to something narrower and sharper: **browse
+activities → mark one done → earn XP → see it in the "Your Lore" tab.**
+No personal notes, no AI summary, no public/private debate on the
+diary — that's deferred until there's real usage to justify it. Map is
+paused too — true geo-discovery ("find hills near me") isn't solved by
+the current fixed-coordinate approach (a curated list with hand-placed
+lat/lng, not a live map), and shipping it as-is would over-promise.
+
+**Nothing is deleted.** The diary (`CompletedLoreCard.tsx`,
+`completedLore.ts`, the `completed_lore` table, the `summarize-lore`
+Edge Function) and `MapScreen.tsx` stay fully intact in the repo, just
+unwired from navigation — re-adding them later is a few import/
+registration lines, not a rebuild. Report and moderation are untouched;
+they were always tied to the public "lore to do" listings, never the
+diary.
+
+**What replaced them:**
+- A new `activity_completions` table (`supabase/migrations/
+  0002_activity_completions.sql`) logs each "Mark as Done" tap:
+  `user_id`, `activity_id`, `xp_earned`, `completed_at`. Per-user
+  SELECT/INSERT via RLS, same pattern as `saved_lore`. No UPDATE/DELETE
+  yet — no "undo" in this pass.
+- **XP formula**: `xp = activity.loreRating * 20` (range 20–100).
+- **Activities are repeatable** — completing the same one again logs
+  another entry and more XP, matching "collect lore" rather than a
+  one-time checklist.
+- **Honor system, deliberately** — "Mark as Done" just inserts a row;
+  nothing verifies the activity actually happened. There's no
+  leaderboard or social comparison in this app, so nobody's incentivized
+  to lie to a tracker only they see (same trust model as Duolingo
+  streaks or most habit trackers). Real verification (photo evidence,
+  location-check) is a bigger ask than this MVP needs — both reopen
+  complexity just deferred with the diary (UGC/moderation/storage) or
+  are trivially spoofable. Revisit only if the app adds competitive/
+  social features or actual abuse shows up.
+- Profile's lore points, activities-done count, and badges are now
+  **live**, computed from real `activity_completions` rows instead of
+  hardcoded values.
+
 ## 6. Core Features / User Stories
 
 Mapped to what's already built in `src/screens/`:
@@ -99,12 +149,13 @@ Mapped to what's already built in `src/screens/`:
 | Explore | As a young person, I want to browse nearby lore grouped by relevance, so I can quickly find something worth doing. | **Live**: `ExploreScreen.tsx` reads from Supabase's `activities` table via `useActivities.ts`, not a hardcoded import. Content is still curated (same 11 rows, now in Postgres instead of `src/data/activities.ts`) — the data-source decision in §8 is about where content comes from long-term, not whether it's live. |
 | Explore | As a young person, I want to search for lore ideas (activities, sidequests), so I can find something specific. | **Functional** client-side search (`TopBar.tsx` + `ExploreScreen.tsx`) — filters the now-live dataset by title/blurb/tags/category. |
 | Explore / Detail | As a young person, I want to bookmark lore, so I can come back to it later. | **Live**: `SavedContext.tsx` reads/writes Supabase's `saved_lore` table, scoped to an anonymous identity via Row Level Security. Survives app restarts; does not yet survive a reinstall or a new device (that needs real accounts, not just anonymous ones). |
-| Map | As a young person, I want to see the closest lore to me on a map, and get directions without the app building its own navigation. | Frontend built (`MapScreen.tsx`) — real device geolocation (`expo-location`) sorts the live `activities` list by distance; "Directions" hands off to Google/Apple Maps via `Linking`. Map visual is a decorative banner, not an interactive map (see §7). |
+| Map | As a young person, I want to see the closest lore to me on a map, and get directions without the app building its own navigation. | **Paused for MVP** (see §5a) — code intact in `MapScreen.tsx`, unregistered from the tab navigator. Real device geolocation (`expo-location`) sorts the live `activities` list by distance; "Directions" hands off to Google/Apple Maps via `Linking`. Map visual is a decorative banner, not an interactive map (see §7). |
 | Lore (To Do) | As a young person, I want my saved lore in one place. | Frontend built (`LoreScreen.tsx`, "To Do" segment) — same Supabase-backed data as the Explore/Detail bookmark row above. |
-| Lore (Completed) | As a young person, I want a private log of lore I've actually done, that nobody else can see. | **Live**: `LoreScreen.tsx` reads/writes Supabase's `completed_lore` table. Row Level Security — not just app UI — is what actually enforces "nobody else can see this." The original 5 seed entries are inserted once per new anonymous identity on first load, rather than hardcoded. Includes a "Summarize My Lore" action calling a real Edge Function (`supabase/functions/summarize-lore`) that proxies to Claude; **falls back to a pre-written per-entry summary if the function isn't deployed yet** (see §11 Phase 2/3 for the one-time deploy step). |
+| Lore (Completed) | As a young person, I want to mark lore I've done and earn XP for it, and see it in one place. | **Live** (re-scoped, see §5a): `LoreScreen.tsx`'s "Completed" segment reads Supabase's `activity_completions` table, joined client-side to the `activities` list, rendered via `ActivityCard` with a completed badge instead of the bookmark button. The private diary (`completed_lore` table, `CompletedLoreCard.tsx`, "Summarize My Lore") is **paused, not removed** — see §5a. |
 | Activity Detail | As a young person, I want full details on a lore listing (what it takes, how long, difficulty) before committing. | Frontend built (`ActivityDetailScreen.tsx`), static placeholder copy; the activity data itself is live (see Explore row). |
+| Activity Detail | As a young person, I want to mark an activity as done and earn XP for it. | **Live** (new, see §5a): the CTA button inserts a row into `activity_completions` (`xp_earned = loreRating * 20`) and shows a brief "+XP · Added to Your Lore" confirmation. Honor system — no completion verification. |
 | Activity Detail | As a young person, I want to report lore that's inappropriate or unsafe. | **Live**: `ReportModal.tsx` inserts into Supabase's `reports` table (activity id, reason, reporter's anonymous user id). Nobody, including the reporter, can read reports back through the app — only a future moderator tool using the `service_role` key can, matching the UGC note in §10. |
-| Profile | As a young person, I want to see my lore points, badges, and history, so progress feels earned. | Frontend built (`ProfileScreen.tsx`), all values still hardcoded — this screen wasn't part of this backend pass; lore points aren't computed from real activity yet. |
+| Profile | As a young person, I want to see my lore points, badges, and history, so progress feels earned. | **Live** (re-scoped, see §5a): `ProfileScreen.tsx` computes lore points and activities-done from real `activity_completions` rows, and badges from the categories of completed activities — no more hardcoded values. |
 
 **New for publishing (not yet built):**
 - ~~Persisted user identity~~ — **done**: anonymous Supabase auth
@@ -112,8 +163,8 @@ Mapped to what's already built in `src/screens/`:
   completed lore, and reports are scoped to via Row Level Security. Real
   accounts (email/password, cross-device sync) are still future work —
   see the Security & Auth checklist under §11 Phase 2.
-- Lore points/badges on Profile are still hardcoded — not derived from
-  real `completed_lore` rows yet.
+- ~~Lore points/badges on Profile are still hardcoded~~ — **done**: now
+  derived from real `activity_completions` rows (see §5a).
 - A real *editorial* dataset behind search/browse/map — the data now
   lives in Postgres instead of a TS file, but it's still the same 11
   curated placeholder rows (see §8's data-source decision, which is
@@ -252,11 +303,15 @@ phase belongs in that phase's own plan when it's time, not here.
     (insert-only, unreadable by anyone through the client). `SavedContext`,
     `useActivities`, the Completed diary, and `ReportModal` all read/write
     Supabase now instead of local/hardcoded data.
+  - **MVP re-scope landed** (see §5a): `supabase/migrations/
+    0002_activity_completions.sql` adds the `activity_completions` table
+    (per-user via RLS) backing "Mark as Done," the Completed segment of
+    Lore, and Profile's stats — all now driven by real rows. Diary
+    (`completed_lore`) and Map are paused, not removed.
   - **Still open**: the data-source decision in §8 (this pass moved the
     same curated rows into Postgres — it didn't resolve curated-vs-API),
-    lore points/badges on Profile aren't computed from real data yet, and
-    there's still no admin tool (content changes go through the SQL
-    migration file or the Supabase dashboard directly).
+    and there's still no admin tool (content changes go through the SQL
+    migration files or the Supabase dashboard directly).
   - **Security & Auth Requirements checklist** — status per item now that
     anonymous auth is live:
   1. **No session/auth tokens in `localStorage` in plaintext.** **Partially

@@ -9,6 +9,7 @@ type Props = {
   onPress?: () => void;
   variant?: 'solid' | 'outline';
   style?: ViewStyle;
+  disabled?: boolean;
 };
 
 export default function PrimaryButton({
@@ -17,16 +18,19 @@ export default function PrimaryButton({
   onPress,
   variant = 'solid',
   style,
+  disabled,
 }: Props) {
   const isSolid = variant === 'solid';
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
       style={({ pressed }) => [
         styles.base,
         isSolid ? styles.solid : styles.outline,
         isSolid && shadow.glow,
         pressed && styles.pressed,
+        disabled && styles.disabled,
         style,
       ]}
     >
@@ -71,6 +75,9 @@ const styles = StyleSheet.create({
   pressed: {
     transform: [{ scale: 0.97 }],
     opacity: 0.92,
+  },
+  disabled: {
+    opacity: 0.6,
   },
   notch: {
     position: 'absolute',

@@ -52,8 +52,11 @@ function TabNavigator() {
       })}
     >
       <Tab.Screen name="Explore" component={ExploreScreen} />
-      <Tab.Screen name="Map" component={MapScreen} />
-      <Tab.Screen name="Lore" component={LoreScreen} />
+      {/* Map tab paused for MVP — true geo-discovery ("find hills near
+          me") isn't solved by the current fixed-coordinate approach.
+          MapScreen.tsx is untouched; re-add this line when ready. */}
+      {/* <Tab.Screen name="Map" component={MapScreen} /> */}
+      <Tab.Screen name="Lore" component={LoreScreen} options={{ tabBarLabel: 'Your Lore' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

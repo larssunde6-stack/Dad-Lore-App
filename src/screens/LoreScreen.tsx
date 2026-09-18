@@ -1,15 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ActivityCard from '../components/ActivityCard';
-import CompletedLoreCard from '../components/CompletedLoreCard';
 import TopBar from '../components/TopBar';
 import PillHeader from '../components/PillHeader';
 import SectionPill from '../components/SectionPill';
 import SegmentedControl from '../components/SegmentedControl';
 import { useActivities } from '../hooks/useActivities';
-import { completedLore as completedLoreSeed, CompletedLoreEntry } from '../data/completedLore';
+import { Activity } from '../data/activities';
 import { colors, fonts, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
 import { useAuth } from '../context/AuthContext';
@@ -20,26 +19,41 @@ type Segment = 'To Do' | 'Completed';
 
 type Props = TabScreenProps<'Lore'>;
 
-type CompletedLoreRow = {
+type CompletionRow = {
   id: string;
-  activity_title: string;
-  date_completed: string;
-  note: string;
-  lore_earned: number;
-  icon: string;
-  lore_summary: string;
+  activity_id: string;
+  xp_earned: number;
+  completed_at: string;
 };
 
-function mapCompletedRow(row: CompletedLoreRow): CompletedLoreEntry {
-  return {
-    id: row.id,
-    activityTitle: row.activity_title,
-    dateCompleted: row.date_completed,
-    note: row.note,
-    loreEarned: row.lore_earned,
-    icon: row.icon,
-    loreSummary: row.lore_summary,
-  };
+type CompletedItem = {
+  completionId: string;
+  activity: Activity;
+  xpEarned: number;
+  completedAt: string;
+};
+
+function mapRowsToItems(rows: CompletionRow[], activities: Activity[]): CompletedItem[] {
+  return rows
+    .map((row) => {
+      const activity = activities.find((a) => a.id === row.activity_id);
+      if (!activity) return null;
+      return {
+        completionId: row.id,
+        activity,
+        xpEarned: row.xp_earned,
+        completedAt: formatCompletedDate(row.completed_at),
+      };
+    })
+    .filter((item): item is CompletedItem => item !== null);
+}
+
+function formatCompletedDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  } catch {
+    return iso;
+  }
 }
 
 export default function LoreScreen({ navigation }: Props) {
@@ -49,7 +63,7 @@ export default function LoreScreen({ navigation }: Props) {
   const { userId } = useAuth();
   const savedActivities = activities.filter((a) => savedIds.has(a.id));
 
-  const [completedEntries, setCompletedEntries] = useState<CompletedLoreEntry[]>([]);
+  const [completionRows, setCompletionRows] = useState<CompletionRow[]>([]);
   const [completedLoading, setCompletedLoading] = useState(true);
 
   useEffect(() => {
@@ -61,10 +75,10 @@ export default function LoreScreen({ navigation }: Props) {
 
     (async () => {
       const { data, error } = await supabase
-        .from('completed_lore')
+        .from('activity_completions')
         .select('*')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .order('completed_at', { ascending: false });
 
       if (cancelled) return;
 
@@ -74,37 +88,7 @@ export default function LoreScreen({ navigation }: Props) {
         return;
       }
 
-      if (data && data.length > 0) {
-        setCompletedEntries((data as CompletedLoreRow[]).map(mapCompletedRow));
-        setCompletedLoading(false);
-        return;
-      }
-
-      // First time this device has an identity with no diary yet — seed
-      // the demo entries so there's something to look at, same content
-      // as before but now a real write instead of a hardcoded import.
-      const seedRows = completedLoreSeed.map((entry) => ({
-        user_id: userId,
-        activity_title: entry.activityTitle,
-        date_completed: entry.dateCompleted,
-        note: entry.note,
-        lore_earned: entry.loreEarned,
-        icon: entry.icon,
-        lore_summary: entry.loreSummary,
-      }));
-
-      const { data: inserted, error: insertError } = await supabase
-        .from('completed_lore')
-        .insert(seedRows)
-        .select('*');
-
-      if (cancelled) return;
-
-      if (insertError) {
-        console.warn('Failed to seed completed lore:', insertError.message);
-      } else if (inserted) {
-        setCompletedEntries((inserted as CompletedLoreRow[]).map(mapCompletedRow));
-      }
+      setCompletionRows((data as CompletionRow[] | null) ?? []);
       setCompletedLoading(false);
     })();
 
@@ -113,11 +97,16 @@ export default function LoreScreen({ navigation }: Props) {
     };
   }, [userId]);
 
+  const completedItems = useMemo(
+    () => mapRowsToItems(completionRows, activities),
+    [completionRows, activities]
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <TopBar loreBalance={1240} showSearch={false} />
-        <PillHeader title="LORE" />
+        <PillHeader title="YOUR LORE" />
         <SegmentedControl
           options={['To Do', 'Completed']}
           value={segment}
@@ -159,16 +148,11 @@ export default function LoreScreen({ navigation }: Props) {
         />
       ) : (
         <FlatList
-          data={completedEntries}
-          keyExtractor={(item) => item.id}
+          data={completedItems}
+          keyExtractor={(item) => item.completionId}
           contentContainerStyle={styles.listContent}
           ListHeaderComponent={
-            <View>
-              <SectionPill label="Your Private Diary" count={completedEntries.length} />
-              <Text style={styles.privacyNote}>
-                Only you can see this. Nobody else's completed lore shows up here either.
-              </Text>
-            </View>
+            <SectionPill label="Completed Lore" count={completedItems.length} />
           }
           ListEmptyComponent={
             completedLoading ? (
@@ -177,15 +161,28 @@ export default function LoreScreen({ navigation }: Props) {
               </View>
             ) : (
               <View style={styles.empty}>
-                <MaterialCommunityIcons name="notebook-outline" size={40} color={colors.textMuted} />
-                <Text style={styles.emptyTitle}>No lore logged yet</Text>
+                <MaterialCommunityIcons
+                  name="check-decagram-outline"
+                  size={40}
+                  color={colors.textMuted}
+                />
+                <Text style={styles.emptyTitle}>No lore completed yet</Text>
                 <Text style={styles.emptyBody}>
-                  Once you've done something worth remembering, log it here.
+                  Mark an activity as done from its detail page to start earning XP.
                 </Text>
               </View>
             )
           }
-          renderItem={({ item }) => <CompletedLoreCard entry={item} />}
+          renderItem={({ item }) => (
+            <ActivityCard
+              activity={item.activity}
+              completedAt={item.completedAt}
+              xpEarned={item.xpEarned}
+              onPress={() =>
+                navigation.navigate('ActivityDetail', { activityId: item.activity.id })
+              }
+            />
+          )}
         />
       )}
     </SafeAreaView>
@@ -204,12 +201,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
     flexGrow: 1,
-  },
-  privacyNote: {
-    color: colors.textMuted,
-    fontSize: 11.5,
-    marginTop: -spacing.sm,
-    marginBottom: spacing.md,
   },
   empty: {
     alignItems: 'center',

@@ -7,6 +7,8 @@ import ReportModal from '../components/ReportModal';
 import { useActivities } from '../hooks/useActivities';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 import { RootStackScreenProps } from '../navigation/types';
 
 const difficultyColor: Record<string, string> = {
@@ -19,7 +21,11 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
   const { activityId } = route.params;
   const { activities, loading, error } = useActivities();
   const { savedIds, toggleSaved } = useSaved();
+  const { userId } = useAuth();
   const [reportVisible, setReportVisible] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [confirmation, setConfirmation] = useState<{ xp: number } | null>(null);
+  const [completeError, setCompleteError] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -45,6 +51,29 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
   }
 
   const saved = savedIds.has(activity.id);
+
+  const handleMarkAsDone = async () => {
+    if (isCompleting || !userId) return;
+    setIsCompleting(true);
+    setCompleteError(null);
+
+    const xp = activity.loreRating * 20;
+    const { error: insertError } = await supabase.from('activity_completions').insert({
+      user_id: userId,
+      activity_id: activity.id,
+      xp_earned: xp,
+    });
+
+    setIsCompleting(false);
+
+    if (insertError) {
+      setCompleteError(insertError.message);
+      return;
+    }
+
+    setConfirmation({ xp });
+    setTimeout(() => setConfirmation(null), 2500);
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -136,7 +165,24 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
       </ScrollView>
 
       <View style={styles.bottomBar}>
-        <PrimaryButton label="Start This Adventure" icon="compass-outline" style={styles.ctaButton} />
+        {confirmation ? (
+          <View style={styles.confirmationBanner}>
+            <MaterialCommunityIcons name="check-circle" size={16} color={colors.success} />
+            <Text style={styles.confirmationText}>
+              +{confirmation.xp} XP · Added to Your Lore
+            </Text>
+          </View>
+        ) : null}
+        {completeError ? (
+          <Text style={styles.completeErrorText}>Couldn't log that: {completeError}</Text>
+        ) : null}
+        <PrimaryButton
+          label={isCompleting ? 'Marking as Done...' : 'Mark as Done'}
+          icon="check-decagram-outline"
+          onPress={handleMarkAsDone}
+          disabled={isCompleting}
+          style={styles.ctaButton}
+        />
       </View>
 
       <ReportModal
@@ -317,5 +363,28 @@ const styles = StyleSheet.create({
   },
   ctaButton: {
     width: '100%',
+  },
+  confirmationBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.orangeMuted,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.orangeDeep,
+    paddingVertical: 8,
+    marginBottom: spacing.sm,
+  },
+  confirmationText: {
+    color: colors.success,
+    fontSize: 13,
+    marginLeft: 6,
+    ...fonts.heading,
+  },
+  completeErrorText: {
+    color: '#E6807A',
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
   },
 });

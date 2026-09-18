@@ -39,7 +39,7 @@ const menuItems = [
   { label: 'Help & Support', icon: 'help-circle-outline' as const, route: null },
 ];
 
-type CompletedStat = { activityTitle: string; loreEarned: number };
+type CompletedStat = { activityId: string; xpEarned: number };
 
 export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
   const { userId } = useAuth();
@@ -56,14 +56,14 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
 
     (async () => {
       const { data, error } = await supabase
-        .from('completed_lore')
-        .select('activity_title, lore_earned')
+        .from('activity_completions')
+        .select('activity_id, xp_earned')
         .eq('user_id', userId);
 
       if (!cancelled) {
         if (!error && data) {
           setCompleted(
-            data.map((row) => ({ activityTitle: row.activity_title, loreEarned: row.lore_earned }))
+            data.map((row) => ({ activityId: row.activity_id, xpEarned: row.xp_earned }))
           );
         }
         setStatsLoading(false);
@@ -75,12 +75,12 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
     };
   }, [userId]);
 
-  const lorePoints = completed.reduce((sum, entry) => sum + entry.loreEarned, 0);
+  const lorePoints = completed.reduce((sum, entry) => sum + entry.xpEarned, 0);
   const activitiesDone = completed.length;
 
   const completedCategories = new Set(
     completed
-      .map((entry) => activities.find((a) => a.title === entry.activityTitle)?.category)
+      .map((entry) => activities.find((a) => a.id === entry.activityId)?.category)
       .filter((category): category is Category => Boolean(category))
   );
   const earnedBadgeCount = badgeDefs.filter((b) => completedCategories.has(b.category)).length;

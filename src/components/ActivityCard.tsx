@@ -15,9 +15,20 @@ type Props = {
   onPress?: () => void;
   saved?: boolean;
   onToggleSave?: () => void;
+  completedAt?: string;
+  xpEarned?: number;
 };
 
-export default function ActivityCard({ activity, onPress, saved, onToggleSave }: Props) {
+export default function ActivityCard({
+  activity,
+  onPress,
+  saved,
+  onToggleSave,
+  completedAt,
+  xpEarned,
+}: Props) {
+  const isCompleted = typeof xpEarned === 'number';
+
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.card, shadow.card, pressed && styles.pressed]}>
       <View style={styles.cornerFold} />
@@ -32,15 +43,23 @@ export default function ActivityCard({ activity, onPress, saved, onToggleSave }:
           <Text style={styles.title} numberOfLines={2}>
             {activity.title}
           </Text>
+          {completedAt ? <Text style={styles.completedDate}>{completedAt}</Text> : null}
         </View>
 
-        <Pressable hitSlop={10} onPress={onToggleSave} style={styles.saveButton}>
-          <MaterialCommunityIcons
-            name={saved ? 'bookmark' : 'bookmark-outline'}
-            size={20}
-            color={saved ? colors.orange : colors.textMuted}
-          />
-        </Pressable>
+        {isCompleted ? (
+          <View style={styles.completedBadge}>
+            <MaterialCommunityIcons name="check-circle" size={14} color={colors.success} />
+            <Text style={styles.completedBadgeText}>+{xpEarned}</Text>
+          </View>
+        ) : (
+          <Pressable hitSlop={10} onPress={onToggleSave} style={styles.saveButton}>
+            <MaterialCommunityIcons
+              name={saved ? 'bookmark' : 'bookmark-outline'}
+              size={20}
+              color={saved ? colors.orange : colors.textMuted}
+            />
+          </Pressable>
+        )}
       </View>
 
       <Text style={styles.blurb}>{activity.blurb}</Text>
@@ -138,8 +157,27 @@ const styles = StyleSheet.create({
     ...fonts.heading,
     lineHeight: 21,
   },
+  completedDate: {
+    color: colors.textMuted,
+    fontSize: 11.5,
+    marginTop: 3,
+  },
   saveButton: {
     padding: 2,
+  },
+  completedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.orangeMuted,
+    borderRadius: radii.pill,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  completedBadgeText: {
+    color: colors.success,
+    fontSize: 11.5,
+    marginLeft: 3,
+    ...fonts.heading,
   },
   blurb: {
     color: colors.textSecondary,
