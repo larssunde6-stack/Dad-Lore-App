@@ -1,0 +1,33 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="flameGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FF8A3D"/>
+      <stop offset="55%" stop-color="#FF6A1F"/>
+      <stop offset="100%" stop-color="#D8500F"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(512,512)">
+    <path
+      d="M 0,-330
+         C -110,-190 -230,-70 -230,90
+         C -230,270 -110,380 0,410
+         C 110,380 230,270 230,90
+         C 230,-30 150,-120 60,-210
+         C 90,-120 50,-40 -20,10
+         C 10,-90 -40,-220 0,-330
+         Z"
+      fill="url(#flameGrad)"
+    />
+    <path
+      d="M 0,-40
+         C -70,40 -110,120 -110,190
+         C -110,270 -55,320 0,335
+         C 55,320 110,270 110,190
+         C 110,130 75,80 30,30
+         C 45,75 20,115 -20,140
+         C -5,90 -35,10 0,-40
+         Z"
+      fill="#0C0B0D" opacity="0.6"
+    />
+  </g>
+</svg>
