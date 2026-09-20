@@ -20,11 +20,11 @@ export const colors = {
   overlay: 'rgba(0, 0, 0, 0.55)',
 
   riskGreen: '#2D9B2B',
-  riskYellow: '#F5A623',
+  riskYellow: '#F2C94C',
   riskRed: '#D40000',
-  riskGreenBg: 'rgba(45, 155, 43, 0.1)',
-  riskYellowBg: 'rgba(245, 166, 35, 0.1)',
-  riskRedBg: 'rgba(212, 0, 0, 0.1)',
+  riskGreenBg: 'rgba(45, 155, 43, 0.06)',
+  riskYellowBg: 'rgba(242, 201, 76, 0.06)',
+  riskRedBg: 'rgba(212, 0, 0, 0.06)',
 };
 
 export const gradients = {

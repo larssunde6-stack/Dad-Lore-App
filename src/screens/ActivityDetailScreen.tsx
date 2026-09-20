@@ -169,30 +169,7 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
         </View>
 
         <Text style={styles.sectionTitle}>The Lore</Text>
-        <Text style={styles.description}>
-          {activity.blurb} This is placeholder detail copy describing what makes this activity
-          worthy of future dad lore — the setup, the moment it goes sideways, and the retelling
-          that somehow gets better every time you tell it.
-        </Text>
-
-        <Text style={styles.sectionTitle}>Tags</Text>
-        <View style={styles.tagsWrap}>
-          {activity.tags.map((tag) => (
-            <View key={tag} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
-            </View>
-          ))}
-        </View>
-
-        <Text style={styles.sectionTitle}>What You'll Need</Text>
-        <View style={styles.checklist}>
-          {['A good attitude', 'Weather-ready gear', 'A story-worthy mindset'].map((item) => (
-            <View key={item} style={styles.checklistItem}>
-              <MaterialCommunityIcons name="check-circle-outline" size={16} color={colors.orange} />
-              <Text style={styles.checklistText}>{item}</Text>
-            </View>
-          ))}
-        </View>
+        <Text style={styles.description}>{activity.blurb}</Text>
       </ScrollView>
 
       <View style={styles.bottomBar}>
@@ -358,39 +335,6 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.lg,
-  },
-  tagsWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  tag: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.pill,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    marginRight: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  tagText: {
-    color: colors.textSecondary,
-    fontSize: 12,
-  },
-  checklist: {
-    paddingHorizontal: spacing.lg,
-  },
-  checklistItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  checklistText: {
-    color: colors.textSecondary,
-    fontSize: 13.5,
-    marginLeft: spacing.sm,
   },
   bottomBar: {
     position: 'absolute',
