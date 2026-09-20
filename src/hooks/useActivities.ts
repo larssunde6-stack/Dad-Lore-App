@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Activity } from '../data/activities';
 
@@ -35,29 +35,24 @@ export function useActivities() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const fetchActivities = useCallback(async () => {
+    const { data, error: fetchError } = await supabase
+      .from('activities')
+      .select('*')
+      .order('created_at', { ascending: true });
 
-    (async () => {
-      const { data, error: fetchError } = await supabase
-        .from('activities')
-        .select('*')
-        .order('created_at', { ascending: true });
-
-      if (cancelled) return;
-
-      if (fetchError) {
-        setError(fetchError.message);
-      } else {
-        setActivities((data as ActivityRow[] | null)?.map(mapRow) ?? []);
-      }
-      setLoading(false);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
+    if (fetchError) {
+      setError(fetchError.message);
+    } else {
+      setError(null);
+      setActivities((data as ActivityRow[] | null)?.map(mapRow) ?? []);
+    }
+    setLoading(false);
   }, []);
 
-  return { activities, loading, error };
+  useEffect(() => {
+    fetchActivities();
+  }, [fetchActivities]);
+
+  return { activities, loading, error, refetch: fetchActivities };
 }

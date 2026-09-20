@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
@@ -9,35 +9,30 @@ export function useCompletions() {
   const [completions, setCompletions] = useState<CompletionStat[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchCompletions = useCallback(async () => {
     if (!userId) {
+      setCompletions([]);
       setLoading(false);
       return;
     }
-    let cancelled = false;
 
-    (async () => {
-      const { data, error } = await supabase
-        .from('activity_completions')
-        .select('activity_id, xp_earned')
-        .eq('user_id', userId);
+    const { data, error } = await supabase
+      .from('activity_completions')
+      .select('activity_id, xp_earned')
+      .eq('user_id', userId);
 
-      if (!cancelled) {
-        if (!error && data) {
-          setCompletions(
-            data.map((row) => ({ activityId: row.activity_id, xpEarned: row.xp_earned }))
-          );
-        }
-        setLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
+    if (!error && data) {
+      setCompletions(data.map((row) => ({ activityId: row.activity_id, xpEarned: row.xp_earned })));
+    }
+    setLoading(false);
   }, [userId]);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchCompletions();
+  }, [fetchCompletions]);
 
   const xp = completions.reduce((sum, entry) => sum + entry.xpEarned, 0);
 
-  return { completions, xp, loading };
+  return { completions, xp, loading, refetch: fetchCompletions };
 }

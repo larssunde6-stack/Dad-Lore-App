@@ -73,12 +73,22 @@ export default function RootNavigator() {
       <Stack.Screen
         name="ActivityDetail"
         component={ActivityDetailScreen}
-        options={{ animation: 'slide_from_right' }}
+        options={{
+          animation: 'slide_from_right',
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
+          fullScreenGestureEnabled: true,
+        }}
       />
       <Stack.Screen
         name="Legal"
         component={LegalScreen}
-        options={{ animation: 'slide_from_right' }}
+        options={{
+          animation: 'slide_from_right',
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
+          fullScreenGestureEnabled: true,
+        }}
       />
     </Stack.Navigator>
   );

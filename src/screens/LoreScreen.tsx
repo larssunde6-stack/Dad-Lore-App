@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ActivityCard from '../components/ActivityCard';
@@ -65,7 +65,7 @@ function formatCompletedDate(iso: string): string {
 
 export default function LoreScreen({ navigation }: Props) {
   const [segment, setSegment] = useState<Segment>('To Do');
-  const { activities, loading: activitiesLoading } = useActivities();
+  const { activities, loading: activitiesLoading, refetch: refetchActivities } = useActivities();
   const { savedIds, pendingIds, toggleSaved } = useSaved();
   const { userId } = useAuth();
   const [filters, setFilters] = useState<ActivityFilters>(EMPTY_FILTERS);
@@ -77,6 +77,7 @@ export default function LoreScreen({ navigation }: Props) {
 
   const [completionRows, setCompletionRows] = useState<CompletionRow[]>([]);
   const [completedLoading, setCompletedLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
 
   const showToast = (next: ToastState) => {
@@ -95,36 +96,36 @@ export default function LoreScreen({ navigation }: Props) {
     }
   };
 
-  useEffect(() => {
+  const fetchCompletions = useCallback(async () => {
     if (!userId) {
       setCompletedLoading(false);
       return;
     }
-    let cancelled = false;
 
-    (async () => {
-      const { data, error } = await supabase
-        .from('activity_completions')
-        .select('*')
-        .eq('user_id', userId)
-        .order('completed_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('activity_completions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('completed_at', { ascending: false });
 
-      if (cancelled) return;
-
-      if (error) {
-        console.warn('Failed to load completed lore:', error.message);
-        setCompletedLoading(false);
-        return;
-      }
-
+    if (error) {
+      console.warn('Failed to load completed lore:', error.message);
+    } else {
       setCompletionRows((data as CompletionRow[] | null) ?? []);
-      setCompletedLoading(false);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
+    }
+    setCompletedLoading(false);
   }, [userId]);
+
+  useEffect(() => {
+    setCompletedLoading(true);
+    fetchCompletions();
+  }, [fetchCompletions]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refetchActivities(), fetchCompletions()]);
+    setRefreshing(false);
+  };
 
   const completedItems = useMemo(
     () =>
@@ -162,6 +163,13 @@ export default function LoreScreen({ navigation }: Props) {
           data={savedActivities}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.orange}
+            />
+          }
           ListHeaderComponent={
             <SectionPill label="Saved To Do" count={savedActivities.length} />
           }
@@ -195,6 +203,13 @@ export default function LoreScreen({ navigation }: Props) {
           data={completedItems}
           keyExtractor={(item) => item.completionId}
           contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.orange}
+            />
+          }
           ListHeaderComponent={
             <SectionPill label="Completed Lore" count={completedItems.length} />
           }

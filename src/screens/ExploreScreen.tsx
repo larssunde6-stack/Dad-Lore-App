@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -26,12 +26,19 @@ const ACTIVE_FILTER_HEIGHT = 34;
 
 export default function ExploreScreen({ navigation }: Props) {
   const { savedIds, pendingIds, toggleSaved } = useSaved();
-  const { activities, loading, error } = useActivities();
-  const { xp } = useCompletions();
+  const { activities, loading, error, refetch: refetchActivities } = useActivities();
+  const { xp, refetch: refetchCompletions } = useCompletions();
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<ActivityFilters>(EMPTY_FILTERS);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refetchActivities(), refetchCompletions()]);
+    setRefreshing(false);
+  };
 
   const showToast = (next: ToastState) => {
     setToast(next);
@@ -89,6 +96,14 @@ export default function ExploreScreen({ navigation }: Props) {
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.listContent, { paddingTop: listTopInset }]}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.orange}
+              progressViewOffset={listTopInset}
+            />
+          }
           ListEmptyComponent={
             loading ? (
               <View style={[styles.emptyState, styles.paddedTop]}>

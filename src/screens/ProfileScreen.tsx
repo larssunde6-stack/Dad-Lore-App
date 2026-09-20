@@ -1,5 +1,5 @@
-import React from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -67,8 +67,16 @@ const menuItems = [
 ];
 
 export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
-  const { activities } = useActivities();
-  const { completions, xp: lorePoints, loading: statsLoading } = useCompletions();
+  const { activities, refetch: refetchActivities } = useActivities();
+  const { completions, xp: lorePoints, loading: statsLoading, refetch: refetchCompletions } =
+    useCompletions();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refetchActivities(), refetchCompletions()]);
+    setRefreshing(false);
+  };
 
   const completedActivities = completions
     .map((entry) => activities.find((a) => a.id === entry.activityId))
@@ -87,7 +95,13 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.orange} />
+        }
+      >
         <TopBar xp={lorePoints} showSearch={false} />
         <PillHeader title="PROFILE" />
 

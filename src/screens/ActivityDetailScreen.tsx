@@ -7,6 +7,7 @@ import PrimaryButton from '../components/PrimaryButton';
 import ReportModal from '../components/ReportModal';
 import CenterToast, { ToastState } from '../components/CenterToast';
 import { useActivities } from '../hooks/useActivities';
+import { useCompletions } from '../hooks/useCompletions';
 import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
 import { useAuth } from '../context/AuthContext';
@@ -35,6 +36,7 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
   const { activityId } = route.params;
   const { activities, loading, error } = useActivities();
   const { savedIds, pendingIds, toggleSaved } = useSaved();
+  const { completions, refetch: refetchCompletions } = useCompletions();
   const { userId, isReady, authError } = useAuth();
   const [reportVisible, setReportVisible] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
@@ -70,8 +72,9 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
 
   const saved = savedIds.has(activity.id);
   const savePending = pendingIds.has(activity.id);
+  const isCompleted = completions.some((c) => c.activityId === activity.id);
 
-  const handleMarkAsDone = async () => {
+  const handleToggleComplete = async () => {
     if (isCompleting) return;
 
     if (!userId) {
@@ -85,12 +88,32 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
 
     setIsCompleting(true);
 
+    if (isCompleted) {
+      const { error: deleteError } = await supabase
+        .from('activity_completions')
+        .delete()
+        .eq('user_id', userId)
+        .eq('activity_id', activity.id);
+
+      setIsCompleting(false);
+
+      if (deleteError) {
+        showToast({ message: `Couldn't undo that: ${deleteError.message}`, tone: 'error' });
+        return;
+      }
+
+      await refetchCompletions();
+      showToast({ message: 'Removed from Your Lore', tone: 'success' });
+      return;
+    }
+
     const xp = activity.loreRating * 20;
-    const { error: insertError } = await supabase.from('activity_completions').insert({
-      user_id: userId,
-      activity_id: activity.id,
-      xp_earned: xp,
-    });
+    const { error: insertError } = await supabase
+      .from('activity_completions')
+      .upsert(
+        { user_id: userId, activity_id: activity.id, xp_earned: xp },
+        { onConflict: 'user_id,activity_id' }
+      );
 
     setIsCompleting(false);
 
@@ -99,6 +122,7 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
       return;
     }
 
+    await refetchCompletions();
     showToast({ message: `Marked as Done — Added to Your Lore (+${xp} XP)`, tone: 'success' });
   };
 
@@ -208,9 +232,16 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
 
       <View style={styles.bottomBar}>
         <PrimaryButton
-          label={isCompleting ? 'Marking as Done...' : 'Mark as Done'}
-          icon="check-decagram-outline"
-          onPress={handleMarkAsDone}
+          label={
+            isCompleting
+              ? 'Working...'
+              : isCompleted
+              ? 'Completed — Tap to Undo'
+              : 'Mark as Done'
+          }
+          icon={isCompleted ? 'check-decagram' : 'check-decagram-outline'}
+          variant={isCompleted ? 'outline' : 'solid'}
+          onPress={handleToggleComplete}
           disabled={isCompleting}
           style={styles.ctaButton}
         />
