@@ -4,6 +4,7 @@ import { useAuth } from './AuthContext';
 
 type SavedContextValue = {
   savedIds: Set<string>;
+  pendingIds: Set<string>;
   toggleSaved: (id: string) => void;
 };
 
@@ -12,6 +13,7 @@ const SavedContext = createContext<SavedContextValue | undefined>(undefined);
 export function SavedProvider({ children }: { children: React.ReactNode }) {
   const { userId } = useAuth();
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!userId) return;
@@ -34,9 +36,11 @@ export function SavedProvider({ children }: { children: React.ReactNode }) {
   }, [userId]);
 
   const toggleSaved = async (id: string) => {
-    if (!userId) return;
+    if (!userId || pendingIds.has(id)) return;
 
     const wasSaved = savedIds.has(id);
+
+    setPendingIds((prev) => new Set(prev).add(id));
 
     // Optimistic update, reverted below if the write fails.
     setSavedIds((prev) => {
@@ -72,9 +76,18 @@ export function SavedProvider({ children }: { children: React.ReactNode }) {
         });
       }
     }
+
+    setPendingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
   };
 
-  const value = useMemo(() => ({ savedIds, toggleSaved }), [savedIds, userId]);
+  const value = useMemo(
+    () => ({ savedIds, pendingIds, toggleSaved }),
+    [savedIds, pendingIds, userId]
+  );
 
   return <SavedContext.Provider value={value}>{children}</SavedContext.Provider>;
 }

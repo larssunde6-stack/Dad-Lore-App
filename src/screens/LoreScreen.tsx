@@ -59,7 +59,7 @@ function formatCompletedDate(iso: string): string {
 export default function LoreScreen({ navigation }: Props) {
   const [segment, setSegment] = useState<Segment>('To Do');
   const { activities, loading: activitiesLoading } = useActivities();
-  const { savedIds, toggleSaved } = useSaved();
+  const { savedIds, pendingIds, toggleSaved } = useSaved();
   const { userId } = useAuth();
   const savedActivities = activities.filter((a) => savedIds.has(a.id));
 
@@ -146,6 +146,7 @@ export default function LoreScreen({ navigation }: Props) {
             <ActivityCard
               activity={item}
               saved
+              savePending={pendingIds.has(item.id)}
               onToggleSave={() => toggleSaved(item.id)}
               onPress={() => navigation.navigate('ActivityDetail', { activityId: item.id })}
             />

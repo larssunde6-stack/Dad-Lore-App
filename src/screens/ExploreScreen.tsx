@@ -19,7 +19,7 @@ const HEADER_HEIGHT = 78;
 const ACTIVE_FILTER_HEIGHT = 34;
 
 export default function ExploreScreen({ navigation }: Props) {
-  const { savedIds, toggleSaved } = useSaved();
+  const { savedIds, pendingIds, toggleSaved } = useSaved();
   const { activities, loading, error } = useActivities();
   const { xp } = useCompletions();
   const [query, setQuery] = useState('');
@@ -88,6 +88,7 @@ export default function ExploreScreen({ navigation }: Props) {
               <ActivityCarouselCard
                 activity={item}
                 saved={savedIds.has(item.id)}
+                savePending={pendingIds.has(item.id)}
                 onToggleSave={() => toggleSaved(item.id)}
                 onPress={() => navigation.navigate('ActivityDetail', { activityId: item.id })}
               />

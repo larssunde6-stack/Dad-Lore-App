@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Activity } from '../data/activities';
@@ -21,6 +21,7 @@ type Props = {
   activity: Activity;
   onPress?: () => void;
   saved?: boolean;
+  savePending?: boolean;
   onToggleSave?: () => void;
   completedAt?: string;
   xpEarned?: number;
@@ -30,6 +31,7 @@ export default function ActivityCard({
   activity,
   onPress,
   saved,
+  savePending,
   onToggleSave,
   completedAt,
   xpEarned,
@@ -64,12 +66,21 @@ export default function ActivityCard({
             <Text style={styles.completedBadgeText}>+{xpEarned}</Text>
           </View>
         ) : (
-          <Pressable hitSlop={10} onPress={onToggleSave} style={styles.saveButton}>
-            <MaterialCommunityIcons
-              name={saved ? 'bookmark' : 'bookmark-outline'}
-              size={20}
-              color={saved ? colors.orange : colors.textMuted}
-            />
+          <Pressable
+            hitSlop={10}
+            onPress={onToggleSave}
+            disabled={savePending}
+            style={[styles.saveButton, savePending && styles.saveButtonPending]}
+          >
+            {savePending ? (
+              <ActivityIndicator size="small" color={colors.textMuted} />
+            ) : (
+              <MaterialCommunityIcons
+                name={saved ? 'bookmark' : 'bookmark-outline'}
+                size={20}
+                color={saved ? colors.orange : colors.textMuted}
+              />
+            )}
           </Pressable>
         )}
       </View>
@@ -171,6 +182,9 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     padding: 2,
+  },
+  saveButtonPending: {
+    opacity: 0.6,
   },
   completedBadge: {
     flexDirection: 'row',

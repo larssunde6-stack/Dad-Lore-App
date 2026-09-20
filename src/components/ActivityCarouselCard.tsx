@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Activity } from '../data/activities';
@@ -20,11 +20,18 @@ const riskBg: Record<Activity['riskLevel'], string> = {
 type Props = {
   activity: Activity;
   saved?: boolean;
+  savePending?: boolean;
   onPress?: () => void;
   onToggleSave?: () => void;
 };
 
-export default function ActivityCarouselCard({ activity, saved, onPress, onToggleSave }: Props) {
+export default function ActivityCarouselCard({
+  activity,
+  saved,
+  savePending,
+  onPress,
+  onToggleSave,
+}: Props) {
   return (
     <Pressable
       onPress={onPress}
@@ -47,12 +54,21 @@ export default function ActivityCarouselCard({ activity, saved, onPress, onToggl
         <View style={styles.kindTag}>
           <Text style={styles.kindTagText}>{activity.kind.join(' · ')}</Text>
         </View>
-        <Pressable onPress={onToggleSave} hitSlop={8} style={styles.iconBox}>
-          <MaterialCommunityIcons
-            name={saved ? 'bookmark' : 'bookmark-outline'}
-            size={17}
-            color={saved ? colors.orange : colors.textSecondary}
-          />
+        <Pressable
+          onPress={onToggleSave}
+          disabled={savePending}
+          hitSlop={8}
+          style={[styles.iconBox, savePending && styles.iconBoxPending]}
+        >
+          {savePending ? (
+            <ActivityIndicator size="small" color={colors.textSecondary} />
+          ) : (
+            <MaterialCommunityIcons
+              name={saved ? 'bookmark' : 'bookmark-outline'}
+              size={17}
+              color={saved ? colors.orange : colors.textSecondary}
+            />
+          )}
         </Pressable>
       </View>
 
@@ -133,6 +149,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  iconBoxPending: {
+    opacity: 0.6,
   },
   title: {
     color: colors.textPrimary,

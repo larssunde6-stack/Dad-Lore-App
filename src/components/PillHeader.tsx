@@ -59,15 +59,13 @@ const styles = StyleSheet.create({
     ...fonts.heading,
   },
   pill: {
-    backgroundColor: colors.orangeMuted,
-    borderWidth: 1,
-    borderColor: colors.orangeDeep,
+    backgroundColor: colors.orange,
     borderRadius: radii.pill,
     paddingVertical: 12,
     paddingHorizontal: 30,
   },
   pillText: {
-    color: colors.orangeBright,
+    color: colors.textOnOrange,
     fontSize: 18,
     ...fonts.display,
     letterSpacing: 1,

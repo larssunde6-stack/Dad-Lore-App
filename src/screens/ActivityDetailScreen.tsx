@@ -33,7 +33,7 @@ const riskLabel: Record<string, string> = {
 export default function ActivityDetailScreen({ route, navigation }: RootStackScreenProps<'ActivityDetail'>) {
   const { activityId } = route.params;
   const { activities, loading, error } = useActivities();
-  const { savedIds, toggleSaved } = useSaved();
+  const { savedIds, pendingIds, toggleSaved } = useSaved();
   const { userId } = useAuth();
   const [reportVisible, setReportVisible] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
@@ -64,6 +64,7 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
   }
 
   const saved = savedIds.has(activity.id);
+  const savePending = pendingIds.has(activity.id);
 
   const handleMarkAsDone = async () => {
     if (isCompleting || !userId) return;
@@ -105,12 +106,21 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
               <Pressable onPress={() => setReportVisible(true)} style={styles.backButton} hitSlop={10}>
                 <MaterialCommunityIcons name="flag-outline" size={18} color={colors.textPrimary} />
               </Pressable>
-              <Pressable onPress={() => toggleSaved(activity.id)} style={styles.backButton} hitSlop={10}>
-                <MaterialCommunityIcons
-                  name={saved ? 'bookmark' : 'bookmark-outline'}
-                  size={20}
-                  color={saved ? colors.orange : colors.textPrimary}
-                />
+              <Pressable
+                onPress={() => toggleSaved(activity.id)}
+                disabled={savePending}
+                style={[styles.backButton, savePending && styles.backButtonPending]}
+                hitSlop={10}
+              >
+                {savePending ? (
+                  <ActivityIndicator size="small" color={colors.textPrimary} />
+                ) : (
+                  <MaterialCommunityIcons
+                    name={saved ? 'bookmark' : 'bookmark-outline'}
+                    size={20}
+                    color={saved ? colors.orange : colors.textPrimary}
+                  />
+                )}
               </Pressable>
             </View>
           </View>
@@ -247,6 +257,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  backButtonPending: {
+    opacity: 0.6,
   },
   heroRightButtons: {
     flexDirection: 'row',
