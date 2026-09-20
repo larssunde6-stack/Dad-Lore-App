@@ -23,12 +23,12 @@ const badgeDefs: BadgeDef[] = [
   {
     label: 'Skill Builder',
     icon: 'school-outline',
-    earned: (c) => c.filter((a) => a.kind === 'Skill').length >= 3,
+    earned: (c) => c.filter((a) => a.kind.includes('Skill')).length >= 3,
   },
   {
     label: 'Fun Seeker',
     icon: 'emoticon-excited-outline',
-    earned: (c) => c.filter((a) => a.kind === 'Fun').length >= 3,
+    earned: (c) => c.filter((a) => a.kind.includes('Fun')).length >= 3,
   },
   {
     label: 'Type 1 Fanatic',

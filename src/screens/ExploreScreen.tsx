@@ -5,7 +5,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ActivityCarouselCard from '../components/ActivityCarouselCard';
 import TopBar from '../components/TopBar';
 import PillHeader from '../components/PillHeader';
-import SectionPill from '../components/SectionPill';
 import FilterModal, { ActivityFilters, EMPTY_FILTERS, isFiltersEmpty } from '../components/FilterModal';
 import { useActivities } from '../hooks/useActivities';
 import { useCompletions } from '../hooks/useCompletions';
@@ -27,7 +26,7 @@ export default function ExploreScreen({ navigation }: Props) {
     const q = query.trim().toLowerCase();
     return activities.filter((activity) => {
       if (filters.risk.length > 0 && !filters.risk.includes(activity.riskLevel)) return false;
-      if (filters.kind.length > 0 && !filters.kind.includes(activity.kind)) return false;
+      if (filters.kind.length > 0 && !filters.kind.some((k) => activity.kind.includes(k))) return false;
       if (filters.funType.length > 0 && !filters.funType.includes(activity.funType)) return false;
 
       if (!q) return true;
@@ -47,33 +46,38 @@ export default function ExploreScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.banner}>
+        <TopBar
+          xp={xp}
+          searchPlaceholder="Search activities, sidequests..."
+          searchValue={query}
+          onSearchChange={setQuery}
+          onProfilePress={() => navigation.navigate('Profile')}
+        />
+      </View>
+
+      <View style={styles.exploreHeader}>
+        <PillHeader title="EXPLORE" onFilterPress={() => setFilterModalVisible(true)} />
+        <View style={styles.metaRow}>
+          {filtersActive ? (
+            <Pressable onPress={() => setFilters(EMPTY_FILTERS)} style={styles.activeFilterChip}>
+              <MaterialCommunityIcons name="close-circle" size={14} color={colors.orangeBright} />
+              <Text style={styles.activeFilterText}>Filters active</Text>
+            </Pressable>
+          ) : (
+            <View />
+          )}
+          <Text style={styles.countText}>
+            {isSearching ? `${filtered.length} results` : `${filtered.length} total`}
+          </Text>
+        </View>
+      </View>
+
       <FlatList
         data={loading || error ? [] : filtered}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
-        ListHeaderComponent={
-          <View style={styles.paddedTop}>
-            <TopBar
-              xp={xp}
-              searchPlaceholder="Search activities, sidequests..."
-              searchValue={query}
-              onSearchChange={setQuery}
-              onProfilePress={() => navigation.navigate('Profile')}
-            />
-            <PillHeader title="EXPLORE" onFilterPress={() => setFilterModalVisible(true)} />
-            {filtersActive ? (
-              <Pressable onPress={() => setFilters(EMPTY_FILTERS)} style={styles.activeFilterChip}>
-                <MaterialCommunityIcons name="close-circle" size={14} color={colors.orangeBright} />
-                <Text style={styles.activeFilterText}>Filters active — tap to clear</Text>
-              </Pressable>
-            ) : null}
-            <SectionPill
-              label={isSearching ? `Results for "${query.trim()}"` : 'All Lore'}
-              count={filtered.length}
-            />
-          </View>
-        }
         ListEmptyComponent={
           loading ? (
             <View style={[styles.emptyState, styles.paddedTop]}>
@@ -129,7 +133,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  banner: {
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.background,
+  },
+  exploreHeader: {
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSubtle,
+    paddingBottom: spacing.sm,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
   listContent: {
+    paddingTop: spacing.md,
     paddingBottom: spacing.xxl,
   },
   paddedTop: {
@@ -138,20 +160,23 @@ const styles = StyleSheet.create({
   activeFilterChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
     backgroundColor: colors.orangeMuted,
     borderRadius: radii.pill,
     borderWidth: 1,
     borderColor: colors.orangeDeep,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    marginBottom: spacing.md,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
   },
   activeFilterText: {
     color: colors.orangeBright,
-    fontSize: 11.5,
-    marginLeft: 5,
+    fontSize: 11,
+    marginLeft: 4,
     ...fonts.heading,
+  },
+  countText: {
+    color: colors.textMuted,
+    fontSize: 11.5,
+    marginLeft: 'auto',
   },
   emptyState: {
     paddingVertical: spacing.xl,

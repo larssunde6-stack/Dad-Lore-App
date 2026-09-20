@@ -30,7 +30,7 @@ export default function ActivityCarouselCard({ activity, saved, onPress, onToggl
       style={({ pressed }) => [
         styles.card,
         shadow.card,
-        { backgroundColor: riskBg[activity.riskLevel], borderColor: riskColor[activity.riskLevel] },
+        { backgroundColor: riskBg[activity.riskLevel] },
         pressed && styles.pressed,
       ]}
     >
@@ -39,7 +39,7 @@ export default function ActivityCarouselCard({ activity, saved, onPress, onToggl
           <MaterialCommunityIcons name={activity.icon as any} size={32} color={colors.orange} />
         </View>
         <View style={styles.kindTag}>
-          <Text style={styles.kindTagText}>{activity.kind}</Text>
+          <Text style={styles.kindTagText}>{activity.kind.join(' · ')}</Text>
         </View>
         <Pressable onPress={onToggleSave} hitSlop={8} style={styles.iconBox}>
           <MaterialCommunityIcons
@@ -85,7 +85,6 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     borderRadius: radii.lg,
-    borderWidth: 1,
     padding: spacing.lg,
     marginBottom: spacing.lg,
   },

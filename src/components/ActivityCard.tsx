@@ -45,7 +45,7 @@ export default function ActivityCard({
         </View>
 
         <View style={styles.headerText}>
-          <Text style={styles.kindLabel}>{activity.kind}</Text>
+          <Text style={styles.kindLabel}>{activity.kind.join(' · ')}</Text>
           <Text style={styles.title} numberOfLines={2}>
             {activity.title}
           </Text>

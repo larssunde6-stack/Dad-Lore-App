@@ -118,9 +118,11 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
             <MaterialCommunityIcons name={activity.icon as any} size={46} color={colors.orange} />
           </View>
           <View style={styles.tagRow}>
-            <View style={styles.kindTag}>
-              <Text style={styles.kindTagText}>{activity.kind}</Text>
-            </View>
+            {activity.kind.map((k) => (
+              <View key={k} style={styles.kindTag}>
+                <Text style={styles.kindTagText}>{k}</Text>
+              </View>
+            ))}
             <View style={styles.kindTag}>
               <Text style={styles.kindTagText}>{activity.funType} Fun</Text>
             </View>
@@ -278,6 +280,7 @@ const styles = StyleSheet.create({
   },
   tagRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     marginBottom: spacing.sm,
   },
   kindTag: {
