@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -7,28 +7,54 @@ import TopBar from '../components/TopBar';
 import PillHeader from '../components/PillHeader';
 import AccessibilityStatement from '../components/AccessibilityStatement';
 import { useActivities } from '../hooks/useActivities';
-import { useAuth } from '../context/AuthContext';
-import { supabase } from '../lib/supabase';
-import { Category } from '../data/activities';
+import { useCompletions } from '../hooks/useCompletions';
+import { Activity } from '../data/activities';
+import { getLevel } from '../utils/level';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 import { TabScreenProps } from '../navigation/types';
 
-const LEVEL_SIZE = 250;
-
 type BadgeDef = {
-  category: Category;
   label: string;
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  earned: (completed: Activity[]) => boolean;
 };
 
 const badgeDefs: BadgeDef[] = [
-  { category: 'Outdoors', label: 'Trail Blazer', icon: 'hiking' },
-  { category: 'Bonfire Nights', label: 'Fire Starter', icon: 'campfire' },
-  { category: 'Behind the Wheel', label: 'Wheelman', icon: 'car-shift-pattern' },
-  { category: 'Backyard Games', label: 'Backyard Champ', icon: 'horseshoe' },
-  { category: 'Water', label: 'Lake Legend', icon: 'fish' },
-  { category: 'Roadside Legend', label: 'Road Scholar', icon: 'compass-outline' },
-  { category: 'Certified Bad Ideas', label: 'Chaos Agent', icon: 'alert-decagram-outline' },
+  {
+    label: 'Skill Builder',
+    icon: 'school-outline',
+    earned: (c) => c.filter((a) => a.kind === 'Skill').length >= 3,
+  },
+  {
+    label: 'Fun Seeker',
+    icon: 'emoticon-excited-outline',
+    earned: (c) => c.filter((a) => a.kind === 'Fun').length >= 3,
+  },
+  {
+    label: 'Type 1 Fanatic',
+    icon: 'lightning-bolt-outline',
+    earned: (c) => c.filter((a) => a.funType === 'Type 1').length >= 3,
+  },
+  {
+    label: 'Type 2 Legend',
+    icon: 'trophy-outline',
+    earned: (c) => c.filter((a) => a.funType === 'Type 2').length >= 3,
+  },
+  {
+    label: 'Green Zone',
+    icon: 'shield-check-outline',
+    earned: (c) => c.some((a) => a.riskLevel === 'green'),
+  },
+  {
+    label: 'Yellow Flag',
+    icon: 'alert-outline',
+    earned: (c) => c.some((a) => a.riskLevel === 'yellow'),
+  },
+  {
+    label: 'Red Alert',
+    icon: 'alert-decagram-outline',
+    earned: (c) => c.some((a) => a.riskLevel === 'red'),
+  },
 ];
 
 const menuItems = [
@@ -39,56 +65,18 @@ const menuItems = [
   { label: 'Help & Support', icon: 'help-circle-outline' as const, route: null },
 ];
 
-type CompletedStat = { activityId: string; xpEarned: number };
-
 export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
-  const { userId } = useAuth();
   const { activities } = useActivities();
-  const [completed, setCompleted] = useState<CompletedStat[]>([]);
-  const [statsLoading, setStatsLoading] = useState(true);
+  const { completions, xp: lorePoints, loading: statsLoading } = useCompletions();
 
-  useEffect(() => {
-    if (!userId) {
-      setStatsLoading(false);
-      return;
-    }
-    let cancelled = false;
+  const completedActivities = completions
+    .map((entry) => activities.find((a) => a.id === entry.activityId))
+    .filter((activity): activity is Activity => Boolean(activity));
 
-    (async () => {
-      const { data, error } = await supabase
-        .from('activity_completions')
-        .select('activity_id, xp_earned')
-        .eq('user_id', userId);
+  const activitiesDone = completions.length;
+  const earnedBadgeCount = badgeDefs.filter((b) => b.earned(completedActivities)).length;
 
-      if (!cancelled) {
-        if (!error && data) {
-          setCompleted(
-            data.map((row) => ({ activityId: row.activity_id, xpEarned: row.xp_earned }))
-          );
-        }
-        setStatsLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
-
-  const lorePoints = completed.reduce((sum, entry) => sum + entry.xpEarned, 0);
-  const activitiesDone = completed.length;
-
-  const completedCategories = new Set(
-    completed
-      .map((entry) => activities.find((a) => a.id === entry.activityId)?.category)
-      .filter((category): category is Category => Boolean(category))
-  );
-  const earnedBadgeCount = badgeDefs.filter((b) => completedCategories.has(b.category)).length;
-
-  const level = Math.floor(lorePoints / LEVEL_SIZE) + 1;
-  const pointsIntoLevel = lorePoints % LEVEL_SIZE;
-  const progressPct = Math.round((pointsIntoLevel / LEVEL_SIZE) * 100);
-  const pointsToNext = LEVEL_SIZE - pointsIntoLevel;
+  const { level, progressPct, pointsToNext } = getLevel(lorePoints);
 
   const stats = [
     { label: 'Lore Points', value: lorePoints.toLocaleString(), icon: 'fire' as const },
@@ -99,7 +87,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <TopBar loreBalance={lorePoints} showSearch={false} />
+        <TopBar xp={lorePoints} showSearch={false} />
         <PillHeader title="PROFILE" />
 
         <View style={styles.profileHeader}>
@@ -135,7 +123,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
         <Text style={styles.sectionTitle}>Badges</Text>
         <View style={styles.badgeGrid}>
           {badgeDefs.map((badge) => {
-            const earned = completedCategories.has(badge.category);
+            const earned = badge.earned(completedActivities);
             return (
               <View key={badge.label} style={[styles.badgeItem, !earned && styles.badgeItemLocked]}>
                 <View style={styles.badgeIcon}>

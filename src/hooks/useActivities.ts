@@ -1,37 +1,32 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Activity, Category } from '../data/activities';
+import { Activity } from '../data/activities';
 
 type ActivityRow = {
   id: string;
   title: string;
-  category: Category;
   icon: string;
   blurb: string;
-  location: string;
-  distance: string;
   duration: string;
   lore_rating: number;
-  difficulty: Activity['difficulty'];
+  risk_level: Activity['riskLevel'];
+  kind: Activity['kind'];
+  fun_type: Activity['funType'];
   tags: string[];
-  latitude: number;
-  longitude: number;
 };
 
 function mapRow(row: ActivityRow): Activity {
   return {
     id: row.id,
     title: row.title,
-    category: row.category,
     icon: row.icon,
     blurb: row.blurb,
-    location: row.location,
-    distance: row.distance,
     duration: row.duration,
     loreRating: row.lore_rating,
-    difficulty: row.difficulty,
+    riskLevel: row.risk_level,
+    kind: row.kind,
+    funType: row.fun_type,
     tags: row.tags,
-    coords: { latitude: row.latitude, longitude: row.longitude },
   };
 }
 

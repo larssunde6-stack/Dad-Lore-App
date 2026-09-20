@@ -4,10 +4,16 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Activity } from '../data/activities';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 
-const difficultyColor: Record<Activity['difficulty'], string> = {
-  Easy: '#7CB88F',
-  Moderate: '#FFB347',
-  Bold: '#FF6A1F',
+const riskColor: Record<Activity['riskLevel'], string> = {
+  green: colors.riskGreen,
+  yellow: colors.riskYellow,
+  red: colors.riskRed,
+};
+
+const riskLabel: Record<Activity['riskLevel'], string> = {
+  green: 'Low',
+  yellow: 'Medium',
+  red: 'High',
 };
 
 type Props = {
@@ -39,7 +45,7 @@ export default function ActivityCard({
         </View>
 
         <View style={styles.headerText}>
-          <Text style={styles.category}>{activity.category}</Text>
+          <Text style={styles.kindLabel}>{activity.kind}</Text>
           <Text style={styles.title} numberOfLines={2}>
             {activity.title}
           </Text>
@@ -66,16 +72,12 @@ export default function ActivityCard({
 
       <View style={styles.metaRow}>
         <View style={styles.metaItem}>
-          <MaterialCommunityIcons name="map-marker-outline" size={14} color={colors.textSecondary} />
-          <Text style={styles.metaText}>{activity.distance}</Text>
-        </View>
-        <View style={styles.metaItem}>
           <MaterialCommunityIcons name="clock-outline" size={14} color={colors.textSecondary} />
           <Text style={styles.metaText}>{activity.duration}</Text>
         </View>
-        <View style={[styles.difficultyBadge, { borderColor: difficultyColor[activity.difficulty] }]}>
-          <Text style={[styles.difficultyText, { color: difficultyColor[activity.difficulty] }]}>
-            {activity.difficulty}
+        <View style={[styles.difficultyBadge, { borderColor: riskColor[activity.riskLevel] }]}>
+          <Text style={[styles.difficultyText, { color: riskColor[activity.riskLevel] }]}>
+            {riskLabel[activity.riskLevel]}
           </Text>
         </View>
       </View>
@@ -145,7 +147,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingRight: spacing.md,
   },
-  category: {
+  kindLabel: {
     color: colors.orangeBright,
     fontSize: 11,
     ...fonts.label,

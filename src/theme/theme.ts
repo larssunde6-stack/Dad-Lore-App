@@ -18,6 +18,13 @@ export const colors = {
 
   success: '#7CB88F',
   overlay: 'rgba(0, 0, 0, 0.55)',
+
+  riskGreen: '#2D9B2B',
+  riskYellow: '#FFD700',
+  riskRed: '#D40000',
+  riskGreenBg: 'rgba(45, 155, 43, 0.1)',
+  riskYellowBg: 'rgba(255, 215, 0, 0.1)',
+  riskRedBg: 'rgba(212, 0, 0, 0.1)',
 };
 
 export const shadow = {

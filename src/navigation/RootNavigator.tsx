@@ -4,7 +4,11 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ExploreScreen from '../screens/ExploreScreen';
-import MapScreen from '../screens/MapScreen';
+// MapScreen import intentionally removed — its data model (device-distance
+// to curated coordinates) no longer compiles against the location-less
+// Activity type (see PRD §5b). The file itself is untouched on disk and
+// excluded from the TS build in tsconfig.json; re-import it here once
+// Map's data model is rebuilt.
 import LoreScreen from '../screens/LoreScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ActivityDetailScreen from '../screens/ActivityDetailScreen';
