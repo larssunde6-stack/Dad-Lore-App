@@ -11,10 +11,22 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { RootStackScreenProps } from '../navigation/types';
 
-const difficultyColor: Record<string, string> = {
-  Easy: '#7CB88F',
-  Moderate: '#FFB347',
-  Bold: '#FF6A1F',
+const riskColor: Record<string, string> = {
+  green: colors.riskGreen,
+  yellow: colors.riskYellow,
+  red: colors.riskRed,
+};
+
+const riskBg: Record<string, string> = {
+  green: colors.riskGreenBg,
+  yellow: colors.riskYellowBg,
+  red: colors.riskRedBg,
+};
+
+const riskLabel: Record<string, string> = {
+  green: 'Low Risk',
+  yellow: 'Medium Risk',
+  red: 'High Risk',
 };
 
 export default function ActivityDetailScreen({ route, navigation }: RootStackScreenProps<'ActivityDetail'>) {
@@ -78,7 +90,12 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.heroCard}>
+        <View
+          style={[
+            styles.heroCard,
+            { backgroundColor: riskBg[activity.riskLevel], borderColor: riskColor[activity.riskLevel] },
+          ]}
+        >
           <View style={styles.heroTop}>
             <Pressable onPress={() => navigation.goBack()} style={styles.backButton} hitSlop={10}>
               <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textPrimary} />
@@ -100,7 +117,14 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
           <View style={styles.heroIcon}>
             <MaterialCommunityIcons name={activity.icon as any} size={46} color={colors.orange} />
           </View>
-          <Text style={styles.category}>{activity.category}</Text>
+          <View style={styles.tagRow}>
+            <View style={styles.kindTag}>
+              <Text style={styles.kindTagText}>{activity.kind}</Text>
+            </View>
+            <View style={styles.kindTag}>
+              <Text style={styles.kindTagText}>{activity.funType} Fun</Text>
+            </View>
+          </View>
           <Text style={styles.title}>{activity.title}</Text>
 
           <View style={styles.loreRow}>
@@ -119,21 +143,20 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
 
         <View style={styles.statsGrid}>
           <View style={[styles.statBox, shadow.soft]}>
-            <MaterialCommunityIcons name="map-marker-outline" size={18} color={colors.orangeBright} />
-            <Text style={styles.statValue}>{activity.distance}</Text>
-            <Text style={styles.statLabel}>{activity.location}</Text>
-          </View>
-          <View style={[styles.statBox, shadow.soft]}>
             <MaterialCommunityIcons name="clock-outline" size={18} color={colors.orangeBright} />
             <Text style={styles.statValue}>{activity.duration}</Text>
             <Text style={styles.statLabel}>Est. duration</Text>
           </View>
           <View style={[styles.statBox, shadow.soft]}>
-            <MaterialCommunityIcons name="chart-line" size={18} color={colors.orangeBright} />
-            <Text style={[styles.statValue, { color: difficultyColor[activity.difficulty] }]}>
-              {activity.difficulty}
+            <MaterialCommunityIcons
+              name="alert-decagram-outline"
+              size={18}
+              color={riskColor[activity.riskLevel]}
+            />
+            <Text style={[styles.statValue, { color: riskColor[activity.riskLevel] }]}>
+              {riskLabel[activity.riskLevel]}
             </Text>
-            <Text style={styles.statLabel}>Difficulty</Text>
+            <Text style={styles.statLabel}>Danger Level</Text>
           </View>
         </View>
 
@@ -253,11 +276,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.lg,
   },
-  category: {
+  tagRow: {
+    flexDirection: 'row',
+    marginBottom: spacing.sm,
+  },
+  kindTag: {
+    backgroundColor: colors.background,
+    borderRadius: radii.pill,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    marginRight: spacing.sm,
+  },
+  kindTagText: {
     color: colors.orangeBright,
-    fontSize: 12,
+    fontSize: 10.5,
     ...fonts.label,
-    marginBottom: 6,
   },
   title: {
     color: colors.textPrimary,

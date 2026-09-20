@@ -3,5 +3,10 @@
   "compilerOptions": {
     "strict": true
   },
-  "exclude": ["node_modules", "supabase/functions"]
+  "exclude": [
+    "node_modules",
+    "supabase/functions",
+    "src/screens/MapScreen.tsx",
+    "src/utils/openInMaps.ts"
+  ]
 }

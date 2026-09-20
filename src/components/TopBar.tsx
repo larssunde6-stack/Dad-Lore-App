@@ -2,29 +2,31 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
+import { getLevel } from '../utils/level';
 
 type Props = {
-  loreBalance: number;
+  xp: number;
   showSearch?: boolean;
   searchPlaceholder?: string;
   searchValue?: string;
   onSearchChange?: (value: string) => void;
+  onProfilePress?: () => void;
 };
 
 export default function TopBar({
-  loreBalance,
+  xp,
   showSearch = true,
   searchPlaceholder,
   searchValue = '',
   onSearchChange,
+  onProfilePress,
 }: Props) {
+  const { level } = getLevel(xp);
+
   return (
     <View style={styles.row}>
       <View style={[styles.balanceChip, shadow.soft]}>
-        <View style={styles.balanceIcon}>
-          <MaterialCommunityIcons name="fire" size={16} color={colors.orange} />
-        </View>
-        <Text style={styles.balanceText}>{loreBalance.toLocaleString()}</Text>
+        <Text style={styles.balanceText}>Lvl. {level.toString().padStart(2, '0')}</Text>
       </View>
 
       {showSearch ? (
@@ -48,7 +50,11 @@ export default function TopBar({
         <View style={styles.spacer} />
       )}
 
-      <Pressable style={[styles.bellButton, shadow.soft]}>
+      <Pressable onPress={onProfilePress} style={[styles.iconButton, shadow.soft]}>
+        <MaterialCommunityIcons name="account-outline" size={18} color={colors.textPrimary} />
+      </Pressable>
+
+      <Pressable style={[styles.iconButton, shadow.soft]}>
         <MaterialCommunityIcons name="bell-outline" size={18} color={colors.textPrimary} />
         <View style={styles.bellDot} />
       </Pressable>
@@ -73,17 +79,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginRight: spacing.sm,
   },
-  balanceIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.orangeMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 6,
-  },
   balanceText: {
-    color: colors.textPrimary,
+    color: colors.orangeBright,
     fontSize: 12.5,
     ...fonts.heading,
   },
@@ -100,7 +97,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     paddingVertical: 9,
     paddingHorizontal: 12,
-    marginRight: spacing.sm,
   },
   searchInput: {
     flex: 1,
@@ -109,7 +105,7 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     paddingVertical: 0,
   },
-  bellButton: {
+  iconButton: {
     width: 34,
     height: 34,
     borderRadius: 17,
@@ -118,6 +114,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: spacing.sm,
   },
   bellDot: {
     position: 'absolute',

@@ -140,6 +140,39 @@ diary.
   **live**, computed from real `activity_completions` rows instead of
   hardcoded values.
 
+## 5b. Explore Redesign: Filters replace categories, no more places
+
+Following the MVP re-scope, Explore itself was overhauled: the app
+dropped location entirely (no more `location`/`distance`/lat-lng on any
+activity — this is now a flat list of things to go do, not nearby spots),
+replaced the 7-category system with **three filter dimensions** — danger
+level (green/yellow/red), Skill vs. Fun, and Type 1 Fun vs. Type 2 Fun
+("in the moment" vs. "sucked then, great story now") — and reseeded the
+catalog with 22 new activity ideas (placeholder lorem ipsum descriptions,
+to be replaced with real copy later).
+
+- `supabase/migrations/0003_activity_reseed.sql` drops `category`,
+  `location`, `distance`, `latitude`, `longitude`, and `difficulty` from
+  `activities`; adds `risk_level`, `kind`, `fun_type`; deletes the old 11
+  rows and reseeds the new 22. This cascade-deletes any saves/completions
+  tied to the old rows — a one-time reset, documented in the migration
+  file itself.
+- Each activity's card and detail hero now show a translucent background
+  tinted by `risk_level` (green `#2D9B2B` / yellow `#FFD700` / red
+  `#D40000` at 10% opacity) instead of a text difficulty label.
+- The filter icon already built into `PillHeader` (previously unwired) now
+  opens `FilterModal.tsx`, letting users filter Explore by any combination
+  of the three dimensions, combined with the existing text search.
+- The top bar across Explore/Your Lore/Profile now shows a computed
+  `Lvl. XX` chip (`src/utils/level.ts`) instead of a raw lore-points
+  count, and gained a profile-shortcut icon.
+- **Map is now doubly paused** — beyond being unwired from navigation
+  (§5a), `MapScreen.tsx` and `src/utils/openInMaps.ts` no longer even
+  compile against the current `Activity` type (no more `coords`), so
+  they're excluded from the TypeScript project in `tsconfig.json`. Both
+  files are untouched on disk; re-enabling Map later means rebuilding its
+  data model, not just re-registering the tab.
+
 ## 6. Core Features / User Stories
 
 Mapped to what's already built in `src/screens/`:
@@ -147,7 +180,7 @@ Mapped to what's already built in `src/screens/`:
 | Screen | User story | Status |
 |---|---|---|
 | Explore | As a young person, I want to browse nearby lore grouped by relevance, so I can quickly find something worth doing. | **Live**: `ExploreScreen.tsx` reads from Supabase's `activities` table via `useActivities.ts`, not a hardcoded import. Content is still curated (same 11 rows, now in Postgres instead of `src/data/activities.ts`) — the data-source decision in §8 is about where content comes from long-term, not whether it's live. |
-| Explore | As a young person, I want to search for lore ideas (activities, sidequests), so I can find something specific. | **Functional** client-side search (`TopBar.tsx` + `ExploreScreen.tsx`) — filters the now-live dataset by title/blurb/tags/category. |
+| Explore | As a young person, I want to search for lore ideas (activities, sidequests), so I can find something specific. | **Functional** client-side search (`TopBar.tsx` + `ExploreScreen.tsx`) — filters the now-live dataset by title/blurb/tags, combinable with the danger/Skill-Fun/Fun-Type filters from §5b. |
 | Explore / Detail | As a young person, I want to bookmark lore, so I can come back to it later. | **Live**: `SavedContext.tsx` reads/writes Supabase's `saved_lore` table, scoped to an anonymous identity via Row Level Security. Survives app restarts; does not yet survive a reinstall or a new device (that needs real accounts, not just anonymous ones). |
 | Map | As a young person, I want to see the closest lore to me on a map, and get directions without the app building its own navigation. | **Paused for MVP** (see §5a) — code intact in `MapScreen.tsx`, unregistered from the tab navigator. Real device geolocation (`expo-location`) sorts the live `activities` list by distance; "Directions" hands off to Google/Apple Maps via `Linking`. Map visual is a decorative banner, not an interactive map (see §7). |
 | Lore (To Do) | As a young person, I want my saved lore in one place. | Frontend built (`LoreScreen.tsx`, "To Do" segment) — same Supabase-backed data as the Explore/Detail bookmark row above. |

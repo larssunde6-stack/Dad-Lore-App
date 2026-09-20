@@ -102,10 +102,15 @@ export default function LoreScreen({ navigation }: Props) {
     [completionRows, activities]
   );
 
+  const xp = useMemo(
+    () => completionRows.reduce((sum, row) => sum + row.xp_earned, 0),
+    [completionRows]
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <TopBar loreBalance={1240} showSearch={false} />
+        <TopBar xp={xp} showSearch={false} onProfilePress={() => navigation.navigate('Profile')} />
         <PillHeader title="YOUR LORE" />
         <SegmentedControl
           options={['To Do', 'Completed']}
