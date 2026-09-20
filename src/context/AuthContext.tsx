@@ -12,11 +12,13 @@ type AuthContextValue = {
   authError: string | null;
   isAnonymous: boolean;
   email: string | null;
-  signUp: (email: string, password: string) => Promise<AuthActionResult>;
+  username: string | null;
+  signUp: (email: string, password: string, username: string) => Promise<AuthActionResult>;
   logIn: (email: string, password: string) => Promise<AuthActionResult>;
   logOut: () => Promise<AuthActionResult>;
   requestPasswordReset: (email: string) => Promise<AuthActionResult>;
   confirmPasswordReset: (email: string, code: string, newPassword: string) => Promise<AuthActionResult>;
+  updateUsername: (username: string) => Promise<AuthActionResult>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -114,8 +116,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const signUp = async (email: string, password: string): Promise<AuthActionResult> => {
-    const { error } = await supabase.auth.updateUser({ email, password });
+  const signUp = async (
+    email: string,
+    password: string,
+    username: string
+  ): Promise<AuthActionResult> => {
+    const { error } = await supabase.auth.updateUser({ email, password, data: { username } });
+    return toResult(error);
+  };
+
+  const updateUsername = async (username: string): Promise<AuthActionResult> => {
+    const { error } = await supabase.auth.updateUser({ data: { username } });
     return toResult(error);
   };
 
@@ -152,17 +163,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return toResult(updateError);
   };
 
+  const rawUsername = user?.user_metadata?.username;
+  const username = typeof rawUsername === 'string' && rawUsername.length > 0 ? rawUsername : null;
+
   const value: AuthContextValue = {
     userId: user?.id ?? null,
     isReady,
     authError,
     isAnonymous: user?.is_anonymous ?? true,
     email: user?.email ?? null,
+    username,
     signUp,
     logIn,
     logOut,
     requestPasswordReset,
     confirmPasswordReset,
+    updateUsername,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

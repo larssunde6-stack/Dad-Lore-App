@@ -21,7 +21,7 @@ const privacySections: Section[] = [
   },
   {
     heading: 'What we collect',
-    body: 'An anonymous device identity by default (no email, password, or name required), your saved activities, your private completed-lore diary, and any reports you submit. If you choose to create an optional account, we also collect your email and a securely hashed password, used only for login and password resets. If you use the Map tab, your location is used on-device to sort nearby lore and is never sent to or stored on our servers.',
+    body: 'An anonymous device identity by default (no email, password, or name required), your saved activities, your private completed-lore diary, and any reports you submit. If you choose to create an optional account, we also collect your email, a securely hashed password, and a username you pick (not required to be your real name). If you use the Map tab, your location is used on-device to sort nearby lore and is never sent to or stored on our servers.',
   },
   {
     heading: 'What we don\'t do',

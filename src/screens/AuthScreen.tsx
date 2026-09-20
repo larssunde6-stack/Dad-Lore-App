@@ -11,10 +11,12 @@ import { RootStackScreenProps } from '../navigation/types';
 type Mode = 'Sign Up' | 'Log In';
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
+const USERNAME_RE = /^[a-zA-Z0-9_]{2,24}$/;
 
 export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>) {
   const { signUp, logIn } = useAuth();
   const [mode, setMode] = useState<Mode>('Sign Up');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -26,6 +28,10 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
     setFormError(null);
     setFormErrorCode(null);
 
+    if (mode === 'Sign Up' && !USERNAME_RE.test(username.trim())) {
+      setFormError('Username must be 2-24 characters (letters, numbers, underscores).');
+      return;
+    }
     if (!EMAIL_RE.test(email.trim())) {
       setFormError('Enter a valid email address.');
       return;
@@ -42,7 +48,7 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
     setSubmitting(true);
     const result =
       mode === 'Sign Up'
-        ? await signUp(email.trim(), password)
+        ? await signUp(email.trim(), password, username.trim())
         : await logIn(email.trim(), password);
     setSubmitting(false);
 
@@ -94,6 +100,22 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
               device.
             </Text>
           </View>
+        ) : null}
+
+        {mode === 'Sign Up' ? (
+          <>
+            <Text style={styles.label}>Username</Text>
+            <TextInput
+              style={styles.input}
+              value={username}
+              onChangeText={setUsername}
+              placeholder="What should we call you?"
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="none"
+              autoCorrect={false}
+              maxLength={24}
+            />
+          </>
         ) : null}
 
         <Text style={styles.label}>Email</Text>

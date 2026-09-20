@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -67,14 +76,19 @@ const menuItems = [
   { label: 'Help & Support', icon: 'help-circle-outline' as const, route: null },
 ];
 
+const USERNAME_RE = /^[a-zA-Z0-9_]{2,24}$/;
+
 export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
   const { activities, refetch: refetchActivities } = useActivities();
   const { completions, xp: lorePoints, loading: statsLoading, refetch: refetchCompletions } =
     useCompletions();
-  const { isAnonymous, email, logOut } = useAuth();
+  const { isAnonymous, email, username, logOut, updateUsername } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [usernameDraft, setUsernameDraft] = useState('');
+  const [savingUsername, setSavingUsername] = useState(false);
 
   const showToast = (next: ToastState) => {
     setToast(next);
@@ -106,6 +120,37 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
     }
 
     showToast({ message: 'Logged out', tone: 'success' });
+  };
+
+  const handleStartEditUsername = () => {
+    setUsernameDraft(username ?? '');
+    setEditingUsername(true);
+  };
+
+  const handleCancelEditUsername = () => {
+    setEditingUsername(false);
+  };
+
+  const handleSaveUsername = async () => {
+    if (!USERNAME_RE.test(usernameDraft.trim())) {
+      showToast({
+        message: 'Username must be 2-24 characters (letters, numbers, underscores).',
+        tone: 'error',
+      });
+      return;
+    }
+
+    setSavingUsername(true);
+    const result = await updateUsername(usernameDraft.trim());
+    setSavingUsername(false);
+
+    if (result.status === 'error') {
+      showToast({ message: result.message, tone: 'error' });
+      return;
+    }
+
+    setEditingUsername(false);
+    showToast({ message: 'Username updated', tone: 'success' });
   };
 
   const completedActivities = completions
@@ -145,7 +190,42 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
             <MaterialCommunityIcons name="account" size={38} color={colors.orange} />
             <View style={styles.avatarRing} />
           </LinearGradient>
-          <Text style={styles.name}>{isAnonymous ? 'Guest' : email ?? 'Account'}</Text>
+          {editingUsername ? (
+            <View style={styles.nameEditRow}>
+              <TextInput
+                style={styles.nameInput}
+                value={usernameDraft}
+                onChangeText={setUsernameDraft}
+                placeholder="Username"
+                placeholderTextColor={colors.textMuted}
+                autoCapitalize="none"
+                autoCorrect={false}
+                maxLength={24}
+                autoFocus
+              />
+              {savingUsername ? (
+                <ActivityIndicator size="small" color={colors.orange} style={styles.nameEditIcon} />
+              ) : (
+                <>
+                  <Pressable onPress={handleSaveUsername} hitSlop={8} style={styles.nameEditIcon}>
+                    <MaterialCommunityIcons name="check" size={18} color={colors.orangeBright} />
+                  </Pressable>
+                  <Pressable onPress={handleCancelEditUsername} hitSlop={8} style={styles.nameEditIcon}>
+                    <MaterialCommunityIcons name="close" size={18} color={colors.textMuted} />
+                  </Pressable>
+                </>
+              )}
+            </View>
+          ) : (
+            <View style={styles.nameRow}>
+              <Text style={styles.name}>{isAnonymous ? 'Guest' : username ?? email ?? 'Account'}</Text>
+              {!isAnonymous ? (
+                <Pressable onPress={handleStartEditUsername} hitSlop={8} style={styles.nameEditIcon}>
+                  <MaterialCommunityIcons name="pencil-outline" size={16} color={colors.textMuted} />
+                </Pressable>
+              ) : null}
+            </View>
+          )}
           <Text style={styles.subtitle}>Level {level} · Lore in Progress</Text>
 
           <View style={styles.progressTrack}>
@@ -273,10 +353,34 @@ const styles = StyleSheet.create({
     borderColor: colors.orange,
     opacity: 0.4,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   name: {
     color: colors.textPrimary,
     fontSize: 20,
     ...fonts.display,
+  },
+  nameEditRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+  },
+  nameInput: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.sm,
+    paddingVertical: 8,
+    paddingHorizontal: spacing.md,
+    color: colors.textPrimary,
+    fontSize: 15,
+    ...fonts.heading,
+  },
+  nameEditIcon: {
+    marginLeft: spacing.sm,
   },
   subtitle: {
     color: colors.textSecondary,
