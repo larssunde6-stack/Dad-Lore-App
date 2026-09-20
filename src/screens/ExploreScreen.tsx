@@ -15,6 +15,9 @@ import { TabScreenProps } from '../navigation/types';
 
 type Props = TabScreenProps<'Explore'>;
 
+const HEADER_HEIGHT = 78;
+const ACTIVE_FILTER_HEIGHT = 34;
+
 export default function ExploreScreen({ navigation }: Props) {
   const { savedIds, toggleSaved } = useSaved();
   const { activities, loading, error } = useActivities();
@@ -45,6 +48,8 @@ export default function ExploreScreen({ navigation }: Props) {
     navigation.navigate('ActivityDetail', { activityId: pick.id });
   };
 
+  const listTopInset = filtersActive ? HEADER_HEIGHT + ACTIVE_FILTER_HEIGHT : HEADER_HEIGHT;
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.banner}>
@@ -57,53 +62,55 @@ export default function ExploreScreen({ navigation }: Props) {
         />
       </View>
 
-      <View style={styles.exploreHeader}>
-        <PillHeader
-          title="EXPLORE"
-          onFilterPress={() => setFilterModalVisible(true)}
-          countLabel={isSearching ? `${filtered.length} results` : `${filtered.length} total`}
-          compact
+      <View style={styles.listWrap}>
+        <FlatList
+          data={loading || error ? [] : filtered}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.listContent, { paddingTop: listTopInset }]}
+          ListEmptyComponent={
+            loading ? (
+              <View style={[styles.emptyState, styles.paddedTop]}>
+                <ActivityIndicator color={colors.orange} />
+              </View>
+            ) : error ? (
+              <View style={[styles.emptyState, styles.paddedTop]}>
+                <Text style={styles.emptyText}>Couldn't load lore: {error}</Text>
+              </View>
+            ) : (
+              <View style={[styles.emptyState, styles.paddedTop]}>
+                <Text style={styles.emptyText}>No lore matches. Try a different search or filter.</Text>
+              </View>
+            )
+          }
+          renderItem={({ item }) => (
+            <View style={styles.paddedTop}>
+              <ActivityCarouselCard
+                activity={item}
+                saved={savedIds.has(item.id)}
+                onToggleSave={() => toggleSaved(item.id)}
+                onPress={() => navigation.navigate('ActivityDetail', { activityId: item.id })}
+              />
+            </View>
+          )}
+          ListFooterComponent={<View style={styles.footerSpace} />}
         />
-        {filtersActive ? (
-          <Pressable onPress={() => setFilters(EMPTY_FILTERS)} style={styles.activeFilterChip}>
-            <MaterialCommunityIcons name="close-circle" size={14} color={colors.orangeBright} />
-            <Text style={styles.activeFilterText}>Filters active — tap to clear</Text>
-          </Pressable>
-        ) : null}
-      </View>
 
-      <FlatList
-        data={loading || error ? [] : filtered}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          loading ? (
-            <View style={[styles.emptyState, styles.paddedTop]}>
-              <ActivityIndicator color={colors.orange} />
-            </View>
-          ) : error ? (
-            <View style={[styles.emptyState, styles.paddedTop]}>
-              <Text style={styles.emptyText}>Couldn't load lore: {error}</Text>
-            </View>
-          ) : (
-            <View style={[styles.emptyState, styles.paddedTop]}>
-              <Text style={styles.emptyText}>No lore matches. Try a different search or filter.</Text>
-            </View>
-          )
-        }
-        renderItem={({ item }) => (
-          <View style={styles.paddedTop}>
-            <ActivityCarouselCard
-              activity={item}
-              saved={savedIds.has(item.id)}
-              onToggleSave={() => toggleSaved(item.id)}
-              onPress={() => navigation.navigate('ActivityDetail', { activityId: item.id })}
-            />
-          </View>
-        )}
-        ListFooterComponent={<View style={styles.footerSpace} />}
-      />
+        <View style={styles.floatingHeader} pointerEvents="box-none">
+          <PillHeader
+            title="EXPLORE"
+            onFilterPress={() => setFilterModalVisible(true)}
+            countLabel={isSearching ? `${filtered.length} results` : `${filtered.length} total`}
+            compact
+          />
+          {filtersActive ? (
+            <Pressable onPress={() => setFilters(EMPTY_FILTERS)} style={styles.activeFilterChip}>
+              <MaterialCommunityIcons name="close-circle" size={14} color={colors.orangeBright} />
+              <Text style={styles.activeFilterText}>Filters active — tap to clear</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      </View>
 
       <Pressable
         onPress={handleSurpriseMe}
@@ -141,13 +148,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSubtle,
   },
-  exploreHeader: {
+  listWrap: {
+    flex: 1,
+  },
+  floatingHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
-    paddingBottom: spacing.sm,
   },
   listContent: {
-    paddingTop: spacing.md,
     paddingBottom: spacing.xxl,
   },
   paddedTop: {
