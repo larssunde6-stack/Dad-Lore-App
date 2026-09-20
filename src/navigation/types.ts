@@ -8,6 +8,7 @@ export type RootStackParamList = {
   Legal: undefined;
   Auth: undefined;
   ResetPassword: undefined;
+  CreateActivity: undefined;
 };
 
 export type TabParamList = {

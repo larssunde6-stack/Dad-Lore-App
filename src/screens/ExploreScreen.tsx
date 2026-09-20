@@ -13,7 +13,7 @@ import FilterModal, {
   matchesFilters,
 } from '../components/FilterModal';
 import CenterToast, { ToastState } from '../components/CenterToast';
-import { useActivities } from '../hooks/useActivities';
+import { useActivities } from '../context/ActivitiesContext';
 import { useCompletions } from '../context/CompletionsContext';
 import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
@@ -150,6 +150,15 @@ export default function ExploreScreen({ navigation }: Props) {
       </View>
 
       <Pressable
+        onPress={() => navigation.navigate('CreateActivity')}
+        style={({ pressed }) => [styles.fabWrap, styles.createFabWrap, shadow.glow, pressed && styles.fabPressed]}
+      >
+        <LinearGradient colors={gradients.fab} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
+          <MaterialCommunityIcons name="plus" size={26} color={colors.textOnOrange} />
+        </LinearGradient>
+      </Pressable>
+
+      <Pressable
         onPress={handleSurpriseMe}
         disabled={activities.length === 0}
         style={({ pressed }) => [
@@ -239,6 +248,9 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
+  },
+  createFabWrap: {
+    bottom: spacing.xl + 60 + spacing.md,
   },
   fab: {
     width: 60,

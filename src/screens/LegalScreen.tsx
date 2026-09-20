@@ -28,6 +28,10 @@ const privacySections: Section[] = [
     body: 'No ads. No analytics or tracking SDKs. We don\'t sell or share your data. We never ask for your name or contact information beyond the email you choose to give us if you create an account.',
   },
   {
+    heading: 'What you publish is public',
+    body: 'Everything above is private to your own identity. Create Your Own Activity is the one exception - if you publish an activity, its title, description, tags, and your username become visible to every user, unlike everything else listed here. Publishing requires a real account.',
+  },
+  {
     heading: 'Where data lives',
     body: 'Saved activities, diary entries, and reports are stored with Supabase, our backend provider, protected by database-level access rules scoped to your anonymous identity.',
   },
@@ -56,7 +60,7 @@ const termsSections: Section[] = [
   },
   {
     heading: 'Your content',
-    body: 'Reports and any future submitted lore must follow our community guidelines - no harassment, hate speech, sexual content, or genuinely dangerous or illegal activity presented as a serious suggestion.',
+    body: 'Reports and any activity you publish via Create Your Own Activity must follow our community guidelines - no harassment, hate speech, sexual content, or genuinely dangerous or illegal activity presented as a serious suggestion. Published activities are public and attributed to your username.',
   },
   {
     heading: 'No warranty',

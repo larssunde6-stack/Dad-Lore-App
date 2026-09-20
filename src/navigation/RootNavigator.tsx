@@ -15,6 +15,7 @@ import ActivityDetailScreen from '../screens/ActivityDetailScreen';
 import LegalScreen from '../screens/LegalScreen';
 import AuthScreen from '../screens/AuthScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
+import CreateActivityScreen from '../screens/CreateActivityScreen';
 import { colors } from '../theme/theme';
 import { RootStackParamList, TabParamList } from './types';
 
@@ -89,6 +90,11 @@ export default function RootNavigator() {
       <Stack.Screen
         name="ResetPassword"
         component={ResetPasswordScreen}
+        options={pushedScreenOptions}
+      />
+      <Stack.Screen
+        name="CreateActivity"
+        component={CreateActivityScreen}
         options={pushedScreenOptions}
       />
     </Stack.Navigator>

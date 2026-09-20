@@ -36,6 +36,17 @@ turning into a story, and keep a private log of the ones they've done.
   our servers or store it anywhere** — the calculation happens entirely
   on your device.
 
+## 2a. What you publish is public
+
+Everything in §2 above is private to your own identity, enforced at the
+database level. **Create Your Own Activity is the one exception.** If you
+publish an activity, its title, description, duration, tags, and your
+username become visible to **every user of the app**, the same as the
+curated activities you browse today. Don't include anything in a
+published activity you wouldn't want public. Publishing requires a real
+account (not a guest identity) specifically because this content is
+public and permanent.
+
 ## 3. What we don't do
 
 - We don't run ads.

@@ -14,7 +14,7 @@ import FilterModal, {
   isFiltersEmpty,
   matchesFilters,
 } from '../components/FilterModal';
-import { useActivities } from '../hooks/useActivities';
+import { useActivities } from '../context/ActivitiesContext';
 import { CompletionEntry, useCompletions } from '../context/CompletionsContext';
 import { Activity } from '../data/activities';
 import { colors, fonts, radii, spacing } from '../theme/theme';

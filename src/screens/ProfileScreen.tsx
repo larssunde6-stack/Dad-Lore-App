@@ -17,7 +17,7 @@ import TopBar from '../components/TopBar';
 import PillHeader from '../components/PillHeader';
 import AccessibilityStatement from '../components/AccessibilityStatement';
 import CenterToast, { ToastState } from '../components/CenterToast';
-import { useActivities } from '../hooks/useActivities';
+import { useActivities } from '../context/ActivitiesContext';
 import { useCompletions } from '../context/CompletionsContext';
 import { useAuth } from '../context/AuthContext';
 import { Activity } from '../data/activities';

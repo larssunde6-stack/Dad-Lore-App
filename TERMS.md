@@ -28,11 +28,12 @@ anyone else in real danger. **Participate at your own risk.**
 
 ## 4. Your content
 
-Anything you submit (a report, and in the future, submitted lore) must
-follow the community guidelines: no harassment, no hate speech, no sexual
-content, and no genuinely dangerous or illegal activity presented as a
-serious suggestion. We can remove content or restrict access for
-violations.
+Anything you submit (a report, or an activity you publish via Create Your
+Own Activity) must follow the community guidelines: no harassment, no
+hate speech, no sexual content, and no genuinely dangerous or illegal
+activity presented as a serious suggestion. Published activities are
+public and attributed to your username. We can remove content or
+restrict access for violations.
 
 ## 5. Accounts, and no warranty
 

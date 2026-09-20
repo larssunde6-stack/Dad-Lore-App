@@ -7,6 +7,7 @@ import RootNavigator from './src/navigation/RootNavigator';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { SavedProvider } from './src/context/SavedContext';
 import { CompletionsProvider } from './src/context/CompletionsContext';
+import { ActivitiesProvider } from './src/context/ActivitiesContext';
 import { colors } from './src/theme/theme';
 
 const navigationTheme = {
@@ -33,14 +34,16 @@ function AppContent() {
   }
 
   return (
-    <SavedProvider>
-      <CompletionsProvider>
-        <NavigationContainer theme={navigationTheme}>
-          <StatusBar style="light" />
-          <RootNavigator />
-        </NavigationContainer>
-      </CompletionsProvider>
-    </SavedProvider>
+    <ActivitiesProvider>
+      <SavedProvider>
+        <CompletionsProvider>
+          <NavigationContainer theme={navigationTheme}>
+            <StatusBar style="light" />
+            <RootNavigator />
+          </NavigationContainer>
+        </CompletionsProvider>
+      </SavedProvider>
+    </ActivitiesProvider>
   );
 }
 

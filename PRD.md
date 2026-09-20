@@ -76,7 +76,8 @@ not removed, in favor of a leaner core loop.
   §11 Phase 2/3).~~ **Paused for MVP** — see §5a.
 - View full activity detail (description, tags, "what you'll need," stats).
 - A **Report** action on published lore, plus a moderation word-filter
-  utility (not yet wired to any submission input — see Out of scope).
+  utility, now wired to its first real submission input (Create Your Own
+  Activity — see §5c).
 - Basic profile: lore points, activity history, badges — **live**, driven
   by real `activity_completions` rows (see §5a, §6).
 - Everything required to legally and technically submit to the App Store
@@ -87,11 +88,14 @@ not removed, in favor of a leaner core loop.
   completed lore is private by design, see above).
 - Ratings/reviews from other users.
 - Multi-user groups or family accounts.
-- **User-submitted lore** — there's a Report action and a moderation word
+- ~~**User-submitted lore** — there's a Report action and a moderation word
   filter, but no way to actually publish new lore yet. All public lore is
-  curated/admin-managed in v1 (see the open decision in §8). Building a
-  submission form is deliberately deferred until there's a backend to
-  publish to and enforce moderation server-side.
+  curated/admin-managed in v1... Building a submission form is
+  deliberately deferred until there's a backend to publish to and enforce
+  moderation server-side.~~ **Landed**: see §5c and §10 for the accepted
+  UGC-safety gap this creates — shipped public/auto-published, without
+  the real server-side moderation this section originally said it was
+  waiting for.
 - Push notifications / re-engagement campaigns.
 - Monetization of any kind (see open decision in §8).
 - ~~Real AI-generated lore summaries~~ — **done, pending your deploy
@@ -173,6 +177,60 @@ to be replaced with real copy later).
   files are untouched on disk; re-enabling Map later means rebuilding its
   data model, not just re-registering the tab.
 
+## 5c. User-Submitted Activities ("Create Your Own")
+
+Users can now publish their own activity directly into the shared Explore
+feed via a new `CreateActivityScreen.tsx`, reached from a second FAB on
+Explore (stacked above "Surprise Me"). Three product decisions were made
+here, each **against this document's own recommended safer default** —
+deliberate, user-chosen tradeoffs, not oversights:
+
+- **Public, auto-published, no review queue.** A published activity
+  inserts straight into `public.activities` (`supabase/migrations/
+  0007_user_submitted_activities.sql`) and appears for every user
+  immediately — the same table and RLS-`select`-for-everyone policy
+  curated activities already use. The safer default considered and
+  rejected was private-to-creator only.
+- **XP awarded normally.** Completing a self-created activity earns
+  `loreRating * 20` XP through the existing `activity_completions` flow,
+  identically to curated content — no new code needed there. The safer
+  default considered and rejected was excluding custom activities from
+  XP. This is bounded by the same `lore_rating between 1 and 5` check
+  every activity already has (max 100 XP, same ceiling as any curated
+  activity), and is philosophically consistent with the fully
+  honor-system Mark-as-Done flow already documented above ("no completion
+  verification") — just extended to self-authored content, not a new
+  risk category.
+- **Publishing requires a real account.** `CreateActivityScreen` gates
+  entry behind `isAnonymous` — the first feature in the app not available
+  to guests, an explicit exception to the "no login required" principle
+  elsewhere in this document, justified by the content being public and
+  permanent versus an otherwise disposable, untraceable identity. **This
+  gate is client-side only** — the RLS insert policy (`auth.uid() =
+  created_by`) does not itself verify the session is non-anonymous,
+  because verifying this project's JWT reliably carries a usable
+  `is_anonymous` claim isn't testable without live access to the Supabase
+  project. The migration file documents the exact one-line hardening to
+  add once that's verified.
+
+Other shape: no `profiles` table was added — attribution
+(`created_by_username`) is denormalized onto the `activities` row at
+insert time, since the client has no way to look up another user's
+identity later. This means a creator who renames themselves afterward
+(via the existing username-edit flow) keeps showing their old name on
+activities they already published — a known, accepted consequence of this
+architecture, not a bug. There's also no self-edit/self-delete for
+creators in this pass: `saved_lore`/`activity_completions`/`reports` all
+cascade-delete off `activities.id`, so letting a creator delete their own
+published activity would erase other users' completions/XP tied to it —
+removal goes through the existing Report flow for now.
+
+`src/utils/moderation.ts`'s `containsBlockedContent` gets its first real
+wiring here (title/blurb/tags, hard-blocks submission rather than
+silently rewriting text) — closing the "still unattached to any input"
+gap noted in §6. See §10 for why this is not, on its own, the real
+server-side moderation a public UGC feature needs.
+
 ## 6. Core Features / User Stories
 
 Mapped to what's already built in `src/screens/`:
@@ -189,6 +247,7 @@ Mapped to what's already built in `src/screens/`:
 | Activity Detail | As a young person, I want to mark an activity as done and earn XP for it. | **Live** (new, see §5a): the CTA button inserts a row into `activity_completions` (`xp_earned = loreRating * 20`) and shows a brief "+XP · Added to Your Lore" confirmation. Honor system — no completion verification. |
 | Activity Detail | As a young person, I want to report lore that's inappropriate or unsafe. | **Live**: `ReportModal.tsx` inserts into Supabase's `reports` table (activity id, reason, reporter's anonymous user id). Nobody, including the reporter, can read reports back through the app — only a future moderator tool using the `service_role` key can, matching the UGC note in §10. |
 | Profile | As a young person, I want to see my lore points, badges, and history, so progress feels earned. | **Live** (re-scoped, see §5a): `ProfileScreen.tsx` computes lore points and activities-done from real `activity_completions` rows, and badges from the categories of completed activities — no more hardcoded values. |
+| Create Activity | As a young person, I want to publish my own activity idea so the whole community can see and do it. | **Live** (see §5c): `CreateActivityScreen.tsx` inserts directly into `activities` (RLS `auth.uid() = created_by`), public and auto-published with no review queue. Completions earn XP identically to curated activities. Requires a real (non-anonymous) account. |
 
 **New for publishing (not yet built):**
 - ~~Persisted user identity~~ — **done**: anonymous Supabase auth
@@ -218,8 +277,9 @@ Mapped to what's already built in `src/screens/`:
   Row Level Security policy only allows `INSERT`, from nobody but the
   authenticated (including anonymous) user, with no `SELECT`. The
   moderation word filter (`src/utils/moderation.ts`, wrapping `bad-words`)
-  is still client-side only and still unattached to any input — there's
-  still no lore-submission form for it to guard.
+  is now wired to its first real input — `CreateActivityScreen.tsx` (§5c)
+  — but remains client-side only, not the server-side moderation
+  enforcement a public UGC feature actually needs (see §10).
 - ~~A real "summarize my lore" endpoint~~ — **done, pending your deploy
   step**: see §11 Phase 2/3.
 
@@ -315,17 +375,27 @@ Required regardless of which open decisions above get picked:
 - **App Store review guidelines / Play Store policy**: review both before
   submission — e.g. location use, ads, and any account-deletion
   requirements (Apple requires in-app account deletion if accounts exist).
-- **User-generated content (UGC)**: once lore can be published (not yet —
-  see §5 Out of scope) plus reporting exists, this app is squarely a UGC
-  product under App Store review guideline 1.2. Combined with a
-  minors-inclusive audience (above), Phase 2 needs, at minimum: real
-  server-side moderation enforcement (the client-side word filter landing
-  now is a first-pass convenience, not a security boundary — trivially
-  bypassed by anyone calling the API directly once one exists), a way to
-  block/mute abusive accounts, a published content policy, and a way for
-  Apple's reviewers to see the report mechanism actually working
-  end-to-end. Don't discover this requirement during review — design for
-  it from the start of Phase 2.
+- **User-generated content (UGC)**: publishing now exists (§5c, "Create
+  Your Own Activity" — landed public/auto-published, against this
+  section's own recommendation, as a deliberate user choice) plus
+  reporting already existed, so this app is squarely a UGC product under
+  App Store review guideline 1.2, and — plainly, not softened — **ships
+  without everything this section says a UGC product needs at minimum**:
+  no real server-side moderation enforcement (`src/utils/moderation.ts`'s
+  word filter is wired to its first real input in `CreateActivityScreen`,
+  closing the "still unattached to any input" gap noted in §6 — but it's
+  still a client-side convenience, not a security boundary, trivially
+  bypassed by anyone calling the Supabase API directly, same as already
+  stated here for Report), no way to block/mute abusive accounts, and no
+  published-content-policy coverage of user-submitted activities
+  specifically (PRIVACY.md/TERMS.md were updated for disclosure — what
+  content is public and that it must follow community guidelines — not
+  for an enforcement/blocking mechanism). Combined with a minors-inclusive
+  audience (above), this is real submission risk under guideline 1.2 as
+  it stands today. Don't ship to the stores on the assumption this gap
+  will go unnoticed — closing it (moderation enforcement, blocking,
+  content-policy coverage, a working end-to-end report path for reviewers
+  to see) needs to happen before store submission, not after.
 
 ## 11. Release Roadmap (Phased)
 
@@ -363,13 +433,23 @@ phase belongs in that phase's own plan when it's time, not here.
     deep-linking configured yet. This required two manual Supabase
     Dashboard changes: "Confirm email" turned off, and the Reset Password
     email template edited to include `{{ .Token }}`.
+  - **User-submitted activities landed** (see §5c): `supabase/migrations/
+    0007_user_submitted_activities.sql` adds an insert-only RLS policy to
+    `activities` (`auth.uid() = created_by`) plus `created_by`/
+    `created_by_username` columns, letting `CreateActivityScreen.tsx`
+    publish directly into the same table/feed curated content lives in.
+    No review queue, XP awarded identically to curated content, gated
+    behind a real (non-anonymous) account client-side only. See §10 for
+    the UGC-compliance gap this deliberately accepts for now.
   - **Still open**: the data-source decision in §8 (this pass moved the
     same curated rows into Postgres — it didn't resolve curated-vs-API),
     there's still no admin tool (content changes go through the SQL
-    migration files or the Supabase dashboard directly), and there's no
+    migration files or the Supabase dashboard directly), there's no
     in-app **account deletion** flow yet — Apple requires one the moment
     any account system exists, so this needs to land before store
-    submission (§11 Phase 4/5).
+    submission (§11 Phase 4/5) — and, new as of §5c, no real server-side
+    UGC moderation, no way to block/mute abusive accounts, and no way for
+    a creator to self-retract a published activity (see §5c and §10).
   - **Security & Auth Requirements checklist** — status per item now that
     real accounts exist:
   1. **No session/auth tokens in `localStorage` in plaintext.** **Still
@@ -500,8 +580,10 @@ built this way:
   than the app's own team (posts, submissions, comments). Apps with UGC
   face extra App Store / Play Store scrutiny: a working report mechanism,
   a way to block abusive users, and a published content policy are all
-  expected. This app isn't there yet (no submission flow exists), but
-  Report + a moderation filter have landed ahead of it.
+  expected. This app's submission flow has landed (§5c, "Create Your Own
+  Activity") — public, auto-published — but the blocking mechanism and
+  real server-side moderation enforcement have not, a deliberate,
+  documented gap (§10), not an oversight.
 - **k-anonymity (password breach checking)** — a way to check if a
   password has leaked without ever sending the actual password anywhere.
   The password is hashed locally, only the first few characters of that

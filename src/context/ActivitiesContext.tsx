@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Activity } from '../data/activities';
 
@@ -13,6 +13,8 @@ type ActivityRow = {
   kind: Activity['kind'];
   fun_type: Activity['funType'];
   tags: string[];
+  created_by: string | null;
+  created_by_username: string | null;
 };
 
 function mapRow(row: ActivityRow): Activity {
@@ -27,10 +29,21 @@ function mapRow(row: ActivityRow): Activity {
     kind: row.kind,
     funType: row.fun_type,
     tags: row.tags,
+    createdBy: row.created_by,
+    createdByUsername: row.created_by_username,
   };
 }
 
-export function useActivities() {
+type ActivitiesContextValue = {
+  activities: Activity[];
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+};
+
+const ActivitiesContext = createContext<ActivitiesContextValue | undefined>(undefined);
+
+export function ActivitiesProvider({ children }: { children: React.ReactNode }) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,5 +67,20 @@ export function useActivities() {
     fetchActivities();
   }, [fetchActivities]);
 
-  return { activities, loading, error, refetch: fetchActivities };
+  const value: ActivitiesContextValue = {
+    activities,
+    loading,
+    error,
+    refetch: fetchActivities,
+  };
+
+  return <ActivitiesContext.Provider value={value}>{children}</ActivitiesContext.Provider>;
+}
+
+export function useActivities() {
+  const ctx = useContext(ActivitiesContext);
+  if (!ctx) {
+    throw new Error('useActivities must be used within an ActivitiesProvider');
+  }
+  return ctx;
 }

@@ -13,6 +13,8 @@ export type Activity = {
   kind: Kind[];
   funType: FunType;
   tags: string[];
+  createdBy?: string | null;
+  createdByUsername?: string | null;
 };
 
 export const activities: Activity[] = [

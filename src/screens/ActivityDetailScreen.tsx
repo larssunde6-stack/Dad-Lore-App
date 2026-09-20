@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
 import ReportModal from '../components/ReportModal';
 import CenterToast, { ToastState } from '../components/CenterToast';
-import { useActivities } from '../hooks/useActivities';
+import { useActivities } from '../context/ActivitiesContext';
 import { useCompletions } from '../context/CompletionsContext';
 import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
@@ -193,6 +193,15 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
           </View>
           <Text style={styles.title}>{activity.title}</Text>
 
+          {activity.createdByUsername != null ? (
+            <View style={styles.attributionRow}>
+              <MaterialCommunityIcons name="account-edit-outline" size={12} color={colors.textMuted} />
+              <Text style={styles.attributionText}>
+                Submitted by {activity.createdBy === userId ? 'you' : activity.createdByUsername}
+              </Text>
+            </View>
+          ) : null}
+
           <View style={styles.loreRow}>
             {Array.from({ length: 5 }).map((_, i) => (
               <MaterialCommunityIcons
@@ -342,6 +351,16 @@ const styles = StyleSheet.create({
     ...fonts.display,
     lineHeight: 30,
     marginBottom: spacing.md,
+  },
+  attributionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  attributionText: {
+    color: colors.textMuted,
+    fontSize: 11.5,
+    marginLeft: spacing.xs,
   },
   loreRow: {
     flexDirection: 'row',
