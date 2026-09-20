@@ -13,6 +13,8 @@ import LoreScreen from '../screens/LoreScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ActivityDetailScreen from '../screens/ActivityDetailScreen';
 import LegalScreen from '../screens/LegalScreen';
+import AuthScreen from '../screens/AuthScreen';
+import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import { colors } from '../theme/theme';
 import { RootStackParamList, TabParamList } from './types';
 
@@ -66,6 +68,13 @@ function TabNavigator() {
   );
 }
 
+const pushedScreenOptions = {
+  animation: 'slide_from_right' as const,
+  gestureEnabled: true,
+  gestureDirection: 'horizontal' as const,
+  fullScreenGestureEnabled: true,
+};
+
 export default function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -73,22 +82,14 @@ export default function RootNavigator() {
       <Stack.Screen
         name="ActivityDetail"
         component={ActivityDetailScreen}
-        options={{
-          animation: 'slide_from_right',
-          gestureEnabled: true,
-          gestureDirection: 'horizontal',
-          fullScreenGestureEnabled: true,
-        }}
+        options={pushedScreenOptions}
       />
+      <Stack.Screen name="Legal" component={LegalScreen} options={pushedScreenOptions} />
+      <Stack.Screen name="Auth" component={AuthScreen} options={pushedScreenOptions} />
       <Stack.Screen
-        name="Legal"
-        component={LegalScreen}
-        options={{
-          animation: 'slide_from_right',
-          gestureEnabled: true,
-          gestureDirection: 'horizontal',
-          fullScreenGestureEnabled: true,
-        }}
+        name="ResetPassword"
+        component={ResetPasswordScreen}
+        options={pushedScreenOptions}
       />
     </Stack.Navigator>
   );

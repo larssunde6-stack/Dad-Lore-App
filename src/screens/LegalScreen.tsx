@@ -21,11 +21,11 @@ const privacySections: Section[] = [
   },
   {
     heading: 'What we collect',
-    body: 'An anonymous device identity (no email, password, or name), your saved activities, your private completed-lore diary, and any reports you submit. If you use the Map tab, your location is used on-device to sort nearby lore and is never sent to or stored on our servers.',
+    body: 'An anonymous device identity by default (no email, password, or name required), your saved activities, your private completed-lore diary, and any reports you submit. If you choose to create an optional account, we also collect your email and a securely hashed password, used only for login and password resets. If you use the Map tab, your location is used on-device to sort nearby lore and is never sent to or stored on our servers.',
   },
   {
     heading: 'What we don\'t do',
-    body: 'No ads. No analytics or tracking SDKs. We don\'t sell or share your data. We never ask for your name, email, or contact information.',
+    body: 'No ads. No analytics or tracking SDKs. We don\'t sell or share your data. We never ask for your name or contact information beyond the email you choose to give us if you create an account.',
   },
   {
     heading: 'Where data lives',
@@ -60,7 +60,7 @@ const termsSections: Section[] = [
   },
   {
     heading: 'No warranty',
-    body: 'The app is provided "as is," without warranties of any kind, to the extent allowed by law. There\'s currently no password-protected account, and no guarantee your data survives a reinstall or new device.',
+    body: 'The app is provided "as is," without warranties of any kind, to the extent allowed by law. An account is optional — without one, there\'s no guarantee your data survives a reinstall or new device.',
   },
   {
     heading: 'Liability',

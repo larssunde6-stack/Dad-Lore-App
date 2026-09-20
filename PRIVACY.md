@@ -15,8 +15,13 @@ turning into a story, and keep a private log of the ones they've done.
 
 - **An anonymous device identity.** When you open the app, it creates an
   anonymous account for your device — no email, no password, no name, no
-  phone number. This identity is a random ID used only to know which
-  saved activities, diary entries, and reports belong to you.
+  phone number required. This identity is a random ID used only to know
+  which saved activities, diary entries, and reports belong to you.
+- **An email and password — only if you choose to create an account.**
+  Creating an account is optional and lets your data follow you across
+  devices. Your password is never stored in plain text; we only store a
+  secure hash of it. We don't use your email for anything besides account
+  login and password resets.
 - **Saved activities.** Which lore listings you've bookmarked.
 - **Your completed-lore diary.** Entries you log — titles, dates, notes,
   and points earned. This is private: nothing here is ever shown to
@@ -35,7 +40,8 @@ turning into a story, and keep a private log of the ones they've done.
 - We don't run ads.
 - We don't use analytics or tracking SDKs.
 - We don't sell or share your data with third parties.
-- We don't ask for your name, email, or any contact information.
+- We don't ask for your name or any contact information beyond the email
+  you choose to give us if you create an optional account.
 
 ## 4. Where data lives
 

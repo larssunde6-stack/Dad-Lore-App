@@ -34,12 +34,14 @@ content, and no genuinely dangerous or illegal activity presented as a
 serious suggestion. We can remove content or restrict access for
 violations.
 
-## 5. No account, no warranty
+## 5. Accounts, and no warranty
 
-Dad Lore currently runs on an anonymous identity tied to your device —
-there's no username or password to protect, and no guarantee your data
-survives a reinstall or a new device (yet). The app is provided "as is,"
-without warranties of any kind, to the extent allowed by law.
+Dad Lore runs on an anonymous identity tied to your device by default —
+no account required. You can optionally create a free account (email and
+password) to keep your data across devices; if you don't, there's no
+guarantee your data survives a reinstall or a new device. You're
+responsible for keeping your password confidential. The app is provided
+"as is," without warranties of any kind, to the extent allowed by law.
 
 ## 6. Limitation of liability
 

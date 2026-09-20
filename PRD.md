@@ -193,9 +193,17 @@ Mapped to what's already built in `src/screens/`:
 **New for publishing (not yet built):**
 - ~~Persisted user identity~~ — **done**: anonymous Supabase auth
   (`AuthContext.tsx`) gives every device a stable identity that saves,
-  completed lore, and reports are scoped to via Row Level Security. Real
-  accounts (email/password, cross-device sync) are still future work —
-  see the Security & Auth checklist under §11 Phase 2.
+  completed lore, and reports are scoped to via Row Level Security.
+- ~~Real accounts (email/password, cross-device sync)~~ — **done**:
+  `AuthScreen.tsx` (opt-in from Profile) lets a user upgrade their
+  anonymous session to a real account via `supabase.auth.updateUser({
+  email, password })` — same UUID, so their existing saves/completions
+  carry over with zero data migration. `ResetPasswordScreen.tsx` covers
+  forgot-password via an emailed 6-digit code (no deep-linking required).
+  Email confirmation is intentionally off for now (see the Security &
+  Auth checklist under §11 Phase 2). Account **deletion** is not yet
+  built — flagged there as a known gap, required by Apple before store
+  submission.
 - ~~Lore points/badges on Profile are still hardcoded~~ — **done**: now
   derived from real `activity_completions` rows (see §5a).
 - A real *editorial* dataset behind search/browse/map — the data now
@@ -220,11 +228,12 @@ Mapped to what's already built in `src/screens/`:
 - **Framework**: Expo (SDK 57) + React Native — already in place, supports
   iOS and Android from one codebase.
 - **Backend**: **Supabase — confirmed and live** (`src/lib/supabase.ts`).
-  Auth is **anonymous-only for now** (`supabase.auth.signInAnonymously()`
-  via `AuthContext.tsx`) — every device gets a stable identity with no
-  email/password, matching the "no login requirement, minimal data
-  collection" recommendation in §10. Real accounts (email/password, 2FA,
-  cross-device sync) remain future work under the Security & Auth
+  Auth is **anonymous by default, with an optional real account**
+  (`AuthContext.tsx`) — every device gets a stable anonymous identity on
+  first launch with no login required, matching the "no login
+  requirement, minimal data collection" recommendation in §10, and can
+  opt in to email/password via `AuthScreen.tsx` at any time without
+  losing its data. 2FA remains future work under the Security & Auth
   checklist in §11 Phase 2. Data access is authorized entirely through
   Postgres **Row Level Security** policies (`supabase/migrations/
   0001_init.sql`) — the actual server-side enforcement the checklist
@@ -232,10 +241,10 @@ Mapped to what's already built in `src/screens/`:
 - **Session storage caveat**: Supabase's React Native integration stores
   the session in `AsyncStorage`. On native this is app-sandboxed; on this
   app's **web** build target, `AsyncStorage` is backed by `localStorage`
-  — exactly what the checklist warns about for token storage. Accepted
-  for now because these are low-stakes anonymous sessions with no
-  password; revisit with the httpOnly-cookie approach the checklist
-  already specs the moment real accounts exist.
+  — exactly what the checklist warns about for token storage. This was
+  accepted while sessions were anonymous-only; **real accounts now exist**
+  and this is a deliberately deferred risk, not a resolved one — revisit
+  with the httpOnly-cookie approach the checklist already specs.
 - **Distribution**: EAS Build + EAS Submit (Expo's managed build/submit
   pipeline) is the standard path from this codebase to both stores without
   needing a Mac for iOS builds.
@@ -341,29 +350,50 @@ phase belongs in that phase's own plan when it's time, not here.
     (per-user via RLS) backing "Mark as Done," the Completed segment of
     Lore, and Profile's stats — all now driven by real rows. Diary
     (`completed_lore`) and Map are paused, not removed.
+  - **Real accounts landed**: `AuthContext.tsx` now also exposes
+    `signUp`/`logIn`/`logOut`/`requestPasswordReset`/`confirmPasswordReset`,
+    backed by `AuthScreen.tsx` and `ResetPasswordScreen.tsx` (both opt-in
+    from Profile, not a login wall). Sign-up upgrades the existing
+    anonymous session in place (`supabase.auth.updateUser`) rather than
+    creating a second account, so RLS-scoped data (`saved_lore`,
+    `activity_completions`) needs zero migration. No `profiles` table was
+    added — email lives only on `auth.users`. Password reset uses a
+    manually-entered 6-digit code (`supabase.auth.verifyOtp(...,
+    {type:'recovery'})`) instead of a clickable link, since the app has no
+    deep-linking configured yet. This required two manual Supabase
+    Dashboard changes: "Confirm email" turned off, and the Reset Password
+    email template edited to include `{{ .Token }}`.
   - **Still open**: the data-source decision in §8 (this pass moved the
     same curated rows into Postgres — it didn't resolve curated-vs-API),
-    and there's still no admin tool (content changes go through the SQL
-    migration files or the Supabase dashboard directly).
+    there's still no admin tool (content changes go through the SQL
+    migration files or the Supabase dashboard directly), and there's no
+    in-app **account deletion** flow yet — Apple requires one the moment
+    any account system exists, so this needs to land before store
+    submission (§11 Phase 4/5).
   - **Security & Auth Requirements checklist** — status per item now that
-    anonymous auth is live:
-  1. **No session/auth tokens in `localStorage` in plaintext.** **Partially
-     accepted, not resolved**: Supabase's session sits in `AsyncStorage`,
-     which is `localStorage`-backed on this app's web target. Tracked as a
-     documented tradeoff in §7 (low-stakes anonymous session, no
-     password) — revisit with httpOnly cookies the moment real accounts
-     exist.
-  2. **Authorization enforced server-side, always.** **Done** for
-     everything this pass touches — Postgres RLS policies are the
-     enforcement, not a client-side check. Still applies to any future
-     admin/moderator tooling (§6), which doesn't exist yet.
-  3. **2FA/OTP** — not applicable yet; there are no password-based accounts
-     to protect. Required the moment admin/moderator accounts are added.
-  4. **Rate limiting on every endpoint** — not yet addressed; Supabase
-     provides some platform-level protection, but login/password-reset
-     rate limiting specifically doesn't apply until real accounts exist.
-  5. **Password rules** — not applicable yet (no passwords).
-  6. **Password breach check** — not applicable yet (no passwords).
+    real accounts exist:
+  1. **No session/auth tokens in `localStorage` in plaintext.** **Still
+     not resolved, now higher-stakes**: Supabase's session sits in
+     `AsyncStorage`, which is `localStorage`-backed on this app's web
+     target. This was an accepted tradeoff while every session was
+     anonymous; now that real, password-protected accounts exist, revisit
+     with the httpOnly-cookie approach before a web build ships broadly.
+  2. **Authorization enforced server-side, always.** **Done** — Postgres
+     RLS policies are the enforcement, not a client-side check, and this
+     didn't change with real accounts (same `auth.uid() = user_id`
+     policies work identically for anonymous and real sessions). Still
+     applies to any future admin/moderator tooling (§6), which doesn't
+     exist yet.
+  3. **2FA/OTP** — not yet built. Now applicable (password-based accounts
+     exist), still not required until admin/moderator accounts exist.
+  4. **Rate limiting on every endpoint** — Supabase applies its own
+     platform-level rate limits to auth endpoints (signup, login,
+     password-reset emails) by default; no additional app-side limiting
+     has been added.
+  5. **Password rules** — **partial**: client and server both enforce a
+     6-character minimum (Supabase's default). No additional strength
+     requirements (breach check, complexity) yet.
+  6. **Password breach check** — not yet addressed.
 - **Phase 2/3 — Real AI lore summaries**: **code landed, not yet
   deployed.** `supabase/functions/summarize-lore/index.ts` is a Supabase
   Edge Function that proxies to the Claude API, holding the key

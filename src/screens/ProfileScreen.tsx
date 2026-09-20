@@ -10,6 +10,7 @@ import AccessibilityStatement from '../components/AccessibilityStatement';
 import CenterToast, { ToastState } from '../components/CenterToast';
 import { useActivities } from '../hooks/useActivities';
 import { useCompletions } from '../context/CompletionsContext';
+import { useAuth } from '../context/AuthContext';
 import { Activity } from '../data/activities';
 import { getLevel } from '../utils/level';
 import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
@@ -70,7 +71,9 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
   const { activities, refetch: refetchActivities } = useActivities();
   const { completions, xp: lorePoints, loading: statsLoading, refetch: refetchCompletions } =
     useCompletions();
+  const { isAnonymous, email, logOut } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
 
   const showToast = (next: ToastState) => {
@@ -90,6 +93,19 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
       return;
     }
     showToast({ message: `${item.label} is coming soon`, tone: 'success' });
+  };
+
+  const handleLogOut = async () => {
+    setLoggingOut(true);
+    const result = await logOut();
+    setLoggingOut(false);
+
+    if (result.status === 'error') {
+      showToast({ message: result.message, tone: 'error' });
+      return;
+    }
+
+    showToast({ message: 'Logged out', tone: 'success' });
   };
 
   const completedActivities = completions
@@ -129,7 +145,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
             <MaterialCommunityIcons name="account" size={38} color={colors.orange} />
             <View style={styles.avatarRing} />
           </LinearGradient>
-          <Text style={styles.name}>Jordan Sundberg</Text>
+          <Text style={styles.name}>{isAnonymous ? 'Guest' : email ?? 'Account'}</Text>
           <Text style={styles.subtitle}>Level {level} · Lore in Progress</Text>
 
           <View style={styles.progressTrack}>
@@ -137,6 +153,23 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
           </View>
           <Text style={styles.progressLabel}>{pointsToNext} lore points to Level {level + 1}</Text>
         </View>
+
+        {isAnonymous ? (
+          <View style={styles.accountCard}>
+            <MaterialCommunityIcons name="account-plus-outline" size={20} color={colors.orangeBright} />
+            <View style={styles.accountCardText}>
+              <Text style={styles.accountCardTitle}>Save your progress</Text>
+              <Text style={styles.accountCardBody}>
+                Create a free account to keep your lore, saves, and XP across devices.
+              </Text>
+            </View>
+            <PrimaryButton
+              label="Create Account"
+              onPress={() => navigation.navigate('Auth')}
+              style={styles.accountCardButton}
+            />
+          </View>
+        ) : null}
 
         {statsLoading ? (
           <View style={styles.statsLoading}>
@@ -190,12 +223,16 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
           ))}
         </View>
 
-        <PrimaryButton
-          label="Log Out"
-          icon="logout"
-          variant="outline"
-          style={styles.logoutButton}
-        />
+        {!isAnonymous ? (
+          <PrimaryButton
+            label="Log Out"
+            icon="logout"
+            variant="outline"
+            onPress={handleLogOut}
+            loading={loggingOut}
+            style={styles.logoutButton}
+          />
+        ) : null}
 
         <AccessibilityStatement />
       </ScrollView>
@@ -264,6 +301,35 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 11.5,
     marginTop: spacing.sm,
+  },
+  accountCard: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  accountCardText: {
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  accountCardTitle: {
+    color: colors.textPrimary,
+    fontSize: 14,
+    ...fonts.heading,
+    marginBottom: spacing.xs,
+  },
+  accountCardBody: {
+    color: colors.textSecondary,
+    fontSize: 12.5,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  accountCardButton: {
+    alignSelf: 'stretch',
   },
   statsRow: {
     flexDirection: 'row',

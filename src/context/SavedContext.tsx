@@ -21,7 +21,10 @@ export function SavedProvider({ children }: { children: React.ReactNode }) {
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setSavedIds(new Set());
+      return;
+    }
     let cancelled = false;
 
     (async () => {

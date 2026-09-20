@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, fonts, shadow } from '../theme/theme';
 
@@ -10,6 +10,7 @@ type Props = {
   variant?: 'solid' | 'outline';
   style?: ViewStyle;
   disabled?: boolean;
+  loading?: boolean;
 };
 
 export default function PrimaryButton({
@@ -19,33 +20,40 @@ export default function PrimaryButton({
   variant = 'solid',
   style,
   disabled,
+  loading,
 }: Props) {
   const isSolid = variant === 'solid';
   return (
     <Pressable
       onPress={onPress}
-      disabled={disabled}
+      disabled={disabled || loading}
       style={({ pressed }) => [
         styles.base,
         isSolid ? styles.solid : styles.outline,
         isSolid && shadow.glow,
         pressed && styles.pressed,
-        disabled && styles.disabled,
+        (disabled || loading) && styles.disabled,
         style,
       ]}
     >
       <View style={styles.notch} />
-      {icon ? (
-        <MaterialCommunityIcons
-          name={icon}
-          size={18}
-          color={isSolid ? colors.textOnOrange : colors.orange}
-          style={styles.icon}
-        />
-      ) : null}
-      <Text style={[styles.label, isSolid ? styles.labelSolid : styles.labelOutline]}>
-        {label}
-      </Text>
+      {loading ? (
+        <ActivityIndicator size="small" color={isSolid ? colors.textOnOrange : colors.orange} />
+      ) : (
+        <>
+          {icon ? (
+            <MaterialCommunityIcons
+              name={icon}
+              size={18}
+              color={isSolid ? colors.textOnOrange : colors.orange}
+              style={styles.icon}
+            />
+          ) : null}
+          <Text style={[styles.label, isSolid ? styles.labelSolid : styles.labelOutline]}>
+            {label}
+          </Text>
+        </>
+      )}
     </Pressable>
   );
 }
