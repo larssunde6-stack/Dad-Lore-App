@@ -47,7 +47,7 @@ export default function ExploreScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={[styles.banner, shadow.soft]}>
+      <View style={styles.banner}>
         <TopBar
           xp={xp}
           searchPlaceholder="Search activities, sidequests..."
@@ -57,7 +57,7 @@ export default function ExploreScreen({ navigation }: Props) {
         />
       </View>
 
-      <View style={[styles.exploreHeader, shadow.soft]}>
+      <View style={styles.exploreHeader}>
         <PillHeader
           title="EXPLORE"
           onFilterPress={() => setFilterModalVisible(true)}
@@ -137,19 +137,14 @@ const styles = StyleSheet.create({
   banner: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    zIndex: 2,
+    borderBottomColor: colors.borderSubtle,
   },
   exploreHeader: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
     paddingBottom: spacing.sm,
-    zIndex: 1,
   },
   listContent: {
     paddingTop: spacing.md,

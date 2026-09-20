@@ -16,7 +16,11 @@ export default function PillHeader({ title, onFilterPress, countLabel, compact }
   return (
     <View style={[styles.row, compact && styles.rowCompact]}>
       <View style={styles.sideSpacer}>
-        {countLabel ? <Text style={styles.countLabel}>{countLabel}</Text> : null}
+        {countLabel ? (
+          <View style={[styles.countPill, shadow.soft]}>
+            <Text style={styles.countLabel}>{countLabel}</Text>
+          </View>
+        ) : null}
       </View>
       <View style={styles.pillWrap}>
         <View style={[styles.pill, shadow.soft]}>
@@ -44,9 +48,19 @@ const styles = StyleSheet.create({
   sideSpacer: {
     minWidth: FILTER_BUTTON_SIZE,
   },
+  countPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.pill,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+  },
   countLabel: {
     color: colors.textMuted,
-    fontSize: 11.5,
+    fontSize: 11,
+    ...fonts.heading,
   },
   pillWrap: {
     flex: 1,

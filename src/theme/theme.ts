@@ -20,10 +20,10 @@ export const colors = {
   overlay: 'rgba(0, 0, 0, 0.55)',
 
   riskGreen: '#2D9B2B',
-  riskYellow: '#FFD700',
+  riskYellow: '#F5A623',
   riskRed: '#D40000',
   riskGreenBg: 'rgba(45, 155, 43, 0.1)',
-  riskYellowBg: 'rgba(255, 215, 0, 0.1)',
+  riskYellowBg: 'rgba(245, 166, 35, 0.1)',
   riskRedBg: 'rgba(212, 0, 0, 0.1)',
 };
 

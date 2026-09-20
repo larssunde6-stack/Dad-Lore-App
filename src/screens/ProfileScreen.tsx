@@ -132,7 +132,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
             const earned = badge.earned(completedActivities);
             return (
               <View key={badge.label} style={[styles.badgeItem, !earned && styles.badgeItemLocked]}>
-                <View style={styles.badgeIcon}>
+                <View style={[styles.badgeIcon, shadow.soft]}>
                   <MaterialCommunityIcons
                     name={badge.icon}
                     size={22}
