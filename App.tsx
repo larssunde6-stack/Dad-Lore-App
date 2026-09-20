@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import RootNavigator from './src/navigation/RootNavigator';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { SavedProvider } from './src/context/SavedContext';
+import { CompletionsProvider } from './src/context/CompletionsContext';
 import { colors } from './src/theme/theme';
 
 const navigationTheme = {
@@ -33,10 +34,12 @@ function AppContent() {
 
   return (
     <SavedProvider>
-      <NavigationContainer theme={navigationTheme}>
-        <StatusBar style="light" />
-        <RootNavigator />
-      </NavigationContainer>
+      <CompletionsProvider>
+        <NavigationContainer theme={navigationTheme}>
+          <StatusBar style="light" />
+          <RootNavigator />
+        </NavigationContainer>
+      </CompletionsProvider>
     </SavedProvider>
   );
 }

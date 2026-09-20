@@ -10,7 +10,6 @@ type Props = {
   searchPlaceholder?: string;
   searchValue?: string;
   onSearchChange?: (value: string) => void;
-  onProfilePress?: () => void;
 };
 
 export default function TopBar({
@@ -19,7 +18,6 @@ export default function TopBar({
   searchPlaceholder,
   searchValue = '',
   onSearchChange,
-  onProfilePress,
 }: Props) {
   const { level } = getLevel(xp);
 
@@ -49,10 +47,6 @@ export default function TopBar({
       ) : (
         <View style={styles.spacer} />
       )}
-
-      <Pressable onPress={onProfilePress} style={[styles.iconButton, shadow.soft]}>
-        <MaterialCommunityIcons name="account-outline" size={18} color={colors.textPrimary} />
-      </Pressable>
 
       <Pressable style={[styles.iconButton, shadow.soft]}>
         <MaterialCommunityIcons name="bell-outline" size={18} color={colors.textPrimary} />

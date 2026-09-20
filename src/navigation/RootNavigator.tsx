@@ -96,7 +96,7 @@ export default function RootNavigator() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     borderTopColor: colors.border,
     borderTopWidth: 1,
     height: Platform.OS === 'ios' ? 88 : 68,

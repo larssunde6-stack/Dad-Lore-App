@@ -1,18 +1,28 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
+import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
 
 type Props = {
   title: string;
   onFilterPress?: () => void;
   countLabel?: string;
   compact?: boolean;
+  showFilter?: boolean;
+  gradient?: boolean;
 };
 
 const FILTER_BUTTON_SIZE = 42;
 
-export default function PillHeader({ title, onFilterPress, countLabel, compact }: Props) {
+export default function PillHeader({
+  title,
+  onFilterPress,
+  countLabel,
+  compact,
+  showFilter = true,
+  gradient = false,
+}: Props) {
   return (
     <View style={[styles.row, compact && styles.rowCompact]}>
       {countLabel ? (
@@ -20,12 +30,25 @@ export default function PillHeader({ title, onFilterPress, countLabel, compact }
           <Text style={styles.countLabel}>{countLabel}</Text>
         </View>
       ) : null}
-      <View style={[styles.pill, shadow.soft]}>
-        <Text style={styles.pillText}>{title}</Text>
-      </View>
-      <Pressable onPress={onFilterPress} style={[styles.filterButton, shadow.soft]}>
-        <MaterialCommunityIcons name="tune" size={19} color={colors.orange} />
-      </Pressable>
+      {gradient ? (
+        <LinearGradient
+          colors={gradients.fab}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.pill, shadow.soft]}
+        >
+          <Text style={styles.pillText}>{title}</Text>
+        </LinearGradient>
+      ) : (
+        <View style={[styles.pill, styles.pillFlat, shadow.soft]}>
+          <Text style={styles.pillText}>{title}</Text>
+        </View>
+      )}
+      {showFilter ? (
+        <Pressable onPress={onFilterPress} style={[styles.filterButton, shadow.soft]}>
+          <MaterialCommunityIcons name="tune" size={19} color={colors.orange} />
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -59,10 +82,12 @@ const styles = StyleSheet.create({
     ...fonts.heading,
   },
   pill: {
-    backgroundColor: colors.orange,
     borderRadius: radii.pill,
     paddingVertical: 12,
     paddingHorizontal: 30,
+  },
+  pillFlat: {
+    backgroundColor: colors.orange,
   },
   pillText: {
     color: colors.textOnOrange,

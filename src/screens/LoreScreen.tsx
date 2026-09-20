@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -15,23 +15,15 @@ import FilterModal, {
   matchesFilters,
 } from '../components/FilterModal';
 import { useActivities } from '../hooks/useActivities';
+import { CompletionEntry, useCompletions } from '../context/CompletionsContext';
 import { Activity } from '../data/activities';
 import { colors, fonts, radii, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
-import { useAuth } from '../context/AuthContext';
-import { supabase } from '../lib/supabase';
 import { TabScreenProps } from '../navigation/types';
 
 type Segment = 'To Do' | 'Completed';
 
 type Props = TabScreenProps<'Lore'>;
-
-type CompletionRow = {
-  id: string;
-  activity_id: string;
-  xp_earned: number;
-  completed_at: string;
-};
 
 type CompletedItem = {
   completionId: string;
@@ -40,16 +32,16 @@ type CompletedItem = {
   completedAt: string;
 };
 
-function mapRowsToItems(rows: CompletionRow[], activities: Activity[]): CompletedItem[] {
-  return rows
-    .map((row) => {
-      const activity = activities.find((a) => a.id === row.activity_id);
+function mapEntriesToItems(entries: CompletionEntry[], activities: Activity[]): CompletedItem[] {
+  return entries
+    .map((entry) => {
+      const activity = activities.find((a) => a.id === entry.activityId);
       if (!activity) return null;
       return {
-        completionId: row.id,
+        completionId: entry.id,
         activity,
-        xpEarned: row.xp_earned,
-        completedAt: formatCompletedDate(row.completed_at),
+        xpEarned: entry.xpEarned,
+        completedAt: formatCompletedDate(entry.completedAt),
       };
     })
     .filter((item): item is CompletedItem => item !== null);
@@ -67,7 +59,12 @@ export default function LoreScreen({ navigation }: Props) {
   const [segment, setSegment] = useState<Segment>('To Do');
   const { activities, loading: activitiesLoading, refetch: refetchActivities } = useActivities();
   const { savedIds, pendingIds, toggleSaved } = useSaved();
-  const { userId } = useAuth();
+  const {
+    completions,
+    xp,
+    loading: completionsLoading,
+    refetch: refetchCompletions,
+  } = useCompletions();
   const [filters, setFilters] = useState<ActivityFilters>(EMPTY_FILTERS);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const filtersActive = !isFiltersEmpty(filters);
@@ -75,8 +72,6 @@ export default function LoreScreen({ navigation }: Props) {
     (a) => savedIds.has(a.id) && matchesFilters(a, filters)
   );
 
-  const [completionRows, setCompletionRows] = useState<CompletionRow[]>([]);
-  const [completedLoading, setCompletedLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
 
@@ -96,54 +91,24 @@ export default function LoreScreen({ navigation }: Props) {
     }
   };
 
-  const fetchCompletions = useCallback(async () => {
-    if (!userId) {
-      setCompletedLoading(false);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from('activity_completions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('completed_at', { ascending: false });
-
-    if (error) {
-      console.warn('Failed to load completed lore:', error.message);
-    } else {
-      setCompletionRows((data as CompletionRow[] | null) ?? []);
-    }
-    setCompletedLoading(false);
-  }, [userId]);
-
-  useEffect(() => {
-    setCompletedLoading(true);
-    fetchCompletions();
-  }, [fetchCompletions]);
-
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([refetchActivities(), fetchCompletions()]);
+    await Promise.all([refetchActivities(), refetchCompletions()]);
     setRefreshing(false);
   };
 
   const completedItems = useMemo(
     () =>
-      mapRowsToItems(completionRows, activities).filter((item) =>
+      mapEntriesToItems(completions, activities).filter((item) =>
         matchesFilters(item.activity, filters)
       ),
-    [completionRows, activities, filters]
-  );
-
-  const xp = useMemo(
-    () => completionRows.reduce((sum, row) => sum + row.xp_earned, 0),
-    [completionRows]
+    [completions, activities, filters]
   );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <TopBar xp={xp} showSearch={false} onProfilePress={() => navigation.navigate('Profile')} />
+        <TopBar xp={xp} showSearch={false} />
         <PillHeader title="YOUR LORE" onFilterPress={() => setFilterModalVisible(true)} />
         {filtersActive ? (
           <Pressable onPress={() => setFilters(EMPTY_FILTERS)} style={styles.activeFilterChip}>
@@ -214,7 +179,7 @@ export default function LoreScreen({ navigation }: Props) {
             <SectionPill label="Completed Lore" count={completedItems.length} />
           }
           ListEmptyComponent={
-            completedLoading ? (
+            completionsLoading ? (
               <View style={styles.empty}>
                 <ActivityIndicator color={colors.orange} />
               </View>

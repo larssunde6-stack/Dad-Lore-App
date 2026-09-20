@@ -7,7 +7,7 @@ import PrimaryButton from '../components/PrimaryButton';
 import ReportModal from '../components/ReportModal';
 import CenterToast, { ToastState } from '../components/CenterToast';
 import { useActivities } from '../hooks/useActivities';
-import { useCompletions } from '../hooks/useCompletions';
+import { useCompletions } from '../context/CompletionsContext';
 import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
 import { useAuth } from '../context/AuthContext';

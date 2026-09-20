@@ -7,8 +7,9 @@ import PrimaryButton from '../components/PrimaryButton';
 import TopBar from '../components/TopBar';
 import PillHeader from '../components/PillHeader';
 import AccessibilityStatement from '../components/AccessibilityStatement';
+import CenterToast, { ToastState } from '../components/CenterToast';
 import { useActivities } from '../hooks/useActivities';
-import { useCompletions } from '../hooks/useCompletions';
+import { useCompletions } from '../context/CompletionsContext';
 import { Activity } from '../data/activities';
 import { getLevel } from '../utils/level';
 import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
@@ -61,7 +62,6 @@ const badgeDefs: BadgeDef[] = [
 const menuItems = [
   { label: 'Activity History', icon: 'history' as const, route: null },
   { label: 'Notification Settings', icon: 'bell-outline' as const, route: null },
-  { label: 'Home Location', icon: 'map-marker-outline' as const, route: null },
   { label: 'Privacy & Terms', icon: 'shield-check-outline' as const, route: 'Legal' as const },
   { label: 'Help & Support', icon: 'help-circle-outline' as const, route: null },
 ];
@@ -71,11 +71,25 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
   const { completions, xp: lorePoints, loading: statsLoading, refetch: refetchCompletions } =
     useCompletions();
   const [refreshing, setRefreshing] = useState(false);
+  const [toast, setToast] = useState<ToastState>(null);
+
+  const showToast = (next: ToastState) => {
+    setToast(next);
+    setTimeout(() => setToast(null), 2200);
+  };
 
   const handleRefresh = async () => {
     setRefreshing(true);
     await Promise.all([refetchActivities(), refetchCompletions()]);
     setRefreshing(false);
+  };
+
+  const handleMenuPress = (item: (typeof menuItems)[number]) => {
+    if (item.route === 'Legal') {
+      navigation.navigate('Legal');
+      return;
+    }
+    showToast({ message: `${item.label} is coming soon`, tone: 'success' });
   };
 
   const completedActivities = completions
@@ -103,7 +117,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
         }
       >
         <TopBar xp={lorePoints} showSearch={false} />
-        <PillHeader title="PROFILE" />
+        <PillHeader title="PROFILE" showFilter={false} />
 
         <View style={styles.profileHeader}>
           <LinearGradient
@@ -164,12 +178,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
           {menuItems.map((item, index) => (
             <Pressable
               key={item.label}
-              disabled={!item.route}
-              onPress={() => {
-                if (item.route === 'Legal') {
-                  navigation.navigate('Legal');
-                }
-              }}
+              onPress={() => handleMenuPress(item)}
               style={[styles.menuItem, index !== menuItems.length - 1 && styles.menuDivider]}
             >
               <View style={styles.menuLeft}>
@@ -190,6 +199,8 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
 
         <AccessibilityStatement />
       </ScrollView>
+
+      <CenterToast toast={toast} />
     </SafeAreaView>
   );
 }

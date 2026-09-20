@@ -14,7 +14,7 @@ import FilterModal, {
 } from '../components/FilterModal';
 import CenterToast, { ToastState } from '../components/CenterToast';
 import { useActivities } from '../hooks/useActivities';
-import { useCompletions } from '../hooks/useCompletions';
+import { useCompletions } from '../context/CompletionsContext';
 import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
 import { TabScreenProps } from '../navigation/types';
@@ -86,7 +86,6 @@ export default function ExploreScreen({ navigation }: Props) {
           searchPlaceholder="Search activities, sidequests..."
           searchValue={query}
           onSearchChange={setQuery}
-          onProfilePress={() => navigation.navigate('Profile')}
         />
       </View>
 
@@ -139,6 +138,7 @@ export default function ExploreScreen({ navigation }: Props) {
             onFilterPress={() => setFilterModalVisible(true)}
             countLabel={isSearching ? `${filtered.length} results` : `${filtered.length} total`}
             compact
+            gradient
           />
           {filtersActive ? (
             <Pressable onPress={() => setFilters(EMPTY_FILTERS)} style={styles.activeFilterChip}>
