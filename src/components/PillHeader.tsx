@@ -6,14 +6,18 @@ import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 type Props = {
   title: string;
   onFilterPress?: () => void;
+  countLabel?: string;
+  compact?: boolean;
 };
 
 const FILTER_BUTTON_SIZE = 42;
 
-export default function PillHeader({ title, onFilterPress }: Props) {
+export default function PillHeader({ title, onFilterPress, countLabel, compact }: Props) {
   return (
-    <View style={styles.row}>
-      <View style={styles.sideSpacer} />
+    <View style={[styles.row, compact && styles.rowCompact]}>
+      <View style={styles.sideSpacer}>
+        {countLabel ? <Text style={styles.countLabel}>{countLabel}</Text> : null}
+      </View>
       <View style={styles.pillWrap}>
         <View style={[styles.pill, shadow.soft]}>
           <Text style={styles.pillText}>{title}</Text>
@@ -33,8 +37,16 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     marginBottom: spacing.lg,
   },
+  rowCompact: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+  },
   sideSpacer: {
-    width: FILTER_BUTTON_SIZE,
+    minWidth: FILTER_BUTTON_SIZE,
+  },
+  countLabel: {
+    color: colors.textMuted,
+    fontSize: 11.5,
   },
   pillWrap: {
     flex: 1,

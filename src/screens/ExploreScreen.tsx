@@ -57,20 +57,18 @@ export default function ExploreScreen({ navigation }: Props) {
       </View>
 
       <View style={styles.exploreHeader}>
-        <PillHeader title="EXPLORE" onFilterPress={() => setFilterModalVisible(true)} />
-        <View style={styles.metaRow}>
-          {filtersActive ? (
-            <Pressable onPress={() => setFilters(EMPTY_FILTERS)} style={styles.activeFilterChip}>
-              <MaterialCommunityIcons name="close-circle" size={14} color={colors.orangeBright} />
-              <Text style={styles.activeFilterText}>Filters active</Text>
-            </Pressable>
-          ) : (
-            <View />
-          )}
-          <Text style={styles.countText}>
-            {isSearching ? `${filtered.length} results` : `${filtered.length} total`}
-          </Text>
-        </View>
+        <PillHeader
+          title="EXPLORE"
+          onFilterPress={() => setFilterModalVisible(true)}
+          countLabel={isSearching ? `${filtered.length} results` : `${filtered.length} total`}
+          compact
+        />
+        {filtersActive ? (
+          <Pressable onPress={() => setFilters(EMPTY_FILTERS)} style={styles.activeFilterChip}>
+            <MaterialCommunityIcons name="close-circle" size={14} color={colors.orangeBright} />
+            <Text style={styles.activeFilterText}>Filters active — tap to clear</Text>
+          </Pressable>
+        ) : null}
       </View>
 
       <FlatList
@@ -135,20 +133,18 @@ const styles = StyleSheet.create({
   },
   banner: {
     paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
     backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSubtle,
   },
   exploreHeader: {
     paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
     backgroundColor: colors.background,
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSubtle,
     paddingBottom: spacing.sm,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm,
   },
   listContent: {
     paddingTop: spacing.md,
@@ -160,23 +156,20 @@ const styles = StyleSheet.create({
   activeFilterChip: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-start',
     backgroundColor: colors.orangeMuted,
     borderRadius: radii.pill,
     borderWidth: 1,
     borderColor: colors.orangeDeep,
     paddingVertical: 5,
     paddingHorizontal: 10,
+    marginBottom: spacing.sm,
   },
   activeFilterText: {
     color: colors.orangeBright,
     fontSize: 11,
     marginLeft: 4,
     ...fonts.heading,
-  },
-  countText: {
-    color: colors.textMuted,
-    fontSize: 11.5,
-    marginLeft: 'auto',
   },
   emptyState: {
     paddingVertical: spacing.xl,
