@@ -17,17 +17,20 @@ export default function PillHeader({ title, onFilterPress, countLabel, compact }
     <View style={[styles.row, compact && styles.rowCompact]}>
       <View style={styles.sideSpacer}>
         {countLabel ? (
-          <View style={[styles.countPill, shadow.soft]}>
+          <View style={[styles.countPill, !compact && [styles.countPillFilled, shadow.soft]]}>
             <Text style={styles.countLabel}>{countLabel}</Text>
           </View>
         ) : null}
       </View>
       <View style={styles.pillWrap}>
-        <View style={[styles.pill, shadow.soft]}>
+        <View style={[styles.pill, !compact && [styles.pillFilled, shadow.soft]]}>
           <Text style={styles.pillText}>{title}</Text>
         </View>
       </View>
-      <Pressable onPress={onFilterPress} style={[styles.filterButton, shadow.soft]}>
+      <Pressable
+        onPress={onFilterPress}
+        style={[styles.filterButton, !compact && [styles.filterButtonFilled, shadow.soft]]}
+      >
         <MaterialCommunityIcons name="tune" size={19} color={colors.orange} />
       </Pressable>
     </View>
@@ -50,12 +53,14 @@ const styles = StyleSheet.create({
   },
   countPill: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: radii.pill,
     paddingVertical: 7,
     paddingHorizontal: 12,
+  },
+  countPillFilled: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   countLabel: {
     color: colors.textMuted,
@@ -67,12 +72,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pill: {
-    backgroundColor: colors.orangeMuted,
-    borderWidth: 1,
-    borderColor: colors.orangeDeep,
     borderRadius: radii.pill,
     paddingVertical: 12,
     paddingHorizontal: 30,
+  },
+  pillFilled: {
+    backgroundColor: colors.orangeMuted,
+    borderWidth: 1,
+    borderColor: colors.orangeDeep,
   },
   pillText: {
     color: colors.orangeBright,
@@ -84,10 +91,12 @@ const styles = StyleSheet.create({
     width: FILTER_BUTTON_SIZE,
     height: FILTER_BUTTON_SIZE,
     borderRadius: FILTER_BUTTON_SIZE / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterButtonFilled: {
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
