@@ -2,16 +2,21 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
+export type ToggleSavedResult =
+  | { status: 'saved' }
+  | { status: 'removed' }
+  | { status: 'error'; message: string };
+
 type SavedContextValue = {
   savedIds: Set<string>;
   pendingIds: Set<string>;
-  toggleSaved: (id: string) => void;
+  toggleSaved: (id: string) => Promise<ToggleSavedResult>;
 };
 
 const SavedContext = createContext<SavedContextValue | undefined>(undefined);
 
 export function SavedProvider({ children }: { children: React.ReactNode }) {
-  const { userId } = useAuth();
+  const { userId, isReady, authError } = useAuth();
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
 
@@ -35,8 +40,18 @@ export function SavedProvider({ children }: { children: React.ReactNode }) {
     };
   }, [userId]);
 
-  const toggleSaved = async (id: string) => {
-    if (!userId || pendingIds.has(id)) return;
+  const toggleSaved = async (id: string): Promise<ToggleSavedResult> => {
+    if (pendingIds.has(id)) {
+      return { status: 'error', message: 'Already working on that — hang on.' };
+    }
+
+    if (!userId) {
+      const message =
+        isReady && authError
+          ? `Not signed in: ${authError}`
+          : 'Still signing you in — try again in a moment.';
+      return { status: 'error', message };
+    }
 
     const wasSaved = savedIds.has(id);
 
@@ -53,6 +68,8 @@ export function SavedProvider({ children }: { children: React.ReactNode }) {
       return next;
     });
 
+    let result: ToggleSavedResult;
+
     if (wasSaved) {
       const { error } = await supabase
         .from('saved_lore')
@@ -62,6 +79,9 @@ export function SavedProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         console.warn('Failed to unsave lore:', error.message);
         setSavedIds((prev) => new Set(prev).add(id));
+        result = { status: 'error', message: error.message };
+      } else {
+        result = { status: 'removed' };
       }
     } else {
       const { error } = await supabase
@@ -74,6 +94,9 @@ export function SavedProvider({ children }: { children: React.ReactNode }) {
           next.delete(id);
           return next;
         });
+        result = { status: 'error', message: error.message };
+      } else {
+        result = { status: 'saved' };
       }
     }
 
@@ -82,6 +105,8 @@ export function SavedProvider({ children }: { children: React.ReactNode }) {
       next.delete(id);
       return next;
     });
+
+    return result;
   };
 
   const value = useMemo(

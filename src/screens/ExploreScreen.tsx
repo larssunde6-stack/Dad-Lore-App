@@ -7,6 +7,7 @@ import ActivityCarouselCard from '../components/ActivityCarouselCard';
 import TopBar from '../components/TopBar';
 import PillHeader from '../components/PillHeader';
 import FilterModal, { ActivityFilters, EMPTY_FILTERS, isFiltersEmpty } from '../components/FilterModal';
+import CenterToast, { ToastState } from '../components/CenterToast';
 import { useActivities } from '../hooks/useActivities';
 import { useCompletions } from '../hooks/useCompletions';
 import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
@@ -25,6 +26,23 @@ export default function ExploreScreen({ navigation }: Props) {
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<ActivityFilters>(EMPTY_FILTERS);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [toast, setToast] = useState<ToastState>(null);
+
+  const showToast = (next: ToastState) => {
+    setToast(next);
+    setTimeout(() => setToast(null), 2200);
+  };
+
+  const handleToggleSave = async (id: string) => {
+    const result = await toggleSaved(id);
+    if (result.status === 'saved') {
+      showToast({ message: 'Saved', tone: 'success' });
+    } else if (result.status === 'removed') {
+      showToast({ message: 'Removed from Saved', tone: 'success' });
+    } else {
+      showToast({ message: result.message, tone: 'error' });
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -89,7 +107,7 @@ export default function ExploreScreen({ navigation }: Props) {
                 activity={item}
                 saved={savedIds.has(item.id)}
                 savePending={pendingIds.has(item.id)}
-                onToggleSave={() => toggleSaved(item.id)}
+                onToggleSave={() => handleToggleSave(item.id)}
                 onPress={() => navigation.navigate('ActivityDetail', { activityId: item.id })}
               />
             </View>
@@ -133,6 +151,8 @@ export default function ExploreScreen({ navigation }: Props) {
         value={filters}
         onApply={setFilters}
       />
+
+      <CenterToast toast={toast} />
     </SafeAreaView>
   );
 }

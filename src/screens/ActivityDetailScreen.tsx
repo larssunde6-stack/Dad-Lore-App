@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
 import ReportModal from '../components/ReportModal';
+import CenterToast, { ToastState } from '../components/CenterToast';
 import { useActivities } from '../hooks/useActivities';
 import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
@@ -34,11 +35,15 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
   const { activityId } = route.params;
   const { activities, loading, error } = useActivities();
   const { savedIds, pendingIds, toggleSaved } = useSaved();
-  const { userId } = useAuth();
+  const { userId, isReady, authError } = useAuth();
   const [reportVisible, setReportVisible] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
-  const [confirmation, setConfirmation] = useState<{ xp: number } | null>(null);
-  const [completeError, setCompleteError] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastState>(null);
+
+  const showToast = (next: ToastState) => {
+    setToast(next);
+    setTimeout(() => setToast(null), 2200);
+  };
 
   if (loading) {
     return (
@@ -67,9 +72,18 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
   const savePending = pendingIds.has(activity.id);
 
   const handleMarkAsDone = async () => {
-    if (isCompleting || !userId) return;
+    if (isCompleting) return;
+
+    if (!userId) {
+      const message =
+        isReady && authError
+          ? `Not signed in: ${authError}`
+          : 'Still signing you in — try again in a moment.';
+      showToast({ message, tone: 'error' });
+      return;
+    }
+
     setIsCompleting(true);
-    setCompleteError(null);
 
     const xp = activity.loreRating * 20;
     const { error: insertError } = await supabase.from('activity_completions').insert({
@@ -81,12 +95,22 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
     setIsCompleting(false);
 
     if (insertError) {
-      setCompleteError(insertError.message);
+      showToast({ message: `Couldn't log that: ${insertError.message}`, tone: 'error' });
       return;
     }
 
-    setConfirmation({ xp });
-    setTimeout(() => setConfirmation(null), 2500);
+    showToast({ message: `Marked as Done — Added to Your Lore (+${xp} XP)`, tone: 'success' });
+  };
+
+  const handleToggleSave = async () => {
+    const result = await toggleSaved(activity.id);
+    if (result.status === 'saved') {
+      showToast({ message: 'Saved', tone: 'success' });
+    } else if (result.status === 'removed') {
+      showToast({ message: 'Removed from Saved', tone: 'success' });
+    } else {
+      showToast({ message: result.message, tone: 'error' });
+    }
   };
 
   return (
@@ -107,7 +131,7 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
                 <MaterialCommunityIcons name="flag-outline" size={18} color={colors.textPrimary} />
               </Pressable>
               <Pressable
-                onPress={() => toggleSaved(activity.id)}
+                onPress={handleToggleSave}
                 disabled={savePending}
                 style={[styles.backButton, savePending && styles.backButtonPending]}
                 hitSlop={10}
@@ -183,17 +207,6 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
       </ScrollView>
 
       <View style={styles.bottomBar}>
-        {confirmation ? (
-          <View style={styles.confirmationBanner}>
-            <MaterialCommunityIcons name="check-circle" size={16} color={colors.success} />
-            <Text style={styles.confirmationText}>
-              +{confirmation.xp} XP · Added to Your Lore
-            </Text>
-          </View>
-        ) : null}
-        {completeError ? (
-          <Text style={styles.completeErrorText}>Couldn't log that: {completeError}</Text>
-        ) : null}
         <PrimaryButton
           label={isCompleting ? 'Marking as Done...' : 'Mark as Done'}
           icon="check-decagram-outline"
@@ -209,6 +222,8 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
         activityId={activity.id}
         activityTitle={activity.title}
       />
+
+      <CenterToast toast={toast} />
     </SafeAreaView>
   );
 }
@@ -361,28 +376,5 @@ const styles = StyleSheet.create({
   },
   ctaButton: {
     width: '100%',
-  },
-  confirmationBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.orangeMuted,
-    borderRadius: radii.sm,
-    borderWidth: 1,
-    borderColor: colors.orangeDeep,
-    paddingVertical: 8,
-    marginBottom: spacing.sm,
-  },
-  confirmationText: {
-    color: colors.success,
-    fontSize: 13,
-    marginLeft: 6,
-    ...fonts.heading,
-  },
-  completeErrorText: {
-    color: '#E6807A',
-    fontSize: 12,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
   },
 });

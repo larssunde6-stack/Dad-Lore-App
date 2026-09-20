@@ -7,6 +7,7 @@ import TopBar from '../components/TopBar';
 import PillHeader from '../components/PillHeader';
 import SectionPill from '../components/SectionPill';
 import SegmentedControl from '../components/SegmentedControl';
+import CenterToast, { ToastState } from '../components/CenterToast';
 import { useActivities } from '../hooks/useActivities';
 import { Activity } from '../data/activities';
 import { colors, fonts, spacing } from '../theme/theme';
@@ -65,6 +66,23 @@ export default function LoreScreen({ navigation }: Props) {
 
   const [completionRows, setCompletionRows] = useState<CompletionRow[]>([]);
   const [completedLoading, setCompletedLoading] = useState(true);
+  const [toast, setToast] = useState<ToastState>(null);
+
+  const showToast = (next: ToastState) => {
+    setToast(next);
+    setTimeout(() => setToast(null), 2200);
+  };
+
+  const handleToggleSave = async (id: string) => {
+    const result = await toggleSaved(id);
+    if (result.status === 'saved') {
+      showToast({ message: 'Saved', tone: 'success' });
+    } else if (result.status === 'removed') {
+      showToast({ message: 'Removed from Saved', tone: 'success' });
+    } else {
+      showToast({ message: result.message, tone: 'error' });
+    }
+  };
 
   useEffect(() => {
     if (!userId) {
@@ -147,7 +165,7 @@ export default function LoreScreen({ navigation }: Props) {
               activity={item}
               saved
               savePending={pendingIds.has(item.id)}
-              onToggleSave={() => toggleSaved(item.id)}
+              onToggleSave={() => handleToggleSave(item.id)}
               onPress={() => navigation.navigate('ActivityDetail', { activityId: item.id })}
             />
           )}
@@ -191,6 +209,8 @@ export default function LoreScreen({ navigation }: Props) {
           )}
         />
       )}
+
+      <CenterToast toast={toast} />
     </SafeAreaView>
   );
 }
