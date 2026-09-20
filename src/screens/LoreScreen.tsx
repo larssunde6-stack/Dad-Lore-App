@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ActivityCard from '../components/ActivityCard';
@@ -8,9 +8,15 @@ import PillHeader from '../components/PillHeader';
 import SectionPill from '../components/SectionPill';
 import SegmentedControl from '../components/SegmentedControl';
 import CenterToast, { ToastState } from '../components/CenterToast';
+import FilterModal, {
+  ActivityFilters,
+  EMPTY_FILTERS,
+  isFiltersEmpty,
+  matchesFilters,
+} from '../components/FilterModal';
 import { useActivities } from '../hooks/useActivities';
 import { Activity } from '../data/activities';
-import { colors, fonts, spacing } from '../theme/theme';
+import { colors, fonts, radii, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -62,7 +68,12 @@ export default function LoreScreen({ navigation }: Props) {
   const { activities, loading: activitiesLoading } = useActivities();
   const { savedIds, pendingIds, toggleSaved } = useSaved();
   const { userId } = useAuth();
-  const savedActivities = activities.filter((a) => savedIds.has(a.id));
+  const [filters, setFilters] = useState<ActivityFilters>(EMPTY_FILTERS);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const filtersActive = !isFiltersEmpty(filters);
+  const savedActivities = activities.filter(
+    (a) => savedIds.has(a.id) && matchesFilters(a, filters)
+  );
 
   const [completionRows, setCompletionRows] = useState<CompletionRow[]>([]);
   const [completedLoading, setCompletedLoading] = useState(true);
@@ -116,8 +127,11 @@ export default function LoreScreen({ navigation }: Props) {
   }, [userId]);
 
   const completedItems = useMemo(
-    () => mapRowsToItems(completionRows, activities),
-    [completionRows, activities]
+    () =>
+      mapRowsToItems(completionRows, activities).filter((item) =>
+        matchesFilters(item.activity, filters)
+      ),
+    [completionRows, activities, filters]
   );
 
   const xp = useMemo(
@@ -129,7 +143,13 @@ export default function LoreScreen({ navigation }: Props) {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <TopBar xp={xp} showSearch={false} onProfilePress={() => navigation.navigate('Profile')} />
-        <PillHeader title="YOUR LORE" />
+        <PillHeader title="YOUR LORE" onFilterPress={() => setFilterModalVisible(true)} />
+        {filtersActive ? (
+          <Pressable onPress={() => setFilters(EMPTY_FILTERS)} style={styles.activeFilterChip}>
+            <MaterialCommunityIcons name="close-circle" size={14} color={colors.orangeBright} />
+            <Text style={styles.activeFilterText}>Filters active — tap to clear</Text>
+          </Pressable>
+        ) : null}
         <SegmentedControl
           options={['To Do', 'Completed']}
           value={segment}
@@ -210,6 +230,13 @@ export default function LoreScreen({ navigation }: Props) {
         />
       )}
 
+      <FilterModal
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        value={filters}
+        onApply={setFilters}
+      />
+
       <CenterToast toast={toast} />
     </SafeAreaView>
   );
@@ -222,6 +249,24 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: spacing.lg,
+  },
+  activeFilterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.orangeMuted,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.orangeDeep,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    marginBottom: spacing.md,
+  },
+  activeFilterText: {
+    color: colors.orangeBright,
+    fontSize: 11,
+    marginLeft: 4,
+    ...fonts.heading,
   },
   listContent: {
     paddingHorizontal: spacing.lg,

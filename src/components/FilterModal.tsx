@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
-import { FunType, Kind, RiskLevel } from '../data/activities';
+import { Activity, FunType, Kind, RiskLevel } from '../data/activities';
 
 export type ActivityFilters = {
   risk: RiskLevel[];
@@ -14,6 +14,13 @@ export const EMPTY_FILTERS: ActivityFilters = { risk: [], kind: [], funType: [] 
 
 export function isFiltersEmpty(filters: ActivityFilters): boolean {
   return filters.risk.length === 0 && filters.kind.length === 0 && filters.funType.length === 0;
+}
+
+export function matchesFilters(activity: Activity, filters: ActivityFilters): boolean {
+  if (filters.risk.length > 0 && !filters.risk.includes(activity.riskLevel)) return false;
+  if (filters.kind.length > 0 && !filters.kind.some((k) => activity.kind.includes(k))) return false;
+  if (filters.funType.length > 0 && !filters.funType.includes(activity.funType)) return false;
+  return true;
 }
 
 const RISK_OPTIONS: { value: RiskLevel; label: string; color: string }[] = [

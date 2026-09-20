@@ -6,7 +6,12 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ActivityCarouselCard from '../components/ActivityCarouselCard';
 import TopBar from '../components/TopBar';
 import PillHeader from '../components/PillHeader';
-import FilterModal, { ActivityFilters, EMPTY_FILTERS, isFiltersEmpty } from '../components/FilterModal';
+import FilterModal, {
+  ActivityFilters,
+  EMPTY_FILTERS,
+  isFiltersEmpty,
+  matchesFilters,
+} from '../components/FilterModal';
 import CenterToast, { ToastState } from '../components/CenterToast';
 import { useActivities } from '../hooks/useActivities';
 import { useCompletions } from '../hooks/useCompletions';
@@ -47,9 +52,7 @@ export default function ExploreScreen({ navigation }: Props) {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return activities.filter((activity) => {
-      if (filters.risk.length > 0 && !filters.risk.includes(activity.riskLevel)) return false;
-      if (filters.kind.length > 0 && !filters.kind.some((k) => activity.kind.includes(k))) return false;
-      if (filters.funType.length > 0 && !filters.funType.includes(activity.funType)) return false;
+      if (!matchesFilters(activity, filters)) return false;
 
       if (!q) return true;
       const haystack = [activity.title, activity.blurb, ...activity.tags].join(' ').toLowerCase();
