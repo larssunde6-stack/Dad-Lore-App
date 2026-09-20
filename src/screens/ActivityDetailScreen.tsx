@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
 import ReportModal from '../components/ReportModal';
 import { useActivities } from '../hooks/useActivities';
-import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
+import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -114,9 +115,14 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
             </View>
           </View>
 
-          <View style={styles.heroIcon}>
+          <LinearGradient
+            colors={gradients.icon}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.heroIcon, shadow.soft]}
+          >
             <MaterialCommunityIcons name={activity.icon as any} size={46} color={colors.orange} />
-          </View>
+          </LinearGradient>
           <View style={styles.tagRow}>
             {activity.kind.map((k) => (
               <View key={k} style={styles.kindTag}>
@@ -273,7 +279,6 @@ const styles = StyleSheet.create({
     width: 76,
     height: 76,
     borderRadius: radii.lg,
-    backgroundColor: colors.orangeMuted,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,

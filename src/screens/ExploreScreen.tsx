@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ActivityCarouselCard from '../components/ActivityCarouselCard';
 import TopBar from '../components/TopBar';
@@ -8,7 +9,7 @@ import PillHeader from '../components/PillHeader';
 import FilterModal, { ActivityFilters, EMPTY_FILTERS, isFiltersEmpty } from '../components/FilterModal';
 import { useActivities } from '../hooks/useActivities';
 import { useCompletions } from '../hooks/useCompletions';
-import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
+import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
 import { TabScreenProps } from '../navigation/types';
 
@@ -46,7 +47,7 @@ export default function ExploreScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.banner}>
+      <View style={[styles.banner, shadow.soft]}>
         <TopBar
           xp={xp}
           searchPlaceholder="Search activities, sidequests..."
@@ -56,7 +57,7 @@ export default function ExploreScreen({ navigation }: Props) {
         />
       </View>
 
-      <View style={styles.exploreHeader}>
+      <View style={[styles.exploreHeader, shadow.soft]}>
         <PillHeader
           title="EXPLORE"
           onFilterPress={() => setFilterModalVisible(true)}
@@ -108,12 +109,14 @@ export default function ExploreScreen({ navigation }: Props) {
         onPress={handleSurpriseMe}
         disabled={activities.length === 0}
         style={({ pressed }) => [
-          styles.fab,
+          styles.fabWrap,
           shadow.glow,
           (activities.length === 0 || pressed) && styles.fabPressed,
         ]}
       >
-        <MaterialCommunityIcons name="dice-multiple-outline" size={26} color={colors.textOnOrange} />
+        <LinearGradient colors={gradients.fab} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
+          <MaterialCommunityIcons name="dice-multiple-outline" size={26} color={colors.textOnOrange} />
+        </LinearGradient>
       </Pressable>
 
       <FilterModal
@@ -134,17 +137,19 @@ const styles = StyleSheet.create({
   banner: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderSubtle,
+    borderBottomColor: colors.border,
+    zIndex: 2,
   },
   exploreHeader: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderSubtle,
+    borderBottomColor: colors.border,
     paddingBottom: spacing.sm,
+    zIndex: 1,
   },
   listContent: {
     paddingTop: spacing.md,
@@ -181,14 +186,18 @@ const styles = StyleSheet.create({
   footerSpace: {
     height: 80,
   },
-  fab: {
+  fabWrap: {
     position: 'absolute',
     right: spacing.lg,
     bottom: spacing.xl,
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: colors.orange,
+  },
+  fab: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },

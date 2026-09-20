@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
 import TopBar from '../components/TopBar';
@@ -10,7 +11,7 @@ import { useActivities } from '../hooks/useActivities';
 import { useCompletions } from '../hooks/useCompletions';
 import { Activity } from '../data/activities';
 import { getLevel } from '../utils/level';
-import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
+import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
 import { TabScreenProps } from '../navigation/types';
 
 type BadgeDef = {
@@ -91,10 +92,15 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
         <PillHeader title="PROFILE" />
 
         <View style={styles.profileHeader}>
-          <View style={styles.avatar}>
+          <LinearGradient
+            colors={gradients.icon}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.avatar, shadow.soft]}
+          >
             <MaterialCommunityIcons name="account" size={38} color={colors.orange} />
             <View style={styles.avatarRing} />
-          </View>
+          </LinearGradient>
           <Text style={styles.name}>Jordan Sundberg</Text>
           <Text style={styles.subtitle}>Level {level} · Lore in Progress</Text>
 
@@ -192,7 +198,6 @@ const styles = StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: colors.orangeMuted,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,

@@ -27,6 +27,11 @@ export const colors = {
   riskRedBg: 'rgba(212, 0, 0, 0.1)',
 };
 
+export const gradients = {
+  icon: ['rgba(255, 138, 61, 0.32)', 'rgba(255, 106, 31, 0.08)'] as const,
+  fab: ['#FF8A3D', '#D8500F'] as const,
+};
+
 export const shadow = {
   card: {
     shadowColor: '#000000',

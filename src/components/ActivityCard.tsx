@@ -1,8 +1,9 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Activity } from '../data/activities';
-import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
+import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
 
 const riskColor: Record<Activity['riskLevel'], string> = {
   green: colors.riskGreen,
@@ -40,9 +41,14 @@ export default function ActivityCard({
       <View style={styles.cornerFold} />
 
       <View style={styles.topRow}>
-        <View style={styles.iconBadge}>
+        <LinearGradient
+          colors={gradients.icon}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.iconBadge, shadow.soft]}
+        >
           <MaterialCommunityIcons name={activity.icon as any} size={26} color={colors.orange} />
-        </View>
+        </LinearGradient>
 
         <View style={styles.headerText}>
           <Text style={styles.kindLabel}>{activity.kind.join(' · ')}</Text>
@@ -138,7 +144,6 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: radii.sm,
-    backgroundColor: colors.orangeMuted,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
