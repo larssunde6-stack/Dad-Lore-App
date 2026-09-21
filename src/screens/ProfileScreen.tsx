@@ -178,7 +178,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
         }
       >
         <TopBar xp={lorePoints} showSearch={false} />
-        <PillHeader title="PROFILE" showFilter={false} />
+        <PillHeader title="PROFILE" showFilter={false} gradient />
 
         <View style={styles.profileHeader}>
           <LinearGradient

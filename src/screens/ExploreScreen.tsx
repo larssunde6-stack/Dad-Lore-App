@@ -21,9 +21,6 @@ import { TabScreenProps } from '../navigation/types';
 
 type Props = TabScreenProps<'Explore'>;
 
-const HEADER_HEIGHT = 78;
-const ACTIVE_FILTER_HEIGHT = 34;
-
 export default function ExploreScreen({ navigation }: Props) {
   const { savedIds, pendingIds, toggleSaved } = useSaved();
   const { activities, loading, error, refetch: refetchActivities } = useActivities();
@@ -76,8 +73,6 @@ export default function ExploreScreen({ navigation }: Props) {
     navigation.navigate('ActivityDetail', { activityId: pick.id });
   };
 
-  const listTopInset = filtersActive ? HEADER_HEIGHT + ACTIVE_FILTER_HEIGHT : HEADER_HEIGHT;
-
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.banner}>
@@ -94,14 +89,26 @@ export default function ExploreScreen({ navigation }: Props) {
           data={loading || error ? [] : filtered}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.listContent, { paddingTop: listTopInset }]}
+          contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              tintColor={colors.orange}
-              progressViewOffset={listTopInset}
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.orange} />
+          }
+          ListHeaderComponent={
+            <View style={styles.listHeader}>
+              <PillHeader
+                title="EXPLORE"
+                onFilterPress={() => setFilterModalVisible(true)}
+                countLabel={isSearching ? `${filtered.length} results` : `${filtered.length} total`}
+                compact
+                gradient
+              />
+              {filtersActive ? (
+                <Pressable onPress={() => setFilters(EMPTY_FILTERS)} style={styles.activeFilterChip}>
+                  <MaterialCommunityIcons name="close-circle" size={14} color={colors.orangeBright} />
+                  <Text style={styles.activeFilterText}>Filters active — tap to clear</Text>
+                </Pressable>
+              ) : null}
+            </View>
           }
           ListEmptyComponent={
             loading ? (
@@ -131,22 +138,6 @@ export default function ExploreScreen({ navigation }: Props) {
           )}
           ListFooterComponent={<View style={styles.footerSpace} />}
         />
-
-        <View style={styles.floatingHeader} pointerEvents="box-none">
-          <PillHeader
-            title="EXPLORE"
-            onFilterPress={() => setFilterModalVisible(true)}
-            countLabel={isSearching ? `${filtered.length} results` : `${filtered.length} total`}
-            compact
-            gradient
-          />
-          {filtersActive ? (
-            <Pressable onPress={() => setFilters(EMPTY_FILTERS)} style={styles.activeFilterChip}>
-              <MaterialCommunityIcons name="close-circle" size={14} color={colors.orangeBright} />
-              <Text style={styles.activeFilterText}>Filters active — tap to clear</Text>
-            </Pressable>
-          ) : null}
-        </View>
       </View>
 
       <Pressable
@@ -199,11 +190,7 @@ const styles = StyleSheet.create({
   listWrap: {
     flex: 1,
   },
-  floatingHeader: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+  listHeader: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
   },

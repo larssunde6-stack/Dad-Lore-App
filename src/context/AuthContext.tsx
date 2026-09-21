@@ -13,7 +13,7 @@ type AuthContextValue = {
   isAnonymous: boolean;
   email: string | null;
   username: string | null;
-  signUp: (email: string, password: string, username: string) => Promise<AuthActionResult>;
+  signUp: (email: string, password: string) => Promise<AuthActionResult>;
   logIn: (email: string, password: string) => Promise<AuthActionResult>;
   logOut: () => Promise<AuthActionResult>;
   requestPasswordReset: (email: string) => Promise<AuthActionResult>;
@@ -116,12 +116,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const signUp = async (
-    email: string,
-    password: string,
-    username: string
-  ): Promise<AuthActionResult> => {
-    const { error } = await supabase.auth.updateUser({ email, password, data: { username } });
+  const signUp = async (email: string, password: string): Promise<AuthActionResult> => {
+    const { error } = await supabase.auth.updateUser({ email, password });
     return toResult(error);
   };
 

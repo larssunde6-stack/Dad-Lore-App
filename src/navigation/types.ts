@@ -7,6 +7,7 @@ export type RootStackParamList = {
   ActivityDetail: { activityId: string };
   Legal: undefined;
   Auth: undefined;
+  WelcomeUsername: undefined;
   ResetPassword: undefined;
   CreateActivity: undefined;
 };

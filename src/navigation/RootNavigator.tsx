@@ -14,6 +14,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import ActivityDetailScreen from '../screens/ActivityDetailScreen';
 import LegalScreen from '../screens/LegalScreen';
 import AuthScreen from '../screens/AuthScreen';
+import WelcomeUsernameScreen from '../screens/WelcomeUsernameScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import CreateActivityScreen from '../screens/CreateActivityScreen';
 import { colors } from '../theme/theme';
@@ -76,6 +77,13 @@ const pushedScreenOptions = {
   fullScreenGestureEnabled: true,
 };
 
+const authModalScreenOptions = {
+  presentation: 'modal' as const,
+  animation: 'slide_from_bottom' as const,
+  gestureEnabled: true,
+  gestureDirection: 'vertical' as const,
+};
+
 export default function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -86,7 +94,12 @@ export default function RootNavigator() {
         options={pushedScreenOptions}
       />
       <Stack.Screen name="Legal" component={LegalScreen} options={pushedScreenOptions} />
-      <Stack.Screen name="Auth" component={AuthScreen} options={pushedScreenOptions} />
+      <Stack.Screen name="Auth" component={AuthScreen} options={authModalScreenOptions} />
+      <Stack.Screen
+        name="WelcomeUsername"
+        component={WelcomeUsernameScreen}
+        options={pushedScreenOptions}
+      />
       <Stack.Screen
         name="ResetPassword"
         component={ResetPasswordScreen}

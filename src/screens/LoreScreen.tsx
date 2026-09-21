@@ -109,7 +109,7 @@ export default function LoreScreen({ navigation }: Props) {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <TopBar xp={xp} showSearch={false} />
-        <PillHeader title="YOUR LORE" onFilterPress={() => setFilterModalVisible(true)} />
+        <PillHeader title="YOUR LORE" onFilterPress={() => setFilterModalVisible(true)} gradient />
         {filtersActive ? (
           <Pressable onPress={() => setFilters(EMPTY_FILTERS)} style={styles.activeFilterChip}>
             <MaterialCommunityIcons name="close-circle" size={14} color={colors.orangeBright} />

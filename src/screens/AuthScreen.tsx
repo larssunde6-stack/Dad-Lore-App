@@ -11,12 +11,10 @@ import { RootStackScreenProps } from '../navigation/types';
 type Mode = 'Sign Up' | 'Log In';
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
-const USERNAME_RE = /^[a-zA-Z0-9_]{2,24}$/;
 
 export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>) {
   const { signUp, logIn } = useAuth();
   const [mode, setMode] = useState<Mode>('Sign Up');
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -28,10 +26,6 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
     setFormError(null);
     setFormErrorCode(null);
 
-    if (mode === 'Sign Up' && !USERNAME_RE.test(username.trim())) {
-      setFormError('Username must be 2-24 characters (letters, numbers, underscores).');
-      return;
-    }
     if (!EMAIL_RE.test(email.trim())) {
       setFormError('Enter a valid email address.');
       return;
@@ -47,14 +41,17 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
 
     setSubmitting(true);
     const result =
-      mode === 'Sign Up'
-        ? await signUp(email.trim(), password, username.trim())
-        : await logIn(email.trim(), password);
+      mode === 'Sign Up' ? await signUp(email.trim(), password) : await logIn(email.trim(), password);
     setSubmitting(false);
 
     if (result.status === 'error') {
       setFormError(result.message);
       setFormErrorCode(result.code);
+      return;
+    }
+
+    if (mode === 'Sign Up') {
+      navigation.replace('WelcomeUsername');
       return;
     }
 
@@ -102,22 +99,6 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
           </View>
         ) : null}
 
-        {mode === 'Sign Up' ? (
-          <>
-            <Text style={styles.label}>Username</Text>
-            <TextInput
-              style={styles.input}
-              value={username}
-              onChangeText={setUsername}
-              placeholder="What should we call you?"
-              placeholderTextColor={colors.textMuted}
-              autoCapitalize="none"
-              autoCorrect={false}
-              maxLength={24}
-            />
-          </>
-        ) : null}
-
         <Text style={styles.label}>Email</Text>
         <TextInput
           style={styles.input}
@@ -128,6 +109,8 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
+          autoComplete="email"
+          textContentType="emailAddress"
         />
 
         <Text style={styles.label}>Password</Text>
@@ -138,6 +121,8 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
           placeholder="At least 6 characters"
           placeholderTextColor={colors.textMuted}
           secureTextEntry
+          autoComplete={mode === 'Sign Up' ? 'new-password' : 'current-password'}
+          textContentType={mode === 'Sign Up' ? 'newPassword' : 'password'}
         />
 
         {mode === 'Sign Up' ? (
@@ -150,6 +135,8 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
               placeholder="Type your password again"
               placeholderTextColor={colors.textMuted}
               secureTextEntry
+              autoComplete="new-password"
+              textContentType="newPassword"
             />
           </>
         ) : null}

@@ -102,6 +102,8 @@ export default function ResetPasswordScreen({ navigation }: RootStackScreenProps
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              autoComplete="email"
+              textContentType="emailAddress"
             />
 
             {formError ? <Text style={styles.errorText}>{formError}</Text> : null}
@@ -126,6 +128,8 @@ export default function ResetPasswordScreen({ navigation }: RootStackScreenProps
               placeholderTextColor={colors.textMuted}
               keyboardType="number-pad"
               maxLength={6}
+              autoComplete="one-time-code"
+              textContentType="oneTimeCode"
             />
 
             <Text style={styles.label}>New Password</Text>
@@ -136,6 +140,8 @@ export default function ResetPasswordScreen({ navigation }: RootStackScreenProps
               placeholder="At least 6 characters"
               placeholderTextColor={colors.textMuted}
               secureTextEntry
+              autoComplete="new-password"
+              textContentType="newPassword"
             />
 
             <Text style={styles.label}>Confirm New Password</Text>
@@ -146,6 +152,8 @@ export default function ResetPasswordScreen({ navigation }: RootStackScreenProps
               placeholder="Type your new password again"
               placeholderTextColor={colors.textMuted}
               secureTextEntry
+              autoComplete="new-password"
+              textContentType="newPassword"
             />
 
             {formError ? <Text style={styles.errorText}>{formError}</Text> : null}
