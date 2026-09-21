@@ -18,7 +18,7 @@ import FilterModal, {
 import { useActivities } from '../context/ActivitiesContext';
 import { CompletionEntry, useCompletions } from '../context/CompletionsContext';
 import { Activity } from '../data/activities';
-import { colors, fonts, radii, spacing } from '../theme/theme';
+import { colors, fonts, radii, scrollPhysics, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
 import { TabScreenProps } from '../navigation/types';
 
@@ -132,6 +132,7 @@ export default function LoreScreen({ navigation }: Props) {
           ref={listRef}
           data={savedActivities}
           keyExtractor={(item) => item.id}
+          decelerationRate={scrollPhysics.decelerationRate}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
@@ -173,6 +174,7 @@ export default function LoreScreen({ navigation }: Props) {
           ref={listRef}
           data={completedItems}
           keyExtractor={(item) => item.completionId}
+          decelerationRate={scrollPhysics.decelerationRate}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl

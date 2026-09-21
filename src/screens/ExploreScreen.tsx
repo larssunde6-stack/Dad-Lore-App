@@ -26,7 +26,7 @@ import FilterModal, {
 import CenterToast, { ToastState } from '../components/CenterToast';
 import { useActivities } from '../context/ActivitiesContext';
 import { useCompletions } from '../context/CompletionsContext';
-import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
+import { colors, fonts, gradients, radii, scrollPhysics, shadow, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
 import { TabScreenProps } from '../navigation/types';
 
@@ -146,6 +146,7 @@ export default function ExploreScreen({ navigation }: Props) {
           data={loading || error ? [] : filtered}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
+          decelerationRate={scrollPhysics.decelerationRate}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.orange} />

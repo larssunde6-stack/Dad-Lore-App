@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import SegmentedControl from '../components/SegmentedControl';
-import { colors, fonts, radii, spacing } from '../theme/theme';
+import { colors, fonts, radii, scrollPhysics, spacing } from '../theme/theme';
 import { RootStackScreenProps } from '../navigation/types';
 
 type Doc = 'Privacy' | 'Terms';
@@ -102,7 +102,11 @@ export default function LegalScreen({ navigation }: RootStackScreenProps<'Legal'
         />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        decelerationRate={scrollPhysics.decelerationRate}
+      >
         <View style={styles.draftNotice}>
           <MaterialCommunityIcons name="information-outline" size={14} color={colors.orangeBright} />
           <Text style={styles.draftNoticeText}>

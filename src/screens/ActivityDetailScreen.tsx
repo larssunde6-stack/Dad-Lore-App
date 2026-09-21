@@ -8,7 +8,7 @@ import ReportModal from '../components/ReportModal';
 import CenterToast, { ToastState } from '../components/CenterToast';
 import { useActivities } from '../context/ActivitiesContext';
 import { useCompletions } from '../context/CompletionsContext';
-import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
+import { colors, fonts, gradients, radii, scrollPhysics, shadow, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -139,7 +139,11 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        decelerationRate={scrollPhysics.decelerationRate}
+      >
         <View
           style={[
             styles.heroCard,

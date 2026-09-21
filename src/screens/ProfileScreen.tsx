@@ -23,7 +23,7 @@ import { useCompletions } from '../context/CompletionsContext';
 import { useAuth } from '../context/AuthContext';
 import { Activity } from '../data/activities';
 import { getLevel } from '../utils/level';
-import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
+import { colors, fonts, gradients, radii, scrollPhysics, shadow, spacing } from '../theme/theme';
 import { TabScreenProps } from '../navigation/types';
 
 type BadgeDef = {
@@ -177,6 +177,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
         ref={scrollRef}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        decelerationRate={scrollPhysics.decelerationRate}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.orange} />
         }

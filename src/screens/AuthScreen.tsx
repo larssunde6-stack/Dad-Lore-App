@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
 import SegmentedControl from '../components/SegmentedControl';
 import { useAuth } from '../context/AuthContext';
-import { colors, fonts, radii, spacing } from '../theme/theme';
+import { colors, fonts, radii, scrollPhysics, spacing } from '../theme/theme';
 import { RootStackScreenProps } from '../navigation/types';
 
 type Mode = 'Sign Up' | 'Log In';
@@ -77,7 +77,11 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
         <View style={styles.backButton} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        decelerationRate={scrollPhysics.decelerationRate}
+      >
         <View style={styles.segmentWrap}>
           <SegmentedControl
             options={['Sign Up', 'Log In']}

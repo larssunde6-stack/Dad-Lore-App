@@ -8,7 +8,7 @@ import { useActivities } from '../context/ActivitiesContext';
 import { containsBlockedContent } from '../utils/moderation';
 import { supabase } from '../lib/supabase';
 import { RiskLevel, Kind, FunType } from '../data/activities';
-import { colors, fonts, radii, spacing } from '../theme/theme';
+import { colors, fonts, radii, scrollPhysics, spacing } from '../theme/theme';
 import { RootStackScreenProps } from '../navigation/types';
 
 const ICON_OPTIONS: { name: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
@@ -185,7 +185,11 @@ export default function CreateActivityScreen({ navigation }: RootStackScreenProp
         <View style={styles.backButton} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        decelerationRate={scrollPhysics.decelerationRate}
+      >
         <Text style={styles.label}>Icon</Text>
         <View style={styles.iconGrid}>
           {ICON_OPTIONS.map((option) => {

@@ -1,3 +1,11 @@
+import { Platform } from 'react-native';
+
+// A touch slower than RN's default ('normal': iOS 0.998, Android 0.985) so
+// flings settle sooner instead of gliding — reads as heavier, less floaty.
+export const scrollPhysics = {
+  decelerationRate: Platform.OS === 'ios' ? 0.994 : 0.97,
+};
+
 export const colors = {
   background: '#0C0B0D',
   backgroundAlt: '#141316',

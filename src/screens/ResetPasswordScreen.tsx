@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
 import { useAuth } from '../context/AuthContext';
-import { colors, fonts, radii, spacing } from '../theme/theme';
+import { colors, fonts, radii, scrollPhysics, spacing } from '../theme/theme';
 import { RootStackScreenProps } from '../navigation/types';
 
 type Step = 'request' | 'confirm';
@@ -85,7 +85,11 @@ export default function ResetPasswordScreen({ navigation }: RootStackScreenProps
         <View style={styles.backButton} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        decelerationRate={scrollPhysics.decelerationRate}
+      >
         {step === 'request' ? (
           <>
             <Text style={styles.body}>
