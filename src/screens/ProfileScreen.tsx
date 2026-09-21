@@ -249,6 +249,21 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
               style={styles.accountCardButton}
             />
           </View>
+        ) : !username ? (
+          <View style={styles.accountCard}>
+            <MaterialCommunityIcons name="account-alert-outline" size={20} color={colors.orangeBright} />
+            <View style={styles.accountCardText}>
+              <Text style={styles.accountCardTitle}>Finish setting up your profile</Text>
+              <Text style={styles.accountCardBody}>
+                Your account is ready — you just haven't picked a username yet.
+              </Text>
+            </View>
+            <PrimaryButton
+              label="Pick a Username"
+              onPress={() => navigation.navigate('WelcomeUsername')}
+              style={styles.accountCardButton}
+            />
+          </View>
         ) : null}
 
         {statsLoading ? (

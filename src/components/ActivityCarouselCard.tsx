@@ -1,5 +1,5 @@
-import React from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Activity } from '../data/activities';
@@ -32,16 +32,39 @@ export default function ActivityCarouselCard({
   onPress,
   onToggleSave,
 }: Props) {
+  const entrance = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(entrance, {
+      toValue: 1,
+      duration: 280,
+      useNativeDriver: true,
+    }).start();
+  }, [entrance]);
+
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        shadow.card,
-        { backgroundColor: riskBg[activity.riskLevel] },
-        pressed && styles.pressed,
-      ]}
+    <Animated.View
+      style={{
+        opacity: entrance,
+        transform: [
+          {
+            translateY: entrance.interpolate({
+              inputRange: [0, 1],
+              outputRange: [16, 0],
+            }),
+          },
+        ],
+      }}
     >
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.card,
+          shadow.card,
+          { backgroundColor: riskBg[activity.riskLevel] },
+          pressed && styles.pressed,
+        ]}
+      >
       <View style={styles.topRow}>
         <LinearGradient
           colors={gradients.icon}
@@ -99,7 +122,8 @@ export default function ActivityCarouselCard({
           <Text style={styles.statLabel}>fun</Text>
         </View>
       </View>
-    </Pressable>
+      </Pressable>
+    </Animated.View>
   );
 }
 

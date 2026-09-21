@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 
@@ -13,17 +13,52 @@ type Props = {
 };
 
 export default function CenterToast({ toast }: Props) {
-  if (!toast) return null;
+  const [rendered, setRendered] = useState(toast);
+  const anim = useRef(new Animated.Value(0)).current;
 
-  const isError = toast.tone === 'error';
+  useEffect(() => {
+    if (toast) {
+      setRendered(toast);
+      Animated.spring(anim, {
+        toValue: 1,
+        friction: 7,
+        tension: 70,
+        useNativeDriver: true,
+      }).start();
+    } else if (rendered) {
+      Animated.timing(anim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished) setRendered(null);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toast]);
+
+  if (!rendered) return null;
+
+  const isError = rendered.tone === 'error';
 
   return (
     <View style={styles.overlay} pointerEvents="none">
-      <View
+      <Animated.View
         style={[
           styles.toast,
           shadow.card,
           { borderColor: isError ? '#E6807A' : colors.success },
+          {
+            opacity: anim,
+            transform: [
+              {
+                scale: anim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.8, 1],
+                }),
+              },
+            ],
+          },
         ]}
       >
         <MaterialCommunityIcons
@@ -31,8 +66,8 @@ export default function CenterToast({ toast }: Props) {
           size={22}
           color={isError ? '#E6807A' : colors.success}
         />
-        <Text style={styles.text}>{toast.message}</Text>
-      </View>
+        <Text style={styles.text}>{rendered.message}</Text>
+      </Animated.View>
     </View>
   );
 }

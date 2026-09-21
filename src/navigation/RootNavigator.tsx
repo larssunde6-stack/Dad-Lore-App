@@ -80,8 +80,12 @@ const pushedScreenOptions = {
 const authModalScreenOptions = {
   presentation: 'modal' as const,
   animation: 'slide_from_bottom' as const,
-  gestureEnabled: true,
-  gestureDirection: 'vertical' as const,
+  gestureEnabled: false,
+};
+
+const welcomeUsernameScreenOptions = {
+  animation: 'slide_from_right' as const,
+  gestureEnabled: false,
 };
 
 export default function RootNavigator() {
@@ -98,7 +102,7 @@ export default function RootNavigator() {
       <Stack.Screen
         name="WelcomeUsername"
         component={WelcomeUsernameScreen}
-        options={pushedScreenOptions}
+        options={welcomeUsernameScreenOptions}
       />
       <Stack.Screen
         name="ResetPassword"

@@ -1,5 +1,15 @@
-import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Animated,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -20,6 +30,49 @@ import { useSaved } from '../context/SavedContext';
 import { TabScreenProps } from '../navigation/types';
 
 type Props = TabScreenProps<'Explore'>;
+
+type AnimatedFabProps = {
+  onPress: () => void;
+  disabled?: boolean;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  positionStyle?: ViewStyle;
+};
+
+function AnimatedFab({ onPress, disabled, icon, positionStyle }: AnimatedFabProps) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const animateTo = (toValue: number) => {
+    Animated.spring(scale, {
+      toValue,
+      friction: 5,
+      tension: 200,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Animated.View
+      style={[
+        styles.fabWrap,
+        positionStyle,
+        shadow.glow,
+        disabled && styles.fabDisabled,
+        { transform: [{ scale }] },
+      ]}
+    >
+      <Pressable
+        onPress={onPress}
+        onPressIn={() => animateTo(0.92)}
+        onPressOut={() => animateTo(1)}
+        disabled={disabled}
+      >
+        <LinearGradient colors={gradients.fab} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
+          <MaterialCommunityIcons name={icon} size={26} color={colors.textOnOrange} />
+        </LinearGradient>
+      </Pressable>
+    </Animated.View>
+  );
+}
 
 export default function ExploreScreen({ navigation }: Props) {
   const { savedIds, pendingIds, toggleSaved } = useSaved();
@@ -140,28 +193,17 @@ export default function ExploreScreen({ navigation }: Props) {
         />
       </View>
 
-      <Pressable
+      <AnimatedFab
         onPress={() => navigation.navigate('CreateActivity')}
-        style={({ pressed }) => [styles.fabWrap, styles.createFabWrap, shadow.glow, pressed && styles.fabPressed]}
-      >
-        <LinearGradient colors={gradients.fab} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
-          <MaterialCommunityIcons name="plus" size={26} color={colors.textOnOrange} />
-        </LinearGradient>
-      </Pressable>
+        icon="plus"
+        positionStyle={styles.createFabWrap}
+      />
 
-      <Pressable
+      <AnimatedFab
         onPress={handleSurpriseMe}
         disabled={activities.length === 0}
-        style={({ pressed }) => [
-          styles.fabWrap,
-          shadow.glow,
-          (activities.length === 0 || pressed) && styles.fabPressed,
-        ]}
-      >
-        <LinearGradient colors={gradients.fab} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
-          <MaterialCommunityIcons name="dice-multiple-outline" size={26} color={colors.textOnOrange} />
-        </LinearGradient>
-      </Pressable>
+        icon="dice-multiple-outline"
+      />
 
       <FilterModal
         visible={filterModalVisible}
@@ -246,7 +288,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  fabPressed: {
-    opacity: 0.6,
+  fabDisabled: {
+    opacity: 0.5,
   },
 });

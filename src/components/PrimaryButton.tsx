@@ -1,5 +1,5 @@
-import React from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import React, { useRef } from 'react';
+import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, fonts, shadow } from '../theme/theme';
 
@@ -23,38 +23,51 @@ export default function PrimaryButton({
   loading,
 }: Props) {
   const isSolid = variant === 'solid';
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const animateTo = (toValue: number) => {
+    Animated.spring(scale, {
+      toValue,
+      friction: 5,
+      tension: 200,
+      useNativeDriver: true,
+    }).start();
+  };
+
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled || loading}
-      style={({ pressed }) => [
-        styles.base,
-        isSolid ? styles.solid : styles.outline,
-        isSolid && shadow.glow,
-        pressed && styles.pressed,
-        (disabled || loading) && styles.disabled,
-        style,
-      ]}
-    >
-      <View style={styles.notch} />
-      {loading ? (
-        <ActivityIndicator size="small" color={isSolid ? colors.textOnOrange : colors.orange} />
-      ) : (
-        <>
-          {icon ? (
-            <MaterialCommunityIcons
-              name={icon}
-              size={18}
-              color={isSolid ? colors.textOnOrange : colors.orange}
-              style={styles.icon}
-            />
-          ) : null}
-          <Text style={[styles.label, isSolid ? styles.labelSolid : styles.labelOutline]}>
-            {label}
-          </Text>
-        </>
-      )}
-    </Pressable>
+    <Animated.View style={[style, { transform: [{ scale }] }]}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={() => animateTo(0.96)}
+        onPressOut={() => animateTo(1)}
+        disabled={disabled || loading}
+        style={[
+          styles.base,
+          isSolid ? styles.solid : styles.outline,
+          isSolid && shadow.glow,
+          (disabled || loading) && styles.disabled,
+        ]}
+      >
+        <View style={styles.notch} />
+        {loading ? (
+          <ActivityIndicator size="small" color={isSolid ? colors.textOnOrange : colors.orange} />
+        ) : (
+          <>
+            {icon ? (
+              <MaterialCommunityIcons
+                name={icon}
+                size={18}
+                color={isSolid ? colors.textOnOrange : colors.orange}
+                style={styles.icon}
+              />
+            ) : null}
+            <Text style={[styles.label, isSolid ? styles.labelSolid : styles.labelOutline]}>
+              {label}
+            </Text>
+          </>
+        )}
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -79,10 +92,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderWidth: 1.5,
     borderColor: colors.orange,
-  },
-  pressed: {
-    transform: [{ scale: 0.97 }],
-    opacity: 0.92,
   },
   disabled: {
     opacity: 0.6,
