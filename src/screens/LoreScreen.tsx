@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useScrollToTop } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ActivityCard from '../components/ActivityCard';
 import TopBar from '../components/TopBar';
@@ -56,6 +57,8 @@ function formatCompletedDate(iso: string): string {
 }
 
 export default function LoreScreen({ navigation }: Props) {
+  const listRef = useRef<FlatList<any>>(null);
+  useScrollToTop(listRef);
   const [segment, setSegment] = useState<Segment>('To Do');
   const { activities, loading: activitiesLoading, refetch: refetchActivities } = useActivities();
   const { savedIds, pendingIds, toggleSaved } = useSaved();
@@ -120,11 +123,13 @@ export default function LoreScreen({ navigation }: Props) {
           options={['To Do', 'Completed']}
           value={segment}
           onChange={(value) => setSegment(value as Segment)}
+          gradient
         />
       </View>
 
       {segment === 'To Do' ? (
         <FlatList
+          ref={listRef}
           data={savedActivities}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
@@ -165,6 +170,7 @@ export default function LoreScreen({ navigation }: Props) {
         />
       ) : (
         <FlatList
+          ref={listRef}
           data={completedItems}
           keyExtractor={(item) => item.completionId}
           contentContainerStyle={styles.listContent}

@@ -1,7 +1,7 @@
 import React from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createMaterialTopTabNavigator, MaterialTopTabBarProps } from '@react-navigation/material-top-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ExploreScreen from '../screens/ExploreScreen';
 // MapScreen import intentionally removed — its data model (device-distance
@@ -21,7 +21,7 @@ import { colors } from '../theme/theme';
 import { RootStackParamList, TabParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const Tab = createBottomTabNavigator<TabParamList>();
+const Tab = createMaterialTopTabNavigator<TabParamList>();
 
 const tabIcon: Record<keyof TabParamList, keyof typeof MaterialCommunityIcons.glyphMap> = {
   Explore: 'compass-outline',
@@ -37,27 +37,55 @@ const tabIconActive: Record<keyof TabParamList, keyof typeof MaterialCommunityIc
   Profile: 'account',
 };
 
+function CustomTabBar({ state, descriptors, navigation }: MaterialTopTabBarProps) {
+  return (
+    <View style={styles.tabBar}>
+      {state.routes.map((route, index) => {
+        const { options } = descriptors[route.key];
+        const focused = state.index === index;
+        const label = (options.tabBarLabel as string | undefined) ?? route.name;
+        const routeName = route.name as keyof TabParamList;
+
+        const onPress = () => {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
+
+          if (!focused && !event.defaultPrevented) {
+            navigation.navigate(route.name);
+          }
+        };
+
+        return (
+          <Pressable key={route.key} onPress={onPress} style={styles.tabBarItem} hitSlop={4}>
+            <View style={styles.iconWrap}>
+              <MaterialCommunityIcons
+                name={focused ? tabIconActive[routeName] : tabIcon[routeName]}
+                color={focused ? colors.orange : colors.textMuted}
+                size={24}
+              />
+            </View>
+            <Text style={[styles.tabBarLabel, { color: focused ? colors.orange : colors.textMuted }]}>
+              {label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 function TabNavigator() {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarShowLabel: true,
-        tabBarActiveTintColor: colors.orange,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: styles.tabBar,
-        tabBarLabelStyle: styles.tabBarLabel,
-        tabBarIcon: ({ focused, color, size }) => (
-          <View style={styles.iconWrap}>
-            <MaterialCommunityIcons
-              name={focused ? tabIconActive[route.name] : tabIcon[route.name]}
-              color={color}
-              size={size}
-            />
-            {focused ? <View style={styles.activeDot} /> : null}
-          </View>
-        ),
-      })}
+      tabBarPosition="bottom"
+      screenOptions={{
+        lazy: true,
+        swipeEnabled: true,
+      }}
+      tabBar={(props) => <CustomTabBar {...props} />}
     >
       <Tab.Screen name="Explore" component={ExploreScreen} />
       {/* Map tab paused for MVP — true geo-discovery ("find hills near
@@ -120,6 +148,7 @@ export default function RootNavigator() {
 
 const styles = StyleSheet.create({
   tabBar: {
+    flexDirection: 'row',
     backgroundColor: colors.background,
     borderTopColor: colors.border,
     borderTopWidth: 1,
@@ -127,20 +156,18 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: Platform.OS === 'ios' ? 28 : 10,
   },
+  tabBarItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   tabBarLabel: {
     fontSize: 11,
     fontWeight: '600',
+    marginTop: 2,
   },
   iconWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 4,
-  },
-  activeDot: {
-    marginTop: 4,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.orange,
   },
 });

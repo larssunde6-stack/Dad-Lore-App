@@ -1,5 +1,14 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Animated,
+  Modal,
+  PanResponder,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 import { useAuth } from '../context/AuthContext';
@@ -20,6 +29,7 @@ export default function ReportModal({ visible, onClose, activityId, activityTitl
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const translateY = useRef(new Animated.Value(0)).current;
 
   const handleClose = () => {
     onClose();
@@ -27,8 +37,39 @@ export default function ReportModal({ visible, onClose, activityId, activityTitl
       setSelectedReason(null);
       setSubmitted(false);
       setSubmitError(null);
+      translateY.setValue(0);
     }, 250);
   };
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponder: (_evt, gestureState) =>
+          gestureState.dy > 5 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx),
+        onPanResponderMove: (_evt, gestureState) => {
+          if (gestureState.dy > 0) {
+            translateY.setValue(gestureState.dy);
+          }
+        },
+        onPanResponderRelease: (_evt, gestureState) => {
+          if (gestureState.dy > 100 || gestureState.vy > 0.6) {
+            Animated.timing(translateY, {
+              toValue: 600,
+              duration: 200,
+              useNativeDriver: true,
+            }).start(() => handleClose());
+          } else {
+            Animated.spring(translateY, {
+              toValue: 0,
+              useNativeDriver: true,
+              friction: 8,
+            }).start();
+          }
+        },
+      }),
+    []
+  );
 
   const handleSubmit = async () => {
     if (!selectedReason || submitting) return;
@@ -52,7 +93,11 @@ export default function ReportModal({ visible, onClose, activityId, activityTitl
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <View style={styles.overlay}>
-        <View style={[styles.sheet, shadow.card]}>
+        <Animated.View
+          style={[styles.sheet, shadow.card, { transform: [{ translateY }] }]}
+          {...panResponder.panHandlers}
+        >
+          <View style={styles.dragHandle} />
           {submitted ? (
             <View style={styles.confirmWrap}>
               <MaterialCommunityIcons name="check-circle-outline" size={36} color={colors.success} />
@@ -111,7 +156,7 @@ export default function ReportModal({ visible, onClose, activityId, activityTitl
               </Pressable>
             </>
           )}
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -131,6 +176,14 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  dragHandle: {
+    alignSelf: 'center',
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    marginBottom: spacing.md,
   },
   headerRow: {
     flexDirection: 'row',

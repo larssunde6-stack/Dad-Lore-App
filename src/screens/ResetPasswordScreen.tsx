@@ -140,6 +140,8 @@ export default function ResetPasswordScreen({ navigation }: RootStackScreenProps
               placeholder="At least 6 characters"
               placeholderTextColor={colors.textMuted}
               secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
               autoComplete="new-password"
               textContentType="newPassword"
             />
@@ -152,6 +154,8 @@ export default function ResetPasswordScreen({ navigation }: RootStackScreenProps
               placeholder="Type your new password again"
               placeholderTextColor={colors.textMuted}
               secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
               autoComplete="new-password"
               textContentType="newPassword"
             />

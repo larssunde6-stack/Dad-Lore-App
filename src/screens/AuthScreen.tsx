@@ -121,6 +121,8 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
           placeholder="At least 6 characters"
           placeholderTextColor={colors.textMuted}
           secureTextEntry
+          autoCapitalize="none"
+          autoCorrect={false}
           autoComplete={mode === 'Sign Up' ? 'new-password' : 'current-password'}
           textContentType={mode === 'Sign Up' ? 'newPassword' : 'password'}
         />
@@ -135,6 +137,8 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
               placeholder="Type your password again"
               placeholderTextColor={colors.textMuted}
               secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
               autoComplete="new-password"
               textContentType="newPassword"
             />

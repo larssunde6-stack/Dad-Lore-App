@@ -11,6 +11,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useScrollToTop } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ActivityCarouselCard from '../components/ActivityCarouselCard';
@@ -75,6 +76,8 @@ function AnimatedFab({ onPress, disabled, icon, positionStyle }: AnimatedFabProp
 }
 
 export default function ExploreScreen({ navigation }: Props) {
+  const listRef = useRef<FlatList<any>>(null);
+  useScrollToTop(listRef);
   const { savedIds, pendingIds, toggleSaved } = useSaved();
   const { activities, loading, error, refetch: refetchActivities } = useActivities();
   const { xp, refetch: refetchCompletions } = useCompletions();
@@ -139,6 +142,7 @@ export default function ExploreScreen({ navigation }: Props) {
 
       <View style={styles.listWrap}>
         <FlatList
+          ref={listRef}
           data={loading || error ? [] : filtered}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}

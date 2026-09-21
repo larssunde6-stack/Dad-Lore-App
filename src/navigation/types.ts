@@ -1,6 +1,6 @@
 import { CompositeScreenProps } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { MaterialTopTabScreenProps } from '@react-navigation/material-top-tabs';
 
 export type RootStackParamList = {
   Tabs: undefined;
@@ -20,7 +20,7 @@ export type TabParamList = {
 };
 
 export type TabScreenProps<T extends keyof TabParamList> = CompositeScreenProps<
-  BottomTabScreenProps<TabParamList, T>,
+  MaterialTopTabScreenProps<TabParamList, T>,
   NativeStackScreenProps<RootStackParamList>
 >;
 

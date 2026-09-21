@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useScrollToTop } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
@@ -79,6 +80,8 @@ const menuItems = [
 const USERNAME_RE = /^[a-zA-Z0-9_]{2,24}$/;
 
 export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>) {
+  const scrollRef = useRef<ScrollView>(null);
+  useScrollToTop(scrollRef);
   const { activities, refetch: refetchActivities } = useActivities();
   const { completions, xp: lorePoints, loading: statsLoading, refetch: refetchCompletions } =
     useCompletions();
@@ -171,6 +174,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
