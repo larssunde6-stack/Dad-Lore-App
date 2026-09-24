@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Text } from './Text';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CompletedLoreEntry } from '../data/completedLore';
 import { supabase } from '../lib/supabase';

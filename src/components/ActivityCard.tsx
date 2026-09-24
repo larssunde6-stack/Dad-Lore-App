@@ -1,9 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Text } from './Text';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Activity } from '../data/activities';
-import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
+import { colors, fonts, gradients, radii, riskGradients, shadow, spacing } from '../theme/theme';
 
 const riskColor: Record<Activity['riskLevel'], string> = {
   green: colors.riskGreen,
@@ -114,11 +115,16 @@ export default function ActivityCard({
           <MaterialCommunityIcons name="clock-outline" size={14} color={colors.textSecondary} />
           <Text style={styles.metaText}>{activity.duration}</Text>
         </View>
-        <View style={[styles.difficultyBadge, { borderColor: riskColor[activity.riskLevel] }]}>
+        <LinearGradient
+          colors={riskGradients[activity.riskLevel]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.difficultyBadge, { borderColor: riskColor[activity.riskLevel] }]}
+        >
           <Text style={[styles.difficultyText, { color: riskColor[activity.riskLevel] }]}>
             {riskLabel[activity.riskLevel]}
           </Text>
-        </View>
+        </LinearGradient>
       </View>
 
       <View style={styles.footer}>

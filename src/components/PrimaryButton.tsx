@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
-import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { ActivityIndicator, Animated, Pressable, StyleSheet, View, ViewStyle } from 'react-native';
+import { Text } from './Text';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, fonts, shadow } from '../theme/theme';
 

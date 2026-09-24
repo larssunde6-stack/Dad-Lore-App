@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '../components/Text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,7 +9,7 @@ import ReportModal from '../components/ReportModal';
 import CenterToast, { ToastState } from '../components/CenterToast';
 import { useActivities } from '../context/ActivitiesContext';
 import { useCompletions } from '../context/CompletionsContext';
-import { colors, fonts, gradients, radii, scrollPhysics, shadow, spacing } from '../theme/theme';
+import { colors, fonts, gradients, radii, riskGradients, scrollPhysics, shadow, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -18,12 +19,6 @@ const riskColor: Record<string, string> = {
   green: colors.riskGreen,
   yellow: colors.riskYellow,
   red: colors.riskRed,
-};
-
-const riskBg: Record<string, string> = {
-  green: colors.riskGreenBg,
-  yellow: colors.riskYellowBg,
-  red: colors.riskRedBg,
 };
 
 const riskLabel: Record<string, string> = {
@@ -144,11 +139,11 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
         showsVerticalScrollIndicator={false}
         decelerationRate={scrollPhysics.decelerationRate}
       >
-        <View
-          style={[
-            styles.heroCard,
-            { backgroundColor: riskBg[activity.riskLevel], borderColor: riskColor[activity.riskLevel] },
-          ]}
+        <LinearGradient
+          colors={riskGradients[activity.riskLevel]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.heroCard, { borderColor: riskColor[activity.riskLevel] }]}
         >
           <View style={styles.heroTop}>
             <Pressable onPress={() => navigation.goBack()} style={styles.backButton} hitSlop={10}>
@@ -218,7 +213,7 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
             ))}
             <Text style={styles.loreLabel}>Lore Rating</Text>
           </View>
-        </View>
+        </LinearGradient>
 
         <View style={styles.statsGrid}>
           <View style={[styles.statBox, shadow.soft]}>

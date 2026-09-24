@@ -1,21 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Text } from './Text';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Activity } from '../data/activities';
-import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
-
-const riskColor: Record<Activity['riskLevel'], string> = {
-  green: colors.riskGreen,
-  yellow: colors.riskYellow,
-  red: colors.riskRed,
-};
-
-const riskBg: Record<Activity['riskLevel'], string> = {
-  green: colors.riskGreenBg,
-  yellow: colors.riskYellowBg,
-  red: colors.riskRedBg,
-};
+import { colors, fonts, gradients, radii, riskGradients, shadow, spacing } from '../theme/theme';
 
 type Props = {
   activity: Activity;
@@ -56,14 +45,12 @@ export default function ActivityCarouselCard({
         ],
       }}
     >
-      <Pressable
-        onPress={onPress}
-        style={({ pressed }) => [
-          styles.card,
-          shadow.card,
-          { backgroundColor: riskBg[activity.riskLevel] },
-          pressed && styles.pressed,
-        ]}
+      <Pressable onPress={onPress} style={({ pressed }) => [pressed && styles.pressed]}>
+      <LinearGradient
+        colors={riskGradients[activity.riskLevel]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.card, shadow.card]}
       >
       <View style={styles.topRow}>
         <LinearGradient
@@ -116,12 +103,11 @@ export default function ActivityCarouselCard({
         </View>
         <View style={styles.colDivider} />
         <View style={styles.statCol}>
-          <Text style={[styles.statValue, { color: riskColor[activity.riskLevel] }]}>
-            {activity.funType}
-          </Text>
+          <Text style={styles.statValue}>{activity.funType}</Text>
           <Text style={styles.statLabel}>fun</Text>
         </View>
       </View>
+      </LinearGradient>
       </Pressable>
     </Animated.View>
   );

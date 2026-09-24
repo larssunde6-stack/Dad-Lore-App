@@ -40,6 +40,14 @@ export const gradients = {
   fab: ['#FF8A3D', '#D8500F'] as const,
 };
 
+// Subtle diagonal wash for anything showing a risk/difficulty color as a
+// fill — a badge, a card background, a hero card — instead of a flat tint.
+export const riskGradients = {
+  green: ['rgba(45, 155, 43, 0.16)', 'rgba(45, 155, 43, 0.03)'] as const,
+  yellow: ['rgba(242, 201, 76, 0.18)', 'rgba(242, 201, 76, 0.03)'] as const,
+  red: ['rgba(212, 0, 0, 0.16)', 'rgba(212, 0, 0, 0.03)'] as const,
+};
+
 export const shadow = {
   card: {
     shadowColor: '#000000',
@@ -80,18 +88,25 @@ export const spacing = {
   xxl: 32,
 };
 
+// Custom fonts don't reliably synthetic-bold from a single file, so each
+// weight points at its own EB Garamond cut rather than relying on
+// fontWeight alone. Loaded via useFonts() in App.tsx.
 export const fonts = {
   display: {
+    fontFamily: 'EBGaramond_800ExtraBold',
     fontWeight: '800' as const,
     letterSpacing: 0.2,
   },
   heading: {
+    fontFamily: 'EBGaramond_700Bold',
     fontWeight: '700' as const,
   },
   body: {
+    fontFamily: 'EBGaramond_400Regular',
     fontWeight: '400' as const,
   },
   label: {
+    fontFamily: 'EBGaramond_600SemiBold',
     fontWeight: '600' as const,
     letterSpacing: 0.6,
     textTransform: 'uppercase' as const,

@@ -3,6 +3,14 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useFonts } from 'expo-font';
+import {
+  EBGaramond_400Regular,
+  EBGaramond_500Medium,
+  EBGaramond_600SemiBold,
+  EBGaramond_700Bold,
+  EBGaramond_800ExtraBold,
+} from '@expo-google-fonts/eb-garamond';
 import RootNavigator from './src/navigation/RootNavigator';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { SavedProvider } from './src/context/SavedContext';
@@ -24,8 +32,15 @@ const navigationTheme = {
 
 function AppContent() {
   const { isReady } = useAuth();
+  const [fontsLoaded] = useFonts({
+    EBGaramond_400Regular,
+    EBGaramond_500Medium,
+    EBGaramond_600SemiBold,
+    EBGaramond_700Bold,
+    EBGaramond_800ExtraBold,
+  });
 
-  if (!isReady) {
+  if (!isReady || !fontsLoaded) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" color={colors.orange} />

@@ -6,10 +6,10 @@ import {
   Pressable,
   RefreshControl,
   StyleSheet,
-  Text,
   View,
   ViewStyle,
 } from 'react-native';
+import { Text } from '../components/Text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useScrollToTop } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
