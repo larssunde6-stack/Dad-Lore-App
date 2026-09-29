@@ -24,7 +24,9 @@ import { useActivities } from '../context/ActivitiesContext';
 import { useCompletions } from '../context/CompletionsContext';
 import { useAuth } from '../context/AuthContext';
 import { Activity } from '../data/activities';
-import { getLevel } from '../utils/level';
+import { getLevel, getRank } from '../utils/level';
+import LevelRing from '../components/LevelRing';
+import RankText from '../components/RankText';
 import { colors, fonts, gradients, radii, scrollPhysics, shadow, spacing } from '../theme/theme';
 import { TabScreenProps } from '../navigation/types';
 
@@ -191,6 +193,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
   const earnedBadgeCount = badgeDefs.filter((b) => b.earned(completedActivities)).length;
 
   const { level, progressPct, pointsToNext } = getLevel(lorePoints);
+  const rank = getRank(level);
 
   const stats = [
     { label: 'Lore Points', value: lorePoints.toLocaleString(), icon: 'fire' as const },
@@ -217,15 +220,18 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
         <PillHeader title="PROFILE" showFilter={false} gradient />
 
         <View style={styles.profileHeader}>
-          <LinearGradient
-            colors={gradients.icon}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[styles.avatar, shadow.soft]}
-          >
-            <MaterialCommunityIcons name="account" size={38} color={colors.orange} />
-            <View style={styles.avatarRing} />
-          </LinearGradient>
+          <View style={styles.ringWrap}>
+            <LevelRing size={112} strokeWidth={6} progressPct={progressPct}>
+              <LinearGradient
+                colors={gradients.icon}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[styles.avatar, shadow.soft]}
+              >
+                <MaterialCommunityIcons name="account" size={38} color={colors.orange} />
+              </LinearGradient>
+            </LevelRing>
+          </View>
           {editingUsername ? (
             <View style={styles.nameEditRow}>
               <TextInput
@@ -262,10 +268,9 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
               ) : null}
             </View>
           )}
-          <Text style={styles.subtitle}>Level {level} · Lore in Progress</Text>
-
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
+          <View style={styles.subtitleRow}>
+            <RankText rank={rank} style={styles.subtitle} />
+            <Text style={styles.subtitle}> · Level {level}</Text>
           </View>
           <Text style={styles.progressLabel}>{pointsToNext} lore points to Level {level + 1}</Text>
         </View>
@@ -406,22 +411,15 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
     marginBottom: spacing.xl,
   },
+  ringWrap: {
+    marginBottom: spacing.md,
+  },
   avatar: {
     width: 84,
     height: 84,
     borderRadius: 42,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  avatarRing: {
-    position: 'absolute',
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    borderWidth: 2,
-    borderColor: colors.orange,
-    opacity: 0.4,
   },
   nameRow: {
     flexDirection: 'row',
@@ -452,29 +450,19 @@ const styles = StyleSheet.create({
   nameEditIcon: {
     marginLeft: spacing.sm,
   },
+  subtitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
   subtitle: {
     color: colors.textSecondary,
     fontSize: 13,
-    marginTop: 4,
-    marginBottom: spacing.lg,
-  },
-  progressTrack: {
-    width: '100%',
-    height: 8,
-    borderRadius: radii.pill,
-    backgroundColor: colors.surfaceRaised,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    width: '68%',
-    height: '100%',
-    borderRadius: radii.pill,
-    backgroundColor: colors.orange,
   },
   progressLabel: {
     color: colors.textMuted,
     fontSize: 11.5,
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
   accountCard: {
     alignItems: 'center',

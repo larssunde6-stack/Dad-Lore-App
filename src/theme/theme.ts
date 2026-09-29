@@ -2,9 +2,10 @@ import { Platform } from 'react-native';
 
 // A touch slower than RN's default ('normal': iOS 0.998, Android 0.985) so
 // flings settle sooner instead of gliding — reads as heavier, less floaty.
-// Nudged a step further per feedback that it still felt light.
+// Dialed back from an earlier, tighter pass that started feeling sticky —
+// "heavy" is now carried by animation/haptics instead of scroll resistance.
 export const scrollPhysics = {
-  decelerationRate: Platform.OS === 'ios' ? 0.988 : 0.95,
+  decelerationRate: Platform.OS === 'ios' ? 0.996 : 0.978,
 };
 
 // Press-scale spring shared by PrimaryButton and the Explore FABs — a bit
@@ -42,6 +43,9 @@ export const colors = {
   riskGreenBg: 'rgba(45, 155, 43, 0.06)',
   riskYellowBg: 'rgba(242, 201, 76, 0.06)',
   riskRedBg: 'rgba(212, 0, 0, 0.06)',
+
+  purple: '#B98AFF',
+  purpleBright: '#8F5CFF',
 };
 
 export const gradients = {

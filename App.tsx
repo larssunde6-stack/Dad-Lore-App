@@ -16,6 +16,7 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { SavedProvider } from './src/context/SavedContext';
 import { CompletionsProvider } from './src/context/CompletionsContext';
 import { ActivitiesProvider } from './src/context/ActivitiesContext';
+import LevelUpModal from './src/components/LevelUpModal';
 import { colors } from './src/theme/theme';
 
 const navigationTheme = {
@@ -56,6 +57,7 @@ function AppContent() {
             <StatusBar style="light" />
             <RootNavigator />
           </NavigationContainer>
+          <LevelUpModal />
         </CompletionsProvider>
       </SavedProvider>
     </ActivitiesProvider>
