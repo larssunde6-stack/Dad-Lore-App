@@ -9,10 +9,11 @@ type Props = {
   size: number;
   strokeWidth?: number;
   progressPct: number;
+  color?: string;
   children?: React.ReactNode;
 };
 
-export default function LevelRing({ size, strokeWidth = 6, progressPct, children }: Props) {
+export default function LevelRing({ size, strokeWidth = 6, progressPct, color = colors.orange, children }: Props) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = useRef(new Animated.Value(0)).current;
@@ -45,7 +46,7 @@ export default function LevelRing({ size, strokeWidth = 6, progressPct, children
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={colors.orange}
+          stroke={color}
           strokeWidth={strokeWidth}
           fill="none"
           strokeLinecap="round"

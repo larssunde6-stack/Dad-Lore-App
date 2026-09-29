@@ -278,7 +278,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
 
         <View style={styles.profileHeader}>
           <View style={styles.ringWrap}>
-            <LevelRing size={112} strokeWidth={6} progressPct={progressPct}>
+            <LevelRing size={112} strokeWidth={6} progressPct={progressPct} color={rank.color}>
               <LinearGradient
                 colors={gradients.icon}
                 start={{ x: 0, y: 0 }}
@@ -289,6 +289,22 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
               </LinearGradient>
             </LevelRing>
           </View>
+
+          <View
+            style={[
+              styles.rankBadge,
+              shadow.soft,
+              { backgroundColor: `${rank.color}22`, borderColor: rank.color },
+            ]}
+          >
+            <MaterialCommunityIcons
+              name={rank.isTopRank ? 'crown' : 'shield-star-outline'}
+              size={16}
+              color={rank.color}
+            />
+            <RankText rank={rank} style={styles.rankBadgeText} />
+          </View>
+
           {editingUsername ? (
             <View style={styles.nameEditRow}>
               <TextInput
@@ -325,10 +341,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
               ) : null}
             </View>
           )}
-          <View style={styles.subtitleRow}>
-            <RankText rank={rank} style={styles.subtitle} />
-            <Text style={styles.subtitle}> · Level {level}</Text>
-          </View>
+          <Text style={styles.levelCaption}>Level {level}</Text>
           <Text style={styles.progressLabel}>{pointsToNext} lore points to Level {level + 1}</Text>
           {__DEV__ ? (
             <Pressable
@@ -492,14 +505,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  rankBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: radii.pill,
+    borderWidth: 1.5,
+    paddingVertical: 7,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  rankBadgeText: {
+    fontSize: 15,
+    ...fonts.heading,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    marginLeft: 6,
+  },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   name: {
-    color: colors.textPrimary,
-    fontSize: 20,
-    ...fonts.display,
+    color: colors.textSecondary,
+    fontSize: 15,
+    ...fonts.heading,
   },
   nameEditRow: {
     flexDirection: 'row',
@@ -521,19 +550,15 @@ const styles = StyleSheet.create({
   nameEditIcon: {
     marginLeft: spacing.sm,
   },
-  subtitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  subtitle: {
-    color: colors.textSecondary,
-    fontSize: 13,
+  levelCaption: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: spacing.sm,
   },
   progressLabel: {
     color: colors.textMuted,
     fontSize: 11.5,
-    marginTop: spacing.xs,
+    marginTop: 2,
   },
   devButton: {
     marginTop: spacing.md,

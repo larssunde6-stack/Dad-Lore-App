@@ -13,9 +13,10 @@ const baseStyle = { fontFamily: 'EBGaramond_400Regular' };
 type Props = {
   rank: Rank;
   style?: StyleProp<TextStyle>;
+  numberOfLines?: number;
 };
 
-export default function RankText({ rank, style }: Props) {
+export default function RankText({ rank, style, numberOfLines }: Props) {
   const shimmer = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -32,7 +33,11 @@ export default function RankText({ rank, style }: Props) {
   }, [rank.isTopRank, shimmer]);
 
   if (!rank.isTopRank) {
-    return <Text style={style}>{rank.name}</Text>;
+    return (
+      <Text style={[style, { color: rank.color }]} numberOfLines={numberOfLines} ellipsizeMode="tail">
+        {rank.name}
+      </Text>
+    );
   }
 
   const color = shimmer.interpolate({
@@ -40,5 +45,13 @@ export default function RankText({ rank, style }: Props) {
     outputRange: [colors.textPrimary, colors.purpleBright],
   });
 
-  return <Animated.Text style={[baseStyle, style, { color }]}>{rank.name}</Animated.Text>;
+  return (
+    <Animated.Text
+      style={[baseStyle, style, { color }]}
+      numberOfLines={numberOfLines}
+      ellipsizeMode="tail"
+    >
+      {rank.name}
+    </Animated.Text>
+  );
 }

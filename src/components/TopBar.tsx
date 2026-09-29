@@ -2,8 +2,9 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from './Text';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import RankText from './RankText';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
-import { getLevel } from '../utils/level';
+import { getLevel, getRank } from '../utils/level';
 
 type Props = {
   xp: number;
@@ -23,11 +24,18 @@ export default function TopBar({
   onNotificationsPress,
 }: Props) {
   const { level } = getLevel(xp);
+  const rank = getRank(level);
 
   return (
     <View style={styles.row}>
-      <View style={[styles.balanceChip, shadow.soft]}>
-        <Text style={styles.balanceText}>Lvl. {level.toString().padStart(2, '0')}</Text>
+      <View
+        style={[
+          styles.balanceChip,
+          shadow.soft,
+          { borderColor: rank.color, backgroundColor: `${rank.color}1A` },
+        ]}
+      >
+        <RankText rank={rank} style={styles.balanceText} numberOfLines={1} />
       </View>
 
       {showSearch ? (
@@ -76,6 +84,7 @@ const styles = StyleSheet.create({
   balanceChip: {
     flexDirection: 'row',
     alignItems: 'center',
+    maxWidth: 118,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
@@ -85,9 +94,10 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   balanceText: {
-    color: colors.orangeBright,
-    fontSize: 12.5,
+    fontSize: 11,
     ...fonts.heading,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
   spacer: {
     flex: 1,
