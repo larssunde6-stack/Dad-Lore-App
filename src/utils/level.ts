@@ -1,4 +1,4 @@
-const LEVEL_SIZE = 250;
+export const LEVEL_SIZE = 250;
 
 export function getLevel(xp: number) {
   const level = Math.floor(xp / LEVEL_SIZE) + 1;
@@ -8,12 +8,21 @@ export function getLevel(xp: number) {
   return { level, pointsIntoLevel, progressPct, pointsToNext };
 }
 
-export type Rank = { name: string; minLevel: number; isTopRank: boolean; color: string };
+export type Rank = {
+  name: string;
+  minLevel: number;
+  isTopRank: boolean;
+  color: string;
+  isRainbow?: boolean;
+};
 
 // Colors escalate from a neutral gray up through the app's warm orange
 // brand tones and into red, capping at purple for the rare top rank —
 // each tier reads as a step up in intensity, purple standing apart as
-// the one tier RankText also gives a shimmering treatment.
+// the one tier RankText also gives a shimmering treatment. `wtf...` is a
+// secret ceiling far past the rest — its `color` is just a fallback
+// swatch (e.g. for a non-animated picker row); everywhere it actually
+// renders, it cycles the full rainbow instead of a fixed color.
 export const RANKS: Rank[] = [
   { name: 'Couch Potato', minLevel: 1, isTopRank: false, color: '#8A8580' },
   { name: 'Weekend Dabbler', minLevel: 3, isTopRank: false, color: '#6FA8DC' },
@@ -23,6 +32,7 @@ export const RANKS: Rank[] = [
   { name: 'Certified Menace', minLevel: 15, isTopRank: false, color: '#FF6A1F' },
   { name: 'Myth in the Making', minLevel: 20, isTopRank: false, color: '#E63946' },
   { name: 'Generational Lore', minLevel: 25, isTopRank: true, color: '#8F5CFF' },
+  { name: 'wtf...', minLevel: 100, isTopRank: false, isRainbow: true, color: '#FF3DAE' },
 ];
 
 export function getRank(level: number): Rank {

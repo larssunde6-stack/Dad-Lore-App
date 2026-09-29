@@ -21,6 +21,7 @@ import { useActivities } from '../context/ActivitiesContext';
 import { CompletionEntry, useCompletions } from '../context/CompletionsContext';
 import { Activity } from '../data/activities';
 import { colors, fonts, radii, scrollPhysics, spacing } from '../theme/theme';
+import { useAccent } from '../context/AccentContext';
 import { useSaved } from '../context/SavedContext';
 import { TabScreenProps } from '../navigation/types';
 
@@ -61,6 +62,7 @@ function formatCompletedDate(iso: string): string {
 export default function LoreScreen({ navigation }: Props) {
   const listRef = useRef<FlatList<any>>(null);
   useScrollToTop(listRef);
+  const { palette } = useAccent();
   const [segment, setSegment] = useState<Segment>('To Do');
   const { activities, loading: activitiesLoading, refetch: refetchActivities } = useActivities();
   const { savedIds, pendingIds, toggleSaved } = useSaved();
@@ -120,9 +122,12 @@ export default function LoreScreen({ navigation }: Props) {
         />
         <PillHeader title="YOUR LORE" onFilterPress={() => setFilterModalVisible(true)} gradient />
         {filtersActive ? (
-          <Pressable onPress={() => setFilters(EMPTY_FILTERS)} style={styles.activeFilterChip}>
-            <MaterialCommunityIcons name="close-circle" size={14} color={colors.orangeBright} />
-            <Text style={styles.activeFilterText}>Filters active — tap to clear</Text>
+          <Pressable
+            onPress={() => setFilters(EMPTY_FILTERS)}
+            style={[styles.activeFilterChip, { backgroundColor: palette.muted, borderColor: palette.deep }]}
+          >
+            <MaterialCommunityIcons name="close-circle" size={14} color={palette.bright} />
+            <Text style={[styles.activeFilterText, { color: palette.bright }]}>Filters active — tap to clear</Text>
           </Pressable>
         ) : null}
         <SegmentedControl
@@ -144,7 +149,7 @@ export default function LoreScreen({ navigation }: Props) {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={colors.orange}
+              tintColor={palette.base}
             />
           }
           ListHeaderComponent={
@@ -184,7 +189,7 @@ export default function LoreScreen({ navigation }: Props) {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={colors.orange}
+              tintColor={palette.base}
             />
           }
           ListHeaderComponent={
@@ -244,16 +249,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: colors.orangeMuted,
     borderRadius: radii.pill,
     borderWidth: 1,
-    borderColor: colors.orangeDeep,
     paddingVertical: 5,
     paddingHorizontal: 10,
     marginBottom: spacing.md,
   },
   activeFilterText: {
-    color: colors.orangeBright,
     fontSize: 11,
     marginLeft: 4,
     ...fonts.heading,

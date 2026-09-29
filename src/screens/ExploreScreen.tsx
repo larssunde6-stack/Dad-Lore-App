@@ -27,7 +27,8 @@ import FilterModal, {
 import CenterToast, { ToastState } from '../components/CenterToast';
 import { useActivities } from '../context/ActivitiesContext';
 import { useCompletions } from '../context/CompletionsContext';
-import { colors, fonts, gradients, pressSpring, radii, scrollPhysics, shadow, spacing } from '../theme/theme';
+import { colors, fonts, pressSpring, radii, scrollPhysics, spacing } from '../theme/theme';
+import { useAccent } from '../context/AccentContext';
 import { useSaved } from '../context/SavedContext';
 import { TabScreenProps } from '../navigation/types';
 
@@ -42,6 +43,7 @@ type AnimatedFabProps = {
 
 function AnimatedFab({ onPress, disabled, icon, positionStyle }: AnimatedFabProps) {
   const scale = useRef(new Animated.Value(1)).current;
+  const { palette } = useAccent();
 
   const animateTo = (toValue: number) => {
     Animated.spring(scale, {
@@ -56,7 +58,7 @@ function AnimatedFab({ onPress, disabled, icon, positionStyle }: AnimatedFabProp
       style={[
         styles.fabWrap,
         positionStyle,
-        shadow.glow,
+        { shadowColor: palette.glow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.45, shadowRadius: 10, elevation: 8 },
         disabled && styles.fabDisabled,
         { transform: [{ scale }] },
       ]}
@@ -67,8 +69,8 @@ function AnimatedFab({ onPress, disabled, icon, positionStyle }: AnimatedFabProp
         onPressOut={() => animateTo(1)}
         disabled={disabled}
       >
-        <LinearGradient colors={gradients.fab} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
-          <MaterialCommunityIcons name={icon} size={26} color={colors.textOnOrange} />
+        <LinearGradient colors={palette.gradientFab} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
+          <MaterialCommunityIcons name={icon} size={26} color={palette.onAccent} />
         </LinearGradient>
       </Pressable>
     </Animated.View>
@@ -78,6 +80,7 @@ function AnimatedFab({ onPress, disabled, icon, positionStyle }: AnimatedFabProp
 export default function ExploreScreen({ navigation }: Props) {
   const listRef = useRef<FlatList<any>>(null);
   useScrollToTop(listRef);
+  const { palette } = useAccent();
   const { savedIds, pendingIds, toggleSaved } = useSaved();
   const { activities, loading, error, refetch: refetchActivities } = useActivities();
   const { xp, refetch: refetchCompletions } = useCompletions();
@@ -150,7 +153,7 @@ export default function ExploreScreen({ navigation }: Props) {
           decelerationRate={scrollPhysics.decelerationRate}
           contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.orange} />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={palette.base} />
           }
           ListHeaderComponent={
             <View style={styles.listHeader}>
@@ -162,9 +165,12 @@ export default function ExploreScreen({ navigation }: Props) {
                 gradient
               />
               {filtersActive ? (
-                <Pressable onPress={() => setFilters(EMPTY_FILTERS)} style={styles.activeFilterChip}>
-                  <MaterialCommunityIcons name="close-circle" size={14} color={colors.orangeBright} />
-                  <Text style={styles.activeFilterText}>Filters active — tap to clear</Text>
+                <Pressable
+                  onPress={() => setFilters(EMPTY_FILTERS)}
+                  style={[styles.activeFilterChip, { backgroundColor: palette.muted, borderColor: palette.deep }]}
+                >
+                  <MaterialCommunityIcons name="close-circle" size={14} color={palette.bright} />
+                  <Text style={[styles.activeFilterText, { color: palette.bright }]}>Filters active — tap to clear</Text>
                 </Pressable>
               ) : null}
             </View>
@@ -179,9 +185,12 @@ export default function ExploreScreen({ navigation }: Props) {
                 <MaterialCommunityIcons name="cloud-off-outline" size={36} color={colors.textMuted} />
                 <Text style={styles.emptyTitle}>Couldn't load lore</Text>
                 <Text style={styles.emptyText}>{error}</Text>
-                <Pressable onPress={() => refetchActivities()} style={styles.retryButton}>
-                  <MaterialCommunityIcons name="refresh" size={15} color={colors.orangeBright} />
-                  <Text style={styles.retryButtonText}>Try Again</Text>
+                <Pressable
+                  onPress={() => refetchActivities()}
+                  style={[styles.retryButton, { backgroundColor: palette.muted, borderColor: palette.deep }]}
+                >
+                  <MaterialCommunityIcons name="refresh" size={15} color={palette.bright} />
+                  <Text style={[styles.retryButtonText, { color: palette.bright }]}>Try Again</Text>
                 </Pressable>
               </View>
             ) : (
@@ -259,16 +268,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: colors.orangeMuted,
     borderRadius: radii.pill,
     borderWidth: 1,
-    borderColor: colors.orangeDeep,
     paddingVertical: 5,
     paddingHorizontal: 10,
     marginBottom: spacing.sm,
   },
   activeFilterText: {
-    color: colors.orangeBright,
     fontSize: 11,
     marginLeft: 4,
     ...fonts.heading,
@@ -293,16 +299,13 @@ const styles = StyleSheet.create({
   retryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.orangeMuted,
     borderRadius: radii.pill,
     borderWidth: 1,
-    borderColor: colors.orangeDeep,
     paddingVertical: 8,
     paddingHorizontal: spacing.md,
     marginTop: spacing.lg,
   },
   retryButtonText: {
-    color: colors.orangeBright,
     fontSize: 12.5,
     ...fonts.heading,
     marginLeft: spacing.xs,

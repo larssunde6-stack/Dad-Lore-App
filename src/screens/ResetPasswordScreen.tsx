@@ -6,6 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
 import { useAuth } from '../context/AuthContext';
 import { colors, fonts, radii, scrollPhysics, spacing } from '../theme/theme';
+import { useAccent } from '../context/AccentContext';
 import { RootStackScreenProps } from '../navigation/types';
 
 type Step = 'request' | 'confirm';
@@ -14,6 +15,7 @@ const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
 export default function ResetPasswordScreen({ navigation }: RootStackScreenProps<'ResetPassword'>) {
   const { requestPasswordReset, confirmPasswordReset } = useAuth();
+  const { palette } = useAccent();
   const [step, setStep] = useState<Step>('request');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -179,7 +181,7 @@ export default function ResetPasswordScreen({ navigation }: RootStackScreenProps
             />
 
             <Pressable onPress={handleBackToEmail} hitSlop={8}>
-              <Text style={styles.linkText}>Didn't get a code? Try a different email</Text>
+              <Text style={[styles.linkText, { color: palette.bright }]}>Didn't get a code? Try a different email</Text>
             </Pressable>
           </>
         )}
@@ -256,7 +258,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   linkText: {
-    color: colors.orangeBright,
     fontSize: 13,
     ...fonts.heading,
     textAlign: 'center',

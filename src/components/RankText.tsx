@@ -3,6 +3,7 @@ import { Animated, StyleProp, TextStyle } from 'react-native';
 import { Text } from './Text';
 import { colors } from '../theme/theme';
 import { Rank } from '../utils/level';
+import { useRainbowColor } from '../hooks/useRainbowColor';
 
 // Animated.Text (RN's own, ref-forwarding version) rather than our custom
 // Text wrapper — Animated.createAnimatedComponent needs a real ref to the
@@ -18,6 +19,7 @@ type Props = {
 
 export default function RankText({ rank, style, numberOfLines }: Props) {
   const shimmer = useRef(new Animated.Value(0)).current;
+  const rainbow = useRainbowColor();
 
   useEffect(() => {
     if (!rank.isTopRank) return;
@@ -31,6 +33,18 @@ export default function RankText({ rank, style, numberOfLines }: Props) {
     loop.start();
     return () => loop.stop();
   }, [rank.isTopRank, shimmer]);
+
+  if (rank.isRainbow) {
+    return (
+      <Animated.Text
+        style={[baseStyle, style, { color: rainbow }]}
+        numberOfLines={numberOfLines}
+        ellipsizeMode="tail"
+      >
+        {rank.name}
+      </Animated.Text>
+    );
+  }
 
   if (!rank.isTopRank) {
     return (

@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import SegmentedControl from '../components/SegmentedControl';
 import { colors, fonts, radii, scrollPhysics, spacing } from '../theme/theme';
+import { useAccent } from '../context/AccentContext';
 import { RootStackScreenProps } from '../navigation/types';
 
 type Doc = 'Privacy' | 'Terms';
@@ -83,6 +84,7 @@ const termsSections: Section[] = [
 
 export default function LegalScreen({ navigation }: RootStackScreenProps<'Legal'>) {
   const [doc, setDoc] = useState<Doc>('Privacy');
+  const { palette } = useAccent();
   const sections = doc === 'Privacy' ? privacySections : termsSections;
 
   return (
@@ -112,9 +114,9 @@ export default function LegalScreen({ navigation }: RootStackScreenProps<'Legal'
         showsVerticalScrollIndicator={false}
         decelerationRate={scrollPhysics.decelerationRate}
       >
-        <View style={styles.draftNotice}>
-          <MaterialCommunityIcons name="information-outline" size={14} color={colors.orangeBright} />
-          <Text style={styles.draftNoticeText}>
+        <View style={[styles.draftNotice, { backgroundColor: palette.muted, borderColor: palette.deep }]}>
+          <MaterialCommunityIcons name="information-outline" size={14} color={palette.bright} />
+          <Text style={[styles.draftNoticeText, { color: palette.bright }]}>
             Draft, pending legal review before store submission.
           </Text>
         </View>
@@ -173,15 +175,12 @@ const styles = StyleSheet.create({
   draftNotice: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.orangeMuted,
     borderRadius: radii.sm,
     borderWidth: 1,
-    borderColor: colors.orangeDeep,
     padding: spacing.sm,
     marginBottom: spacing.lg,
   },
   draftNoticeText: {
-    color: colors.orangeBright,
     fontSize: 11.5,
     marginLeft: spacing.xs,
     flexShrink: 1,

@@ -1,74 +1,27 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as Haptics from 'expo-haptics';
-import { Animated, Easing, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { Text } from './Text';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import RankText from './RankText';
+import BurstParticles from './BurstParticles';
 import { useCompletions } from '../context/CompletionsContext';
+import { useAccent } from '../context/AccentContext';
 import { getRank } from '../utils/level';
-import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
-
-const PARTICLE_COUNT = 14;
-
-function BurstParticles() {
-  const burst = useRef(new Animated.Value(0)).current;
-  const particles = useRef(
-    Array.from({ length: PARTICLE_COUNT }).map((_, i) => {
-      const angle = (i / PARTICLE_COUNT) * Math.PI * 2 + (i % 2 === 0 ? 0.15 : -0.15);
-      const distance = 66 + (i % 4) * 22;
-      return {
-        tx: Math.cos(angle) * distance,
-        ty: Math.sin(angle) * distance,
-        size: 7 + (i % 3) * 5,
-      };
-    })
-  ).current;
-
-  useEffect(() => {
-    Animated.timing(burst, {
-      toValue: 1,
-      duration: 800,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [burst]);
-
-  return (
-    <View style={styles.burstLayer} pointerEvents="none">
-      {particles.map((p, i) => {
-        const translateX = burst.interpolate({ inputRange: [0, 1], outputRange: [0, p.tx] });
-        const translateY = burst.interpolate({ inputRange: [0, 1], outputRange: [0, p.ty] });
-        const opacity = burst.interpolate({ inputRange: [0, 0.55, 1], outputRange: [1, 0.9, 0] });
-        const scale = burst.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0.3, 1, 0.6] });
-        return (
-          <Animated.View
-            key={i}
-            style={[
-              styles.particle,
-              {
-                width: p.size,
-                height: p.size,
-                borderRadius: p.size / 2,
-                opacity,
-                transform: [{ translateX }, { translateY }, { scale }],
-              },
-            ]}
-          />
-        );
-      })}
-    </View>
-  );
-}
+import { colors, fonts, radii, spacing } from '../theme/theme';
 
 export default function LevelUpModal() {
   const { levelUpEvent, dismissLevelUp } = useCompletions();
+  const { palette, setAccent } = useAccent();
   const scale = useRef(new Animated.Value(0.8)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+  const [colorApplied, setColorApplied] = useState(false);
 
   useEffect(() => {
     if (!levelUpEvent) return;
 
+    setColorApplied(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     scale.setValue(0.8);
     opacity.setValue(0);
@@ -82,28 +35,54 @@ export default function LevelUpModal() {
 
   const rank = getRank(levelUpEvent.level);
 
+  const handleApplyColor = () => {
+    setAccent(rank);
+    setColorApplied(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
   return (
     <Modal visible transparent animationType="fade" onRequestClose={dismissLevelUp}>
       <Pressable style={styles.overlay} onPress={dismissLevelUp}>
-        <Animated.View style={[styles.card, shadow.glow, { opacity, transform: [{ scale }] }]}>
+        <Animated.View style={[styles.card, { shadowColor: palette.glow }, { opacity, transform: [{ scale }] }]}>
           <View style={styles.badgeWrap}>
-            <BurstParticles />
+            <BurstParticles color={palette.base} />
             <LinearGradient
-              colors={gradients.fab}
+              colors={palette.gradientFab}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.badge}
             >
-              <MaterialCommunityIcons name="trophy-award" size={32} color={colors.textOnOrange} />
+              <MaterialCommunityIcons name="trophy-award" size={32} color={palette.onAccent} />
             </LinearGradient>
           </View>
 
-          <Text style={styles.eyebrow}>LEVEL UP</Text>
+          <Text style={[styles.eyebrow, { color: palette.bright }]}>LEVEL UP</Text>
           <Text style={styles.levelNumber}>Level {levelUpEvent.level}</Text>
           <RankText rank={rank} style={styles.rankName} />
 
           {levelUpEvent.rankChanged ? (
-            <Text style={styles.rankChangedNote}>New rank unlocked</Text>
+            <>
+              <Text style={styles.rankChangedNote}>New rank unlocked</Text>
+              <Pressable
+                onPress={handleApplyColor}
+                disabled={colorApplied}
+                style={({ pressed }) => [
+                  styles.colorButton,
+                  { borderColor: rank.isRainbow ? palette.base : rank.color },
+                  pressed && styles.colorButtonPressed,
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name={colorApplied ? 'check' : 'palette-outline'}
+                  size={14}
+                  color={rank.isRainbow ? palette.base : rank.color}
+                />
+                <Text style={[styles.colorButtonText, { color: rank.isRainbow ? palette.base : rank.color }]}>
+                  {colorApplied ? 'Color applied' : 'Make this your color?'}
+                </Text>
+              </Pressable>
+            </>
           ) : null}
 
           <Text style={styles.tapHint}>TAP ANYWHERE TO CONTINUE</Text>
@@ -131,6 +110,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     paddingVertical: spacing.xxl,
     paddingHorizontal: spacing.xl,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    elevation: 8,
   },
   badgeWrap: {
     width: 140,
@@ -138,19 +121,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
-  },
-  burstLayer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  particle: {
-    position: 'absolute',
-    backgroundColor: colors.orange,
   },
   badge: {
     width: 72,
@@ -160,7 +130,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   eyebrow: {
-    color: colors.orangeBright,
     fontSize: 12,
     ...fonts.label,
     marginBottom: spacing.xs,
@@ -179,7 +148,24 @@ const styles = StyleSheet.create({
   rankChangedNote: {
     color: colors.textMuted,
     fontSize: 12,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  colorButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: radii.pill,
+    borderWidth: 1.5,
+    paddingVertical: 8,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  colorButtonPressed: {
+    opacity: 0.65,
+  },
+  colorButtonText: {
+    fontSize: 12.5,
+    ...fonts.heading,
+    marginLeft: 6,
   },
   tapHint: {
     color: colors.textMuted,

@@ -1,10 +1,12 @@
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from './Text';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import RankText from './RankText';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 import { getLevel, getRank } from '../utils/level';
+import { useRainbowColor } from '../hooks/useRainbowColor';
+import { useAccent } from '../context/AccentContext';
 
 type Props = {
   xp: number;
@@ -25,18 +27,23 @@ export default function TopBar({
 }: Props) {
   const { level } = getLevel(xp);
   const rank = getRank(level);
+  const rainbowBorder = useRainbowColor();
+  const rainbowBg = useRainbowColor(0.1);
+  const { palette } = useAccent();
 
   return (
     <View style={styles.row}>
-      <View
+      <Animated.View
         style={[
           styles.balanceChip,
           shadow.soft,
-          { borderColor: rank.color, backgroundColor: `${rank.color}1A` },
+          rank.isRainbow
+            ? { borderColor: rainbowBorder, backgroundColor: rainbowBg }
+            : { borderColor: rank.color, backgroundColor: `${rank.color}1A` },
         ]}
       >
         <RankText rank={rank} style={styles.balanceText} numberOfLines={1} />
-      </View>
+      </Animated.View>
 
       {showSearch ? (
         <View style={[styles.searchBar, shadow.soft]}>
@@ -69,7 +76,7 @@ export default function TopBar({
         hitSlop={8}
       >
         <MaterialCommunityIcons name="bell-outline" size={18} color={colors.textPrimary} />
-        <View style={styles.bellDot} />
+        <View style={[styles.bellDot, { backgroundColor: palette.base }]} />
       </Pressable>
     </View>
   );

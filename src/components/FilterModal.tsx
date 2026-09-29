@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { Text } from './Text';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
+import { useAccent } from '../context/AccentContext';
 import { Activity, FunType, Kind, RiskLevel } from '../data/activities';
 
 export type ActivityFilters = {
@@ -46,6 +48,7 @@ type Props = {
 
 export default function FilterModal({ visible, onClose, value, onApply }: Props) {
   const [draft, setDraft] = useState<ActivityFilters>(value);
+  const { palette } = useAccent();
 
   useEffect(() => {
     if (visible) setDraft(value);
@@ -56,7 +59,7 @@ export default function FilterModal({ visible, onClose, value, onApply }: Props)
       <View style={styles.overlay}>
         <View style={[styles.sheet, shadow.card]}>
           <View style={styles.headerRow}>
-            <MaterialCommunityIcons name="tune" size={18} color={colors.orange} />
+            <MaterialCommunityIcons name="tune" size={18} color={palette.base} />
             <Text style={styles.title}>Filter Lore</Text>
             <Pressable
               onPress={onClose}
@@ -96,7 +99,11 @@ export default function FilterModal({ visible, onClose, value, onApply }: Props)
                 <Pressable
                   key={option}
                   onPress={() => setDraft((d) => ({ ...d, kind: toggle(d.kind, option) }))}
-                  style={({ pressed }) => [styles.chip, active && styles.chipActive, pressed && styles.pressed]}
+                  style={({ pressed }) => [
+                    styles.chip,
+                    active && { borderColor: palette.base, backgroundColor: palette.muted },
+                    pressed && styles.pressed,
+                  ]}
                 >
                   <Text style={styles.chipText}>{option}</Text>
                 </Pressable>
@@ -112,7 +119,11 @@ export default function FilterModal({ visible, onClose, value, onApply }: Props)
                 <Pressable
                   key={option}
                   onPress={() => setDraft((d) => ({ ...d, funType: toggle(d.funType, option) }))}
-                  style={({ pressed }) => [styles.chip, active && styles.chipActive, pressed && styles.pressed]}
+                  style={({ pressed }) => [
+                    styles.chip,
+                    active && { borderColor: palette.base, backgroundColor: palette.muted },
+                    pressed && styles.pressed,
+                  ]}
                 >
                   <Text style={styles.chipText}>{option}</Text>
                 </Pressable>
@@ -134,7 +145,13 @@ export default function FilterModal({ visible, onClose, value, onApply }: Props)
               }}
               style={({ pressed }) => [styles.applyButton, pressed && styles.pressed]}
             >
-              <Text style={styles.applyButtonText}>Apply</Text>
+              <LinearGradient
+                colors={palette.gradientFab}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <Text style={[styles.applyButtonText, { color: palette.onAccent }]}>Apply</Text>
             </Pressable>
           </View>
         </View>
@@ -200,10 +217,6 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
     marginBottom: spacing.sm,
   },
-  chipActive: {
-    borderColor: colors.orange,
-    backgroundColor: colors.orangeMuted,
-  },
   swatch: {
     width: 10,
     height: 10,
@@ -238,10 +251,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 14,
     borderRadius: radii.pill,
-    backgroundColor: colors.orange,
+    overflow: 'hidden',
   },
   applyButtonText: {
-    color: colors.textOnOrange,
     fontSize: 14,
     ...fonts.heading,
   },

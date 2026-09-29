@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { ActivityIndicator, Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { Text } from './Text';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import BookmarkButton from './BookmarkButton';
 import { Activity } from '../data/activities';
-import { colors, fonts, gradients, radii, riskGradients, shadow, spacing } from '../theme/theme';
+import { colors, fonts, radii, riskGradients, shadow, spacing } from '../theme/theme';
+import { useAccent } from '../context/AccentContext';
 
 type Props = {
   activity: Activity;
@@ -22,6 +24,7 @@ export default function ActivityCarouselCard({
   onToggleSave,
 }: Props) {
   const entrance = useRef(new Animated.Value(0)).current;
+  const { palette } = useAccent();
 
   useEffect(() => {
     Animated.timing(entrance, {
@@ -54,36 +57,18 @@ export default function ActivityCarouselCard({
       >
       <View style={styles.topRow}>
         <LinearGradient
-          colors={gradients.icon}
+          colors={palette.gradientIcon}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.thumbnail, shadow.soft]}
         >
-          <MaterialCommunityIcons name={activity.icon as any} size={32} color={colors.orange} />
+          <MaterialCommunityIcons name={activity.icon as any} size={32} color={palette.base} />
         </LinearGradient>
         <View style={styles.kindTag}>
-          <Text style={styles.kindTagText}>{activity.kind.join(' · ')}</Text>
+          <Text style={[styles.kindTagText, { color: palette.bright }]}>{activity.kind.join(' · ')}</Text>
         </View>
-        <Pressable
-          onPress={onToggleSave}
-          disabled={savePending}
-          hitSlop={8}
-          style={({ pressed }) => [
-            styles.iconBox,
-            savePending && styles.iconBoxPending,
-            pressed && styles.iconBoxPressed,
-          ]}
-        >
-          {savePending ? (
-            <ActivityIndicator size="small" color={colors.textSecondary} />
-          ) : (
-            <MaterialCommunityIcons
-              name={saved ? 'bookmark' : 'bookmark-outline'}
-              size={17}
-              color={saved ? colors.orange : colors.textSecondary}
-            />
-          )}
-        </Pressable>
+        <View style={styles.topRowSpacer} />
+        <BookmarkButton saved={saved} pending={savePending} onToggle={onToggleSave} size={17} boxSize={34} />
       </View>
 
       <Text style={styles.title} numberOfLines={2}>
@@ -142,33 +127,19 @@ const styles = StyleSheet.create({
   },
   kindTag: {
     marginLeft: spacing.md,
-    flex: 1,
     alignSelf: 'flex-start',
     backgroundColor: colors.background,
     borderRadius: radii.pill,
     paddingVertical: 4,
     paddingHorizontal: 10,
   },
+  topRowSpacer: {
+    flex: 1,
+    minWidth: spacing.sm,
+  },
   kindTagText: {
-    color: colors.orangeBright,
     fontSize: 10.5,
     ...fonts.label,
-  },
-  iconBox: {
-    width: 34,
-    height: 34,
-    borderRadius: radii.sm,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconBoxPending: {
-    opacity: 0.6,
-  },
-  iconBoxPressed: {
-    opacity: 0.5,
   },
   title: {
     color: colors.textPrimary,

@@ -1,9 +1,12 @@
-import React from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import * as Haptics from 'expo-haptics';
+import { Animated, LayoutChangeEvent, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '../components/Text';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createMaterialTopTabNavigator, MaterialTopTabBarProps } from '@react-navigation/material-top-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useAccent } from '../context/AccentContext';
 import ExploreScreen from '../screens/ExploreScreen';
 // MapScreen import intentionally removed — its data model (device-distance
 // to curated coordinates) no longer compiles against the location-less
@@ -18,7 +21,7 @@ import AuthScreen from '../screens/AuthScreen';
 import WelcomeUsernameScreen from '../screens/WelcomeUsernameScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import CreateActivityScreen from '../screens/CreateActivityScreen';
-import { colors } from '../theme/theme';
+import { colors, pressSpring } from '../theme/theme';
 import { RootStackParamList, TabParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -38,14 +41,139 @@ const tabIconActive: Record<keyof TabParamList, keyof typeof MaterialCommunityIc
   Profile: 'account',
 };
 
-function CustomTabBar({ state, descriptors, navigation }: MaterialTopTabBarProps) {
+const ORB_SIZE = 8;
+
+type PositionValue = MaterialTopTabBarProps['position'];
+
+// Two overlapping icon layers rotated on the Y axis, cross-fading exactly
+// at the 90deg edge-on point — the standard dependency-free "flip card"
+// trick. Driven by the same continuous swipe `position` as everything
+// else in this bar, so it opens/closes in sync with taps AND live swipes,
+// and naturally reverses (closes) as you continue past the Lore tab.
+function LoreTabIcon({ position, index, focused, color }: {
+  position: PositionValue;
+  index: number;
+  focused: boolean;
+  color: string;
+}) {
+  const progress = position.interpolate({
+    inputRange: [index - 1, index, index + 1],
+    outputRange: [0, 1, 0],
+    extrapolate: 'clamp',
+  });
+  const frontRotate = progress.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
+  const backRotate = progress.interpolate({ inputRange: [0, 1], outputRange: ['180deg', '360deg'] });
+  const frontOpacity = progress.interpolate({ inputRange: [0, 0.5, 0.501, 1], outputRange: [1, 1, 0, 0] });
+  const backOpacity = progress.interpolate({ inputRange: [0, 0.499, 0.5, 1], outputRange: [0, 0, 1, 1] });
+
   return (
-    <View style={styles.tabBar}>
+    <View style={styles.flipWrap}>
+      <Animated.View
+        style={[styles.flipFace, { opacity: frontOpacity, transform: [{ perspective: 800 }, { rotateY: frontRotate }] }]}
+      >
+        <MaterialCommunityIcons name={tabIcon.Lore} color={focused ? color : colors.textMuted} size={24} />
+      </Animated.View>
+      <Animated.View
+        style={[styles.flipFace, { opacity: backOpacity, transform: [{ perspective: 800 }, { rotateY: backRotate }] }]}
+      >
+        <MaterialCommunityIcons name={tabIconActive.Lore} color={color} size={24} />
+      </Animated.View>
+    </View>
+  );
+}
+
+function TabBarItemButton({ onPress, children }: { onPress: () => void; children: React.ReactNode }) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const animateTo = (toValue: number) => {
+    Animated.spring(scale, { toValue, ...pressSpring, useNativeDriver: true }).start();
+  };
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onPressIn={() => animateTo(0.88)}
+      onPressOut={() => animateTo(1)}
+      style={styles.tabBarItem}
+      hitSlop={4}
+    >
+      <Animated.View style={[styles.tabBarItemInner, { transform: [{ scale }] }]}>{children}</Animated.View>
+    </Pressable>
+  );
+}
+
+function CustomTabBar({ state, descriptors, navigation, position }: MaterialTopTabBarProps) {
+  const { palette } = useAccent();
+  const [barWidth, setBarWidth] = useState(0);
+  const prevIndexRef = useRef<number | null>(null);
+  const numTabs = state.routes.length;
+  const loreIndex = state.routes.findIndex((r) => r.name === 'Lore');
+
+  useEffect(() => {
+    if (prevIndexRef.current === null) {
+      prevIndexRef.current = state.index;
+      return;
+    }
+    if (prevIndexRef.current !== state.index) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      prevIndexRef.current = state.index;
+    }
+  }, [state.index]);
+
+  const handleLayout = (e: LayoutChangeEvent) => setBarWidth(e.nativeEvent.layout.width);
+
+  const tabWidth = numTabs > 0 ? barWidth / numTabs : 0;
+  const orbInputRange: number[] = [];
+  const orbTranslateRange: number[] = [];
+  const orbScaleInputRange: number[] = [];
+  const orbScaleRange: number[] = [];
+  for (let i = 0; i < numTabs; i++) {
+    orbInputRange.push(i);
+    orbTranslateRange.push((i + 0.5) * tabWidth - ORB_SIZE / 2);
+    orbScaleInputRange.push(i);
+    orbScaleRange.push(1);
+    if (i < numTabs - 1) {
+      orbScaleInputRange.push(i + 0.5);
+      orbScaleRange.push(1.5);
+    }
+  }
+
+  const orbTranslateX = position.interpolate({
+    inputRange: orbInputRange,
+    outputRange: orbTranslateRange,
+  });
+  const orbScale = position.interpolate({
+    inputRange: orbScaleInputRange,
+    outputRange: orbScaleRange,
+  });
+
+  return (
+    <View style={styles.tabBar} onLayout={handleLayout}>
+      {barWidth > 0 ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.orb, { transform: [{ translateX: orbTranslateX }, { scale: orbScale }] }]}
+        >
+          <LinearGradient
+            colors={palette.gradientFab}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.orbFill}
+          />
+        </Animated.View>
+      ) : null}
+
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const focused = state.index === index;
         const label = (options.tabBarLabel as string | undefined) ?? route.name;
         const routeName = route.name as keyof TabParamList;
+
+        const tintColor = position.interpolate({
+          inputRange: [index - 1, index, index + 1],
+          outputRange: [colors.textMuted, palette.base, colors.textMuted],
+          extrapolate: 'clamp',
+        });
 
         const onPress = () => {
           const event = navigation.emit({
@@ -60,18 +188,20 @@ function CustomTabBar({ state, descriptors, navigation }: MaterialTopTabBarProps
         };
 
         return (
-          <Pressable key={route.key} onPress={onPress} style={styles.tabBarItem} hitSlop={4}>
+          <TabBarItemButton key={route.key} onPress={onPress}>
             <View style={styles.iconWrap}>
-              <MaterialCommunityIcons
-                name={focused ? tabIconActive[routeName] : tabIcon[routeName]}
-                color={focused ? colors.orange : colors.textMuted}
-                size={24}
-              />
+              {routeName === 'Lore' && loreIndex >= 0 ? (
+                <LoreTabIcon position={position} index={loreIndex} focused={focused} color={palette.base} />
+              ) : (
+                <MaterialCommunityIcons
+                  name={focused ? tabIconActive[routeName] : tabIcon[routeName]}
+                  color={focused ? palette.base : colors.textMuted}
+                  size={24}
+                />
+              )}
             </View>
-            <Text style={[styles.tabBarLabel, { color: focused ? colors.orange : colors.textMuted }]}>
-              {label}
-            </Text>
-          </Pressable>
+            <Animated.Text style={[styles.tabBarLabel, { color: tintColor }]}>{label}</Animated.Text>
+          </TabBarItemButton>
         );
       })}
     </View>
@@ -149,6 +279,7 @@ export default function RootNavigator() {
 
 const styles = StyleSheet.create({
   tabBar: {
+    position: 'relative',
     flexDirection: 'row',
     backgroundColor: colors.background,
     borderTopColor: colors.border,
@@ -162,12 +293,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  tabBarItemInner: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   tabBarLabel: {
     fontSize: 11,
     fontWeight: '600',
     marginTop: 2,
   },
   iconWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  orb: {
+    position: 'absolute',
+    top: 4,
+    left: 0,
+    width: ORB_SIZE,
+    height: ORB_SIZE,
+    borderRadius: ORB_SIZE / 2,
+    overflow: 'hidden',
+  },
+  orbFill: {
+    width: '100%',
+    height: '100%',
+  },
+  flipWrap: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flipFace: {
+    position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
   },

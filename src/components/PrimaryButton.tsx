@@ -1,8 +1,10 @@
 import React, { useRef } from 'react';
 import { ActivityIndicator, Animated, Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { Text } from './Text';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors, fonts, pressSpring, shadow } from '../theme/theme';
+import { fonts, pressSpring } from '../theme/theme';
+import { useAccent } from '../context/AccentContext';
 
 type Props = {
   label: string;
@@ -25,6 +27,7 @@ export default function PrimaryButton({
 }: Props) {
   const isSolid = variant === 'solid';
   const scale = useRef(new Animated.Value(1)).current;
+  const { palette } = useAccent();
 
   const animateTo = (toValue: number) => {
     Animated.spring(scale, {
@@ -32,6 +35,14 @@ export default function PrimaryButton({
       ...pressSpring,
       useNativeDriver: true,
     }).start();
+  };
+
+  const glow = {
+    shadowColor: palette.glow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    elevation: 8,
   };
 
   return (
@@ -43,25 +54,34 @@ export default function PrimaryButton({
         disabled={disabled || loading}
         style={[
           styles.base,
-          isSolid ? styles.solid : styles.outline,
-          isSolid && shadow.glow,
+          !isSolid && styles.outline,
+          !isSolid && { borderColor: palette.base },
+          isSolid && glow,
           (disabled || loading) && styles.disabled,
         ]}
       >
-        <View style={styles.notch} />
+        {isSolid ? (
+          <LinearGradient
+            colors={palette.gradientFab}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+        ) : null}
+        <View style={[styles.notch, isSolid && { backgroundColor: palette.onAccent }]} />
         {loading ? (
-          <ActivityIndicator size="small" color={isSolid ? colors.textOnOrange : colors.orange} />
+          <ActivityIndicator size="small" color={isSolid ? palette.onAccent : palette.base} />
         ) : (
           <>
             {icon ? (
               <MaterialCommunityIcons
                 name={icon}
                 size={18}
-                color={isSolid ? colors.textOnOrange : colors.orange}
+                color={isSolid ? palette.onAccent : palette.base}
                 style={styles.icon}
               />
             ) : null}
-            <Text style={[styles.label, isSolid ? styles.labelSolid : styles.labelOutline]}>
+            <Text style={[styles.label, { color: isSolid ? palette.onAccent : palette.base }]}>
               {label}
             </Text>
           </>
@@ -85,13 +105,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
   },
-  solid: {
-    backgroundColor: colors.orange,
-  },
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: colors.orange,
   },
   disabled: {
     opacity: 0.6,
@@ -102,7 +118,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: 16,
     height: 16,
-    backgroundColor: colors.textOnOrange,
     opacity: 0.12,
     borderTopLeftRadius: 16,
   },
@@ -113,11 +128,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     ...fonts.heading,
     letterSpacing: 0.3,
-  },
-  labelSolid: {
-    color: colors.textOnOrange,
-  },
-  labelOutline: {
-    color: colors.orange,
   },
 });

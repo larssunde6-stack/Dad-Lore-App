@@ -5,8 +5,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CompletedLoreEntry } from '../data/completedLore';
 import { supabase } from '../lib/supabase';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
+import { useAccent } from '../context/AccentContext';
 
 export default function CompletedLoreCard({ entry }: { entry: CompletedLoreEntry }) {
+  const { palette } = useAccent();
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [summaryText, setSummaryText] = useState<string | null>(null);
 
@@ -34,10 +36,10 @@ export default function CompletedLoreCard({ entry }: { entry: CompletedLoreEntry
   };
 
   return (
-    <View style={[styles.card, shadow.card]}>
+    <View style={[styles.card, shadow.card, { borderLeftColor: palette.base }]}>
       <View style={styles.header}>
-        <View style={styles.iconBadge}>
-          <MaterialCommunityIcons name={entry.icon as any} size={22} color={colors.orange} />
+        <View style={[styles.iconBadge, { backgroundColor: palette.muted }]}>
+          <MaterialCommunityIcons name={entry.icon as any} size={22} color={palette.base} />
         </View>
         <View style={styles.headerText}>
           <Text style={styles.title} numberOfLines={2}>
@@ -45,19 +47,19 @@ export default function CompletedLoreCard({ entry }: { entry: CompletedLoreEntry
           </Text>
           <Text style={styles.date}>{entry.dateCompleted}</Text>
         </View>
-        <View style={styles.loreBadge}>
-          <MaterialCommunityIcons name="fire" size={13} color={colors.orange} />
-          <Text style={styles.loreBadgeText}>+{entry.loreEarned}</Text>
+        <View style={[styles.loreBadge, { backgroundColor: palette.muted }]}>
+          <MaterialCommunityIcons name="fire" size={13} color={palette.base} />
+          <Text style={[styles.loreBadgeText, { color: palette.bright }]}>+{entry.loreEarned}</Text>
         </View>
       </View>
 
       <Text style={styles.note}>{entry.note}</Text>
 
       {summaryText ? (
-        <View style={styles.summaryBox}>
+        <View style={[styles.summaryBox, { backgroundColor: palette.muted, borderColor: palette.deep }]}>
           <View style={styles.summaryLabelRow}>
-            <MaterialCommunityIcons name="creation" size={13} color={colors.orangeBright} />
-            <Text style={styles.summaryLabel}>AI Lore Summary</Text>
+            <MaterialCommunityIcons name="creation" size={13} color={palette.bright} />
+            <Text style={[styles.summaryLabel, { color: palette.bright }]}>AI Lore Summary</Text>
           </View>
           <Text style={styles.summaryText}>&ldquo;{summaryText}&rdquo;</Text>
         </View>
@@ -68,11 +70,11 @@ export default function CompletedLoreCard({ entry }: { entry: CompletedLoreEntry
           disabled={isSummarizing}
         >
           {isSummarizing ? (
-            <ActivityIndicator size="small" color={colors.orange} />
+            <ActivityIndicator size="small" color={palette.base} />
           ) : (
-            <MaterialCommunityIcons name="creation" size={15} color={colors.orange} />
+            <MaterialCommunityIcons name="creation" size={15} color={palette.base} />
           )}
-          <Text style={styles.summarizeText}>
+          <Text style={[styles.summarizeText, { color: palette.base }]}>
             {isSummarizing ? 'Summarizing...' : 'Summarize My Lore'}
           </Text>
         </Pressable>
@@ -86,7 +88,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: radii.md,
     borderLeftWidth: 3,
-    borderLeftColor: colors.orange,
     borderTopWidth: 1,
     borderRightWidth: 1,
     borderBottomWidth: 1,
@@ -105,7 +106,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: radii.sm,
-    backgroundColor: colors.orangeMuted,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
@@ -128,13 +128,11 @@ const styles = StyleSheet.create({
   loreBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.orangeMuted,
     borderRadius: radii.pill,
     paddingVertical: 4,
     paddingHorizontal: 8,
   },
   loreBadgeText: {
-    color: colors.orangeBright,
     fontSize: 11,
     marginLeft: 3,
     ...fonts.heading,
@@ -158,16 +156,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   summarizeText: {
-    color: colors.orange,
     fontSize: 12.5,
     marginLeft: 6,
     ...fonts.heading,
   },
   summaryBox: {
-    backgroundColor: colors.orangeMuted,
     borderRadius: radii.sm,
     borderWidth: 1,
-    borderColor: colors.orangeDeep,
     padding: spacing.md,
   },
   summaryLabelRow: {
@@ -176,7 +171,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   summaryLabel: {
-    color: colors.orangeBright,
     fontSize: 10.5,
     marginLeft: 4,
     ...fonts.label,

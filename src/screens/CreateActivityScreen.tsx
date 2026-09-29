@@ -11,6 +11,7 @@ import { containsBlockedContent } from '../utils/moderation';
 import { supabase } from '../lib/supabase';
 import { RiskLevel, Kind, FunType } from '../data/activities';
 import { colors, fonts, radii, scrollPhysics, spacing } from '../theme/theme';
+import { useAccent } from '../context/AccentContext';
 import { RootStackScreenProps } from '../navigation/types';
 
 const ICON_OPTIONS: { name: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
@@ -50,6 +51,7 @@ function toggle<T>(list: T[], value: T): T[] {
 export default function CreateActivityScreen({ navigation }: RootStackScreenProps<'CreateActivity'>) {
   const { isAnonymous, userId, username, email } = useAuth();
   const { refetch } = useActivities();
+  const { palette } = useAccent();
 
   const [icon, setIcon] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -166,7 +168,7 @@ export default function CreateActivityScreen({ navigation }: RootStackScreenProp
         </View>
 
         <View style={styles.gateWrap}>
-          <MaterialCommunityIcons name="account-plus-outline" size={28} color={colors.orangeBright} />
+          <MaterialCommunityIcons name="account-plus-outline" size={28} color={palette.bright} />
           <Text style={styles.gateTitle}>Create an account to publish</Text>
           <Text style={styles.gateBody}>
             Publishing an activity shows your username to everyone, so it needs a real account —
@@ -209,12 +211,15 @@ export default function CreateActivityScreen({ navigation }: RootStackScreenProp
               <Pressable
                 key={option.name}
                 onPress={() => setIcon(option.name)}
-                style={[styles.iconButton, active && styles.iconButtonActive]}
+                style={[
+                  styles.iconButton,
+                  active && { borderColor: palette.base, backgroundColor: palette.muted },
+                ]}
               >
                 <MaterialCommunityIcons
                   name={option.name}
                   size={22}
-                  color={active ? colors.orangeBright : colors.textSecondary}
+                  color={active ? palette.bright : colors.textSecondary}
                 />
               </Pressable>
             );
@@ -260,7 +265,7 @@ export default function CreateActivityScreen({ navigation }: RootStackScreenProp
               <MaterialCommunityIcons
                 name="fire"
                 size={28}
-                color={i < loreRating ? colors.orange : 'rgba(255,255,255,0.15)'}
+                color={i < loreRating ? palette.base : 'rgba(255,255,255,0.15)'}
               />
             </Pressable>
           ))}
@@ -294,7 +299,7 @@ export default function CreateActivityScreen({ navigation }: RootStackScreenProp
               <Pressable
                 key={option}
                 onPress={() => setKind((k) => toggle(k, option))}
-                style={[styles.chip, active && styles.chipActive]}
+                style={[styles.chip, active && { borderColor: palette.base, backgroundColor: palette.muted }]}
               >
                 <Text style={styles.chipText}>{option}</Text>
               </Pressable>
@@ -310,7 +315,7 @@ export default function CreateActivityScreen({ navigation }: RootStackScreenProp
               <Pressable
                 key={option}
                 onPress={() => setFunType(option)}
-                style={[styles.chip, active && styles.chipActive]}
+                style={[styles.chip, active && { borderColor: palette.base, backgroundColor: palette.muted }]}
               >
                 <Text style={styles.chipText}>{option}</Text>
               </Pressable>
@@ -424,10 +429,6 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
     marginBottom: spacing.sm,
   },
-  iconButtonActive: {
-    borderColor: colors.orange,
-    backgroundColor: colors.orangeMuted,
-  },
   input: {
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -465,10 +466,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     marginRight: spacing.sm,
     marginBottom: spacing.sm,
-  },
-  chipActive: {
-    borderColor: colors.orange,
-    backgroundColor: colors.orangeMuted,
   },
   swatch: {
     width: 10,

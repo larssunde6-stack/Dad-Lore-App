@@ -3,7 +3,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from './Text';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors, fonts, gradients, radii, shadow, spacing } from '../theme/theme';
+import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
+import { useAccent } from '../context/AccentContext';
 
 type Props = {
   title: string;
@@ -22,8 +23,10 @@ export default function PillHeader({
   countLabel,
   compact,
   showFilter = true,
-  gradient = false,
+  gradient = true,
 }: Props) {
+  const { palette } = useAccent();
+
   return (
     <View style={[styles.row, compact && styles.rowCompact]}>
       {countLabel ? (
@@ -33,16 +36,16 @@ export default function PillHeader({
       ) : null}
       {gradient ? (
         <LinearGradient
-          colors={gradients.fab}
+          colors={palette.gradientFab}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={[styles.pill, shadow.soft]}
         >
-          <Text style={styles.pillText}>{title}</Text>
+          <Text style={[styles.pillText, { color: palette.onAccent }]}>{title}</Text>
         </LinearGradient>
       ) : (
-        <View style={[styles.pill, styles.pillFlat, shadow.soft]}>
-          <Text style={styles.pillText}>{title}</Text>
+        <View style={[styles.pill, shadow.soft, { backgroundColor: palette.base }]}>
+          <Text style={[styles.pillText, { color: palette.onAccent }]}>{title}</Text>
         </View>
       )}
       {showFilter ? (
@@ -50,7 +53,7 @@ export default function PillHeader({
           onPress={onFilterPress}
           style={({ pressed }) => [styles.filterButton, shadow.soft, pressed && styles.filterButtonPressed]}
         >
-          <MaterialCommunityIcons name="tune" size={19} color={colors.orange} />
+          <MaterialCommunityIcons name="tune" size={19} color={palette.base} />
         </Pressable>
       ) : null}
     </View>
@@ -90,11 +93,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 30,
   },
-  pillFlat: {
-    backgroundColor: colors.orange,
-  },
   pillText: {
-    color: colors.textOnOrange,
     fontSize: 18,
     ...fonts.display,
     letterSpacing: 1,

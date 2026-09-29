@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { colors } from '../theme/theme';
+import { useRainbowColor } from '../hooks/useRainbowColor';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -10,13 +11,22 @@ type Props = {
   strokeWidth?: number;
   progressPct: number;
   color?: string;
+  rainbow?: boolean;
   children?: React.ReactNode;
 };
 
-export default function LevelRing({ size, strokeWidth = 6, progressPct, color = colors.orange, children }: Props) {
+export default function LevelRing({
+  size,
+  strokeWidth = 6,
+  progressPct,
+  color = colors.orange,
+  rainbow,
+  children,
+}: Props) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = useRef(new Animated.Value(0)).current;
+  const rainbowStroke = useRainbowColor();
 
   useEffect(() => {
     Animated.timing(progress, {
@@ -46,7 +56,7 @@ export default function LevelRing({ size, strokeWidth = 6, progressPct, color = 
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={color}
+          stroke={rainbow ? rainbowStroke : color}
           strokeWidth={strokeWidth}
           fill="none"
           strokeLinecap="round"

@@ -9,9 +9,11 @@ import {
   View,
 } from 'react-native';
 import { Text } from './Text';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
 import { useAuth } from '../context/AuthContext';
+import { useAccent } from '../context/AccentContext';
 import { supabase } from '../lib/supabase';
 
 const REASONS = ['Inappropriate', 'Dangerous or Unsafe', 'Spam', 'Other'];
@@ -25,6 +27,7 @@ type Props = {
 
 export default function ReportModal({ visible, onClose, activityId, activityTitle }: Props) {
   const { userId } = useAuth();
+  const { palette } = useAccent();
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -115,7 +118,7 @@ export default function ReportModal({ visible, onClose, activityId, activityTitl
           ) : (
             <>
               <View style={styles.headerRow}>
-                <MaterialCommunityIcons name="flag-outline" size={18} color={colors.orange} />
+                <MaterialCommunityIcons name="flag-outline" size={18} color={palette.base} />
                 <Text style={styles.title}>Report Lore</Text>
                 <Pressable
                   onPress={handleClose}
@@ -137,12 +140,12 @@ export default function ReportModal({ visible, onClose, activityId, activityTitl
                     onPress={() => setSelectedReason(reason)}
                     style={({ pressed }) => [
                       styles.reasonRow,
-                      active && styles.reasonRowActive,
+                      active && { borderColor: palette.base, backgroundColor: palette.muted },
                       pressed && styles.pressedFaint,
                     ]}
                   >
-                    <View style={[styles.radio, active && styles.radioActive]}>
-                      {active ? <View style={styles.radioDot} /> : null}
+                    <View style={[styles.radio, active && { borderColor: palette.base }]}>
+                      {active ? <View style={[styles.radioDot, { backgroundColor: palette.base }]} /> : null}
                     </View>
                     <Text style={styles.reasonText}>{reason}</Text>
                   </Pressable>
@@ -160,10 +163,16 @@ export default function ReportModal({ visible, onClose, activityId, activityTitl
                   pressed && styles.pressedFaint,
                 ]}
               >
+                <LinearGradient
+                  colors={palette.gradientFab}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={StyleSheet.absoluteFill}
+                />
                 {submitting ? (
-                  <ActivityIndicator size="small" color={colors.textOnOrange} />
+                  <ActivityIndicator size="small" color={palette.onAccent} />
                 ) : (
-                  <Text style={styles.submitButtonText}>Submit Report</Text>
+                  <Text style={[styles.submitButtonText, { color: palette.onAccent }]}>Submit Report</Text>
                 )}
               </Pressable>
             </>
@@ -238,10 +247,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     marginBottom: spacing.sm,
   },
-  reasonRowActive: {
-    borderColor: colors.orange,
-    backgroundColor: colors.orangeMuted,
-  },
   radio: {
     width: 18,
     height: 18,
@@ -252,14 +257,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: spacing.sm,
   },
-  radioActive: {
-    borderColor: colors.orange,
-  },
   radioDot: {
     width: 9,
     height: 9,
     borderRadius: 4.5,
-    backgroundColor: colors.orange,
   },
   reasonText: {
     color: colors.textPrimary,
@@ -271,11 +272,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   submitButton: {
-    backgroundColor: colors.orange,
     borderRadius: radii.pill,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: spacing.sm,
+    overflow: 'hidden',
   },
   submitButtonDisabled: {
     opacity: 0.4,
@@ -284,7 +285,6 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   submitButtonText: {
-    color: colors.textOnOrange,
     fontSize: 14,
     ...fonts.heading,
   },

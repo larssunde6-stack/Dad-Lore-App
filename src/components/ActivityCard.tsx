@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { ActivityIndicator, Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { Text } from './Text';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import BookmarkButton from './BookmarkButton';
 import { Activity } from '../data/activities';
-import { colors, fonts, gradients, radii, riskGradients, shadow, spacing } from '../theme/theme';
+import { colors, fonts, radii, riskGradients, shadow, spacing } from '../theme/theme';
+import { useAccent } from '../context/AccentContext';
 
 const riskColor: Record<Activity['riskLevel'], string> = {
   green: colors.riskGreen,
@@ -39,6 +41,7 @@ export default function ActivityCard({
 }: Props) {
   const isCompleted = typeof xpEarned === 'number';
   const entrance = useRef(new Animated.Value(0)).current;
+  const { palette } = useAccent();
 
   useEffect(() => {
     Animated.timing(entrance, {
@@ -67,16 +70,16 @@ export default function ActivityCard({
 
       <View style={styles.topRow}>
         <LinearGradient
-          colors={gradients.icon}
+          colors={palette.gradientIcon}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.iconBadge, shadow.soft]}
         >
-          <MaterialCommunityIcons name={activity.icon as any} size={26} color={colors.orange} />
+          <MaterialCommunityIcons name={activity.icon as any} size={26} color={palette.base} />
         </LinearGradient>
 
         <View style={styles.headerText}>
-          <Text style={styles.kindLabel}>{activity.kind.join(' · ')}</Text>
+          <Text style={[styles.kindLabel, { color: palette.bright }]}>{activity.kind.join(' · ')}</Text>
           <Text style={styles.title} numberOfLines={2}>
             {activity.title}
           </Text>
@@ -84,31 +87,19 @@ export default function ActivityCard({
         </View>
 
         {isCompleted ? (
-          <View style={styles.completedBadge}>
+          <View style={[styles.completedBadge, { backgroundColor: palette.muted }]}>
             <MaterialCommunityIcons name="check-circle" size={14} color={colors.success} />
             <Text style={styles.completedBadgeText}>+{xpEarned}</Text>
           </View>
         ) : (
-          <Pressable
-            hitSlop={10}
-            onPress={onToggleSave}
-            disabled={savePending}
-            style={({ pressed }) => [
-              styles.saveButton,
-              savePending && styles.saveButtonPending,
-              pressed && styles.saveButtonPressed,
-            ]}
-          >
-            {savePending ? (
-              <ActivityIndicator size="small" color={colors.textMuted} />
-            ) : (
-              <MaterialCommunityIcons
-                name={saved ? 'bookmark' : 'bookmark-outline'}
-                size={20}
-                color={saved ? colors.orange : colors.textMuted}
-              />
-            )}
-          </Pressable>
+          <BookmarkButton
+            saved={saved}
+            pending={savePending}
+            onToggle={onToggleSave}
+            size={20}
+            boxSize={28}
+            style={styles.saveButton}
+          />
         )}
       </View>
 
@@ -145,7 +136,7 @@ export default function ActivityCard({
               key={i}
               name="fire"
               size={13}
-              color={i < activity.loreRating ? colors.orange : colors.borderSubtle}
+              color={i < activity.loreRating ? palette.base : colors.borderSubtle}
               style={{ marginLeft: 1 }}
             />
           ))}
@@ -197,7 +188,6 @@ const styles = StyleSheet.create({
     paddingRight: spacing.md,
   },
   kindLabel: {
-    color: colors.orangeBright,
     fontSize: 11,
     ...fonts.label,
     marginBottom: 3,
@@ -216,16 +206,9 @@ const styles = StyleSheet.create({
   saveButton: {
     padding: 2,
   },
-  saveButtonPending: {
-    opacity: 0.6,
-  },
-  saveButtonPressed: {
-    opacity: 0.5,
-  },
   completedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.orangeMuted,
     borderRadius: radii.pill,
     paddingVertical: 4,
     paddingHorizontal: 8,

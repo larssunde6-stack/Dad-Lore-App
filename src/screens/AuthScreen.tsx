@@ -6,6 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
 import SegmentedControl from '../components/SegmentedControl';
 import { useAuth } from '../context/AuthContext';
+import { useAccent } from '../context/AccentContext';
 import { colors, fonts, radii, scrollPhysics, spacing } from '../theme/theme';
 import { RootStackScreenProps } from '../navigation/types';
 
@@ -15,6 +16,7 @@ const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
 export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>) {
   const { signUp, logIn } = useAuth();
+  const { palette } = useAccent();
   const [mode, setMode] = useState<Mode>('Sign Up');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -99,9 +101,9 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
         </View>
 
         {mode === 'Log In' ? (
-          <View style={styles.warningBox}>
-            <MaterialCommunityIcons name="information-outline" size={14} color={colors.orangeBright} />
-            <Text style={styles.warningText}>
+          <View style={[styles.warningBox, { backgroundColor: palette.muted, borderColor: palette.deep }]}>
+            <MaterialCommunityIcons name="information-outline" size={14} color={palette.bright} />
+            <Text style={[styles.warningText, { color: palette.bright }]}>
               Logging into an existing account will replace your current guest progress on this
               device.
             </Text>
@@ -158,7 +160,7 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
 
         {showEmailExistsHint ? (
           <Pressable onPress={handleLogInInstead} hitSlop={8}>
-            <Text style={styles.linkText}>Log in instead</Text>
+            <Text style={[styles.linkText, { color: palette.bright }]}>Log in instead</Text>
           </Pressable>
         ) : null}
 
@@ -172,7 +174,7 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
         {mode === 'Sign Up' ? (
           <Text style={styles.legalText}>
             By creating an account, you agree to our{' '}
-            <Text style={styles.legalLink} onPress={() => navigation.navigate('Legal')}>
+            <Text style={[styles.legalLink, { color: palette.bright }]} onPress={() => navigation.navigate('Legal')}>
               Privacy Policy & Terms
             </Text>
             .
@@ -181,7 +183,7 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
 
         {mode === 'Log In' ? (
           <Pressable onPress={() => navigation.navigate('ResetPassword')} hitSlop={8}>
-            <Text style={styles.linkText}>Forgot password?</Text>
+            <Text style={[styles.linkText, { color: palette.bright }]}>Forgot password?</Text>
           </Pressable>
         ) : null}
       </ScrollView>
@@ -233,15 +235,12 @@ const styles = StyleSheet.create({
   warningBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.orangeMuted,
     borderRadius: radii.sm,
     borderWidth: 1,
-    borderColor: colors.orangeDeep,
     padding: spacing.sm,
     marginBottom: spacing.lg,
   },
   warningText: {
-    color: colors.orangeBright,
     fontSize: 11.5,
     marginLeft: spacing.xs,
     flexShrink: 1,
@@ -269,7 +268,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   linkText: {
-    color: colors.orangeBright,
     fontSize: 13,
     ...fonts.heading,
     textAlign: 'center',
@@ -287,7 +285,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   legalLink: {
-    color: colors.orangeBright,
     textDecorationLine: 'underline',
   },
 });

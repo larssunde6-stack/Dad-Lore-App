@@ -7,10 +7,12 @@ import * as Haptics from 'expo-haptics';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
 import ReportModal from '../components/ReportModal';
+import BookmarkButton from '../components/BookmarkButton';
 import CenterToast, { ToastState } from '../components/CenterToast';
 import { useActivities } from '../context/ActivitiesContext';
 import { useCompletions } from '../context/CompletionsContext';
-import { colors, fonts, gradients, radii, riskGradients, scrollPhysics, shadow, spacing } from '../theme/theme';
+import { colors, fonts, radii, riskGradients, scrollPhysics, shadow, spacing } from '../theme/theme';
+import { useAccent } from '../context/AccentContext';
 import { useSaved } from '../context/SavedContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -34,6 +36,7 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
   const { savedIds, pendingIds, toggleSaved } = useSaved();
   const { completions, refetch: refetchCompletions } = useCompletions();
   const { userId, isReady, authError } = useAuth();
+  const { palette } = useAccent();
   const [reportVisible, setReportVisible] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [hiding, setHiding] = useState(false);
@@ -47,7 +50,7 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
   if (loading) {
     return (
       <SafeAreaView style={styles.centeredSafe} edges={['top']}>
-        <ActivityIndicator color={colors.orange} />
+        <ActivityIndicator color={palette.base} />
       </SafeAreaView>
     );
   }
@@ -129,7 +132,6 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
   };
 
   const handleToggleSave = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const result = await toggleSaved(activity.id);
     if (result.status === 'saved') {
       showToast({ message: 'Saved', tone: 'success' });
@@ -216,45 +218,33 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
               >
                 <MaterialCommunityIcons name="flag-outline" size={18} color={colors.textPrimary} />
               </Pressable>
-              <Pressable
-                onPress={handleToggleSave}
-                disabled={savePending}
-                style={({ pressed }) => [
-                  styles.backButton,
-                  savePending && styles.backButtonPending,
-                  pressed && styles.backButtonPressed,
-                ]}
-                hitSlop={10}
-              >
-                {savePending ? (
-                  <ActivityIndicator size="small" color={colors.textPrimary} />
-                ) : (
-                  <MaterialCommunityIcons
-                    name={saved ? 'bookmark' : 'bookmark-outline'}
-                    size={20}
-                    color={saved ? colors.orange : colors.textPrimary}
-                  />
-                )}
-              </Pressable>
+              <BookmarkButton
+                saved={saved}
+                pending={savePending}
+                onToggle={handleToggleSave}
+                size={20}
+                boxSize={38}
+                style={styles.backButton}
+              />
             </View>
           </View>
 
           <LinearGradient
-            colors={gradients.icon}
+            colors={palette.gradientIcon}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[styles.heroIcon, shadow.soft]}
           >
-            <MaterialCommunityIcons name={activity.icon as any} size={46} color={colors.orange} />
+            <MaterialCommunityIcons name={activity.icon as any} size={46} color={palette.base} />
           </LinearGradient>
           <View style={styles.tagRow}>
             {activity.kind.map((k) => (
               <View key={k} style={styles.kindTag}>
-                <Text style={styles.kindTagText}>{k}</Text>
+                <Text style={[styles.kindTagText, { color: palette.bright }]}>{k}</Text>
               </View>
             ))}
             <View style={styles.kindTag}>
-              <Text style={styles.kindTagText}>{activity.funType} Fun</Text>
+              <Text style={[styles.kindTagText, { color: palette.bright }]}>{activity.funType} Fun</Text>
             </View>
           </View>
           <Text style={styles.title}>{activity.title}</Text>
@@ -274,7 +264,7 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
                 key={i}
                 name="fire"
                 size={16}
-                color={i < activity.loreRating ? colors.orange : 'rgba(255,255,255,0.15)'}
+                color={i < activity.loreRating ? palette.base : 'rgba(255,255,255,0.15)'}
                 style={{ marginRight: 2 }}
               />
             ))}
@@ -284,7 +274,7 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
 
         <View style={styles.statsGrid}>
           <View style={[styles.statBox, shadow.soft]}>
-            <MaterialCommunityIcons name="clock-outline" size={18} color={colors.orangeBright} />
+            <MaterialCommunityIcons name="clock-outline" size={18} color={palette.bright} />
             <Text style={styles.statValue}>{activity.duration}</Text>
             <Text style={styles.statLabel}>Est. duration</Text>
           </View>
@@ -410,7 +400,6 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   kindTagText: {
-    color: colors.orangeBright,
     fontSize: 10.5,
     ...fonts.label,
   },

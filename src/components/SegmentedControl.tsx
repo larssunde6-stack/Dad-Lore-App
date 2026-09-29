@@ -2,7 +2,8 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from './Text';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, fonts, gradients, radii, spacing } from '../theme/theme';
+import { colors, fonts, radii, spacing } from '../theme/theme';
+import { useAccent } from '../context/AccentContext';
 
 type Props = {
   options: [string, string];
@@ -11,7 +12,9 @@ type Props = {
   gradient?: boolean;
 };
 
-export default function SegmentedControl({ options, value, onChange, gradient }: Props) {
+export default function SegmentedControl({ options, value, onChange, gradient = true }: Props) {
+  const { palette } = useAccent();
+
   return (
     <View style={styles.track}>
       {options.map((option) => {
@@ -25,12 +28,12 @@ export default function SegmentedControl({ options, value, onChange, gradient }:
               style={({ pressed }) => [styles.segmentGradientWrap, pressed && styles.pressed]}
             >
               <LinearGradient
-                colors={gradients.fab}
+                colors={palette.gradientFab}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.segmentGradient}
               >
-                <Text style={[styles.label, styles.labelActive]}>{option}</Text>
+                <Text style={[styles.label, { color: palette.onAccent }]}>{option}</Text>
               </LinearGradient>
             </Pressable>
           );
@@ -42,11 +45,11 @@ export default function SegmentedControl({ options, value, onChange, gradient }:
             onPress={() => onChange(option)}
             style={({ pressed }) => [
               styles.segment,
-              active && styles.segmentActive,
+              active && { backgroundColor: palette.base },
               pressed && styles.pressed,
             ]}
           >
-            <Text style={[styles.label, active && styles.labelActive]}>{option}</Text>
+            <Text style={[styles.label, active && { color: palette.onAccent }]}>{option}</Text>
           </Pressable>
         );
       })}
@@ -70,9 +73,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     alignItems: 'center',
   },
-  segmentActive: {
-    backgroundColor: colors.orange,
-  },
   segmentGradientWrap: {
     flex: 1,
   },
@@ -86,9 +86,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 13,
     ...fonts.heading,
-  },
-  labelActive: {
-    color: colors.textOnOrange,
   },
   pressed: {
     opacity: 0.7,

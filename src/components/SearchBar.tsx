@@ -3,15 +3,18 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from './Text';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, fonts, radii, shadow, spacing } from '../theme/theme';
+import { useAccent } from '../context/AccentContext';
 
 export default function SearchBar({ placeholder }: { placeholder: string }) {
+  const { palette } = useAccent();
+
   return (
     <Pressable style={[styles.container, shadow.soft]}>
       <MaterialCommunityIcons name="magnify" size={20} color={colors.textSecondary} />
       <Text style={styles.placeholder}>{placeholder}</Text>
-      <View style={styles.locationPill}>
-        <MaterialCommunityIcons name="map-marker" size={14} color={colors.orange} />
-        <Text style={styles.locationText}>Near Me</Text>
+      <View style={[styles.locationPill, { backgroundColor: palette.muted }]}>
+        <MaterialCommunityIcons name="map-marker" size={14} color={palette.base} />
+        <Text style={[styles.locationText, { color: palette.bright }]}>Near Me</Text>
       </View>
     </Pressable>
   );
