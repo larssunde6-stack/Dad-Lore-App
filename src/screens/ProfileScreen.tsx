@@ -23,6 +23,7 @@ import CenterToast, { ToastState } from '../components/CenterToast';
 import { useActivities } from '../context/ActivitiesContext';
 import { useCompletions } from '../context/CompletionsContext';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 import { Activity } from '../data/activities';
 import { getLevel, getRank } from '../utils/level';
 import LevelRing from '../components/LevelRing';
@@ -89,7 +90,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
   const { activities, refetch: refetchActivities } = useActivities();
   const { completions, xp: lorePoints, loading: statsLoading, refetch: refetchCompletions } =
     useCompletions();
-  const { isAnonymous, email, username, logOut, deleteAccount, updateUsername } = useAuth();
+  const { isAnonymous, email, username, userId, logOut, deleteAccount, updateUsername } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -97,6 +98,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameDraft, setUsernameDraft] = useState('');
   const [savingUsername, setSavingUsername] = useState(false);
+  const [testingLevelUp, setTestingLevelUp] = useState(false);
 
   const showToast = (next: ToastState) => {
     setToast(next);
@@ -195,6 +197,46 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
   const { level, progressPct, pointsToNext } = getLevel(lorePoints);
   const rank = getRank(level);
 
+  const handleTestLevelUp = async () => {
+    if (testingLevelUp || !userId) return;
+    setTestingLevelUp(true);
+
+    const completedIds = new Set(completions.map((c) => c.activityId));
+    const uncompleted = activities.filter((a) => !completedIds.has(a.id));
+
+    const toComplete: Activity[] = [];
+    let accumulated = 0;
+    for (const activity of uncompleted) {
+      if (accumulated >= pointsToNext) break;
+      toComplete.push(activity);
+      accumulated += activity.loreRating * 20;
+    }
+
+    if (accumulated < pointsToNext) {
+      setTestingLevelUp(false);
+      showToast({ message: 'Not enough uncompleted activities left to test with', tone: 'error' });
+      return;
+    }
+
+    const { error } = await supabase.from('activity_completions').upsert(
+      toComplete.map((activity) => ({
+        user_id: userId,
+        activity_id: activity.id,
+        xp_earned: activity.loreRating * 20,
+      })),
+      { onConflict: 'user_id,activity_id' }
+    );
+
+    setTestingLevelUp(false);
+
+    if (error) {
+      showToast({ message: error.message, tone: 'error' });
+      return;
+    }
+
+    await refetchCompletions();
+  };
+
   const stats = [
     { label: 'Lore Points', value: lorePoints.toLocaleString(), icon: 'fire' as const },
     { label: 'Activities Done', value: String(activitiesDone), icon: 'check-decagram' as const },
@@ -273,6 +315,20 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
             <Text style={styles.subtitle}> · Level {level}</Text>
           </View>
           <Text style={styles.progressLabel}>{pointsToNext} lore points to Level {level + 1}</Text>
+          {__DEV__ ? (
+            <Pressable
+              onPress={handleTestLevelUp}
+              disabled={testingLevelUp}
+              hitSlop={8}
+              style={({ pressed }) => [styles.devButton, (pressed || testingLevelUp) && styles.pressedFaint]}
+            >
+              {testingLevelUp ? (
+                <ActivityIndicator size="small" color={colors.textMuted} />
+              ) : (
+                <Text style={styles.devButtonText}>TEST: LEVEL UP</Text>
+              )}
+            </Pressable>
+          ) : null}
         </View>
 
         {isAnonymous ? (
@@ -463,6 +519,20 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 11.5,
     marginTop: spacing.xs,
+  },
+  devButton: {
+    marginTop: spacing.md,
+    paddingVertical: 6,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: colors.textMuted,
+  },
+  devButtonText: {
+    color: colors.textMuted,
+    fontSize: 10.5,
+    ...fonts.label,
   },
   accountCard: {
     alignItems: 'center',
