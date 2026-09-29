@@ -52,6 +52,7 @@ export function ActivitiesProvider({ children }: { children: React.ReactNode }) 
     const { data, error: fetchError } = await supabase
       .from('activities')
       .select('*')
+      .eq('hidden', false)
       .order('created_at', { ascending: true });
 
     if (fetchError) {

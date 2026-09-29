@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import * as Haptics from 'expo-haptics';
 import {
   ActivityIndicator,
   Alert,
@@ -134,7 +135,10 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
 
     if (result.status === 'error') {
       showToast({ message: result.message, tone: 'error' });
+      return;
     }
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
   const handleDeleteAccount = () => {

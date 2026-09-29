@@ -27,7 +27,7 @@ import FilterModal, {
 import CenterToast, { ToastState } from '../components/CenterToast';
 import { useActivities } from '../context/ActivitiesContext';
 import { useCompletions } from '../context/CompletionsContext';
-import { colors, fonts, gradients, radii, scrollPhysics, shadow, spacing } from '../theme/theme';
+import { colors, fonts, gradients, pressSpring, radii, scrollPhysics, shadow, spacing } from '../theme/theme';
 import { useSaved } from '../context/SavedContext';
 import { TabScreenProps } from '../navigation/types';
 
@@ -46,8 +46,7 @@ function AnimatedFab({ onPress, disabled, icon, positionStyle }: AnimatedFabProp
   const animateTo = (toValue: number) => {
     Animated.spring(scale, {
       toValue,
-      friction: 5,
-      tension: 200,
+      ...pressSpring,
       useNativeDriver: true,
     }).start();
   };

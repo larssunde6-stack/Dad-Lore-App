@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '../components/Text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
 import ReportModal from '../components/ReportModal';
@@ -29,12 +30,13 @@ const riskLabel: Record<string, string> = {
 
 export default function ActivityDetailScreen({ route, navigation }: RootStackScreenProps<'ActivityDetail'>) {
   const { activityId } = route.params;
-  const { activities, loading, error } = useActivities();
+  const { activities, loading, error, refetch: refetchActivities } = useActivities();
   const { savedIds, pendingIds, toggleSaved } = useSaved();
   const { completions, refetch: refetchCompletions } = useCompletions();
   const { userId, isReady, authError } = useAuth();
   const [reportVisible, setReportVisible] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [hiding, setHiding] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
 
   const showToast = (next: ToastState) => {
@@ -86,6 +88,7 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
     }
 
     setIsCompleting(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     if (isCompleted) {
       const { error: deleteError } = await supabase
@@ -126,6 +129,7 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
   };
 
   const handleToggleSave = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const result = await toggleSaved(activity.id);
     if (result.status === 'saved') {
       showToast({ message: 'Saved', tone: 'success' });
@@ -134,6 +138,35 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
     } else {
       showToast({ message: result.message, tone: 'error' });
     }
+  };
+
+  const confirmHideActivity = async () => {
+    setHiding(true);
+    const { error: hideError } = await supabase
+      .from('activities')
+      .update({ hidden: true })
+      .eq('id', activity.id);
+    setHiding(false);
+
+    if (hideError) {
+      showToast({ message: `Couldn't remove that: ${hideError.message}`, tone: 'error' });
+      return;
+    }
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await refetchActivities();
+    navigation.goBack();
+  };
+
+  const handleHideActivity = () => {
+    Alert.alert(
+      'Remove this activity?',
+      'This takes it out of Explore for everyone. It can\'t be undone from here.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: confirmHideActivity },
+      ]
+    );
   };
 
   return (
@@ -158,6 +191,24 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
               <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textPrimary} />
             </Pressable>
             <View style={styles.heroRightButtons}>
+              {activity.createdBy === userId ? (
+                <Pressable
+                  onPress={handleHideActivity}
+                  disabled={hiding}
+                  style={({ pressed }) => [
+                    styles.backButton,
+                    hiding && styles.backButtonPending,
+                    pressed && styles.backButtonPressed,
+                  ]}
+                  hitSlop={10}
+                >
+                  {hiding ? (
+                    <ActivityIndicator size="small" color={colors.textPrimary} />
+                  ) : (
+                    <MaterialCommunityIcons name="trash-can-outline" size={18} color={colors.textPrimary} />
+                  )}
+                </Pressable>
+              ) : null}
               <Pressable
                 onPress={() => setReportVisible(true)}
                 style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}

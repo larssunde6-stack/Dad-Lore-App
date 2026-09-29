@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { ActivityIndicator, Animated, Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { Text } from './Text';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors, fonts, shadow } from '../theme/theme';
+import { colors, fonts, pressSpring, shadow } from '../theme/theme';
 
 type Props = {
   label: string;
@@ -29,8 +29,7 @@ export default function PrimaryButton({
   const animateTo = (toValue: number) => {
     Animated.spring(scale, {
       toValue,
-      friction: 5,
-      tension: 200,
+      ...pressSpring,
       useNativeDriver: true,
     }).start();
   };

@@ -2,8 +2,17 @@ import { Platform } from 'react-native';
 
 // A touch slower than RN's default ('normal': iOS 0.998, Android 0.985) so
 // flings settle sooner instead of gliding — reads as heavier, less floaty.
+// Nudged a step further per feedback that it still felt light.
 export const scrollPhysics = {
-  decelerationRate: Platform.OS === 'ios' ? 0.994 : 0.97,
+  decelerationRate: Platform.OS === 'ios' ? 0.988 : 0.95,
+};
+
+// Press-scale spring shared by PrimaryButton and the Explore FABs — a bit
+// more damped than RN's typical snappy defaults, so a tap settles instead
+// of springing back instantly. Same "heavier" intent as scrollPhysics above.
+export const pressSpring = {
+  friction: 7,
+  tension: 160,
 };
 
 export const colors = {
