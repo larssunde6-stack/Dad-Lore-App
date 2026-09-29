@@ -13,6 +13,7 @@ import { useScrollToTop } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
+import { StatCardSkeletonRow } from '../components/Skeleton';
 import TopBar from '../components/TopBar';
 import PillHeader from '../components/PillHeader';
 import AccessibilityStatement from '../components/AccessibilityStatement';
@@ -181,7 +182,11 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.orange} />
         }
       >
-        <TopBar xp={lorePoints} showSearch={false} />
+        <TopBar
+          xp={lorePoints}
+          showSearch={false}
+          onNotificationsPress={() => showToast({ message: 'Notifications coming soon', tone: 'success' })}
+        />
         <PillHeader title="PROFILE" showFilter={false} gradient />
 
         <View style={styles.profileHeader}>
@@ -271,9 +276,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
         ) : null}
 
         {statsLoading ? (
-          <View style={styles.statsLoading}>
-            <ActivityIndicator color={colors.orange} />
-          </View>
+          <StatCardSkeletonRow />
         ) : (
           <View style={styles.statsRow}>
             {stats.map((stat) => (
@@ -311,7 +314,11 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
             <Pressable
               key={item.label}
               onPress={() => handleMenuPress(item)}
-              style={[styles.menuItem, index !== menuItems.length - 1 && styles.menuDivider]}
+              style={({ pressed }) => [
+                styles.menuItem,
+                index !== menuItems.length - 1 && styles.menuDivider,
+                pressed && styles.menuItemPressed,
+              ]}
             >
               <View style={styles.menuLeft}>
                 <MaterialCommunityIcons name={item.icon} size={19} color={colors.textSecondary} />
@@ -458,11 +465,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: spacing.xl,
   },
-  statsLoading: {
-    paddingVertical: spacing.xl,
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
   statCard: {
     flex: 1,
     alignItems: 'center',
@@ -538,6 +540,9 @@ const styles = StyleSheet.create({
   menuDivider: {
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSubtle,
+  },
+  menuItemPressed: {
+    backgroundColor: colors.backgroundAlt,
   },
   menuLeft: {
     flexDirection: 'row',

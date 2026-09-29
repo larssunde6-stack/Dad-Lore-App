@@ -11,6 +11,7 @@ type Props = {
   searchPlaceholder?: string;
   searchValue?: string;
   onSearchChange?: (value: string) => void;
+  onNotificationsPress?: () => void;
 };
 
 export default function TopBar({
@@ -19,6 +20,7 @@ export default function TopBar({
   searchPlaceholder,
   searchValue = '',
   onSearchChange,
+  onNotificationsPress,
 }: Props) {
   const { level } = getLevel(xp);
 
@@ -40,7 +42,11 @@ export default function TopBar({
             returnKeyType="search"
           />
           {searchValue.length > 0 ? (
-            <Pressable onPress={() => onSearchChange?.('')} hitSlop={8}>
+            <Pressable
+              onPress={() => onSearchChange?.('')}
+              hitSlop={8}
+              style={({ pressed }) => pressed && styles.iconButtonPressed}
+            >
               <MaterialCommunityIcons name="close-circle-outline" size={16} color={colors.textMuted} />
             </Pressable>
           ) : null}
@@ -49,7 +55,11 @@ export default function TopBar({
         <View style={styles.spacer} />
       )}
 
-      <Pressable style={[styles.iconButton, shadow.soft]}>
+      <Pressable
+        onPress={onNotificationsPress}
+        style={({ pressed }) => [styles.iconButton, shadow.soft, pressed && styles.iconButtonPressed]}
+        hitSlop={8}
+      >
         <MaterialCommunityIcons name="bell-outline" size={18} color={colors.textPrimary} />
         <View style={styles.bellDot} />
       </Pressable>
@@ -110,6 +120,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: spacing.sm,
+  },
+  iconButtonPressed: {
+    opacity: 0.6,
   },
   bellDot: {
     position: 'absolute',

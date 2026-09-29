@@ -15,6 +15,7 @@ import { useScrollToTop } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ActivityCarouselCard from '../components/ActivityCarouselCard';
+import { ActivityCarouselSkeletonList } from '../components/Skeleton';
 import TopBar from '../components/TopBar';
 import PillHeader from '../components/PillHeader';
 import FilterModal, {
@@ -137,6 +138,7 @@ export default function ExploreScreen({ navigation }: Props) {
           searchPlaceholder="Search activities, sidequests..."
           searchValue={query}
           onSearchChange={setQuery}
+          onNotificationsPress={() => showToast({ message: 'Notifications coming soon', tone: 'success' })}
         />
       </View>
 
@@ -170,15 +172,22 @@ export default function ExploreScreen({ navigation }: Props) {
           }
           ListEmptyComponent={
             loading ? (
-              <View style={[styles.emptyState, styles.paddedTop]}>
-                <ActivityIndicator color={colors.orange} />
+              <View style={styles.paddedTop}>
+                <ActivityCarouselSkeletonList />
               </View>
             ) : error ? (
               <View style={[styles.emptyState, styles.paddedTop]}>
-                <Text style={styles.emptyText}>Couldn't load lore: {error}</Text>
+                <MaterialCommunityIcons name="cloud-off-outline" size={36} color={colors.textMuted} />
+                <Text style={styles.emptyTitle}>Couldn't load lore</Text>
+                <Text style={styles.emptyText}>{error}</Text>
+                <Pressable onPress={() => refetchActivities()} style={styles.retryButton}>
+                  <MaterialCommunityIcons name="refresh" size={15} color={colors.orangeBright} />
+                  <Text style={styles.retryButtonText}>Try Again</Text>
+                </Pressable>
               </View>
             ) : (
               <View style={[styles.emptyState, styles.paddedTop]}>
+                <MaterialCommunityIcons name="compass-off-outline" size={36} color={colors.textMuted} />
                 <Text style={styles.emptyText}>No lore matches. Try a different search or filter.</Text>
               </View>
             )
@@ -266,11 +275,38 @@ const styles = StyleSheet.create({
     ...fonts.heading,
   },
   emptyState: {
+    alignItems: 'center',
     paddingVertical: spacing.xl,
+  },
+  emptyTitle: {
+    color: colors.textPrimary,
+    fontSize: 15,
+    ...fonts.heading,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
   },
   emptyText: {
     color: colors.textMuted,
     fontSize: 12.5,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.orangeMuted,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.orangeDeep,
+    paddingVertical: 8,
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.lg,
+  },
+  retryButtonText: {
+    color: colors.orangeBright,
+    fontSize: 12.5,
+    ...fonts.heading,
+    marginLeft: spacing.xs,
   },
   footerSpace: {
     height: 80,

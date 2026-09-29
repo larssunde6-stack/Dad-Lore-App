@@ -19,7 +19,11 @@ export default function SegmentedControl({ options, value, onChange, gradient }:
 
         if (active && gradient) {
           return (
-            <Pressable key={option} onPress={() => onChange(option)} style={styles.segmentGradientWrap}>
+            <Pressable
+              key={option}
+              onPress={() => onChange(option)}
+              style={({ pressed }) => [styles.segmentGradientWrap, pressed && styles.pressed]}
+            >
               <LinearGradient
                 colors={gradients.fab}
                 start={{ x: 0, y: 0 }}
@@ -36,7 +40,11 @@ export default function SegmentedControl({ options, value, onChange, gradient }:
           <Pressable
             key={option}
             onPress={() => onChange(option)}
-            style={[styles.segment, active && styles.segmentActive]}
+            style={({ pressed }) => [
+              styles.segment,
+              active && styles.segmentActive,
+              pressed && styles.pressed,
+            ]}
           >
             <Text style={[styles.label, active && styles.labelActive]}>{option}</Text>
           </Pressable>
@@ -81,5 +89,8 @@ const styles = StyleSheet.create({
   },
   labelActive: {
     color: colors.textOnOrange,
+  },
+  pressed: {
+    opacity: 0.7,
   },
 });

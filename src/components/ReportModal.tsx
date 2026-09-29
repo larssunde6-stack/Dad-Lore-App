@@ -105,7 +105,10 @@ export default function ReportModal({ visible, onClose, activityId, activityTitl
               <Text style={styles.confirmBody}>
                 Thanks for flagging this — our team will take a look.
               </Text>
-              <Pressable onPress={handleClose} style={styles.doneButton}>
+              <Pressable
+                onPress={handleClose}
+                style={({ pressed }) => [styles.doneButton, pressed && styles.pressedFaint]}
+              >
                 <Text style={styles.doneButtonText}>Done</Text>
               </Pressable>
             </View>
@@ -114,7 +117,11 @@ export default function ReportModal({ visible, onClose, activityId, activityTitl
               <View style={styles.headerRow}>
                 <MaterialCommunityIcons name="flag-outline" size={18} color={colors.orange} />
                 <Text style={styles.title}>Report Lore</Text>
-                <Pressable onPress={handleClose} hitSlop={8} style={styles.closeButton}>
+                <Pressable
+                  onPress={handleClose}
+                  hitSlop={8}
+                  style={({ pressed }) => [styles.closeButton, pressed && styles.pressedFaint]}
+                >
                   <MaterialCommunityIcons name="close" size={18} color={colors.textMuted} />
                 </Pressable>
               </View>
@@ -128,7 +135,11 @@ export default function ReportModal({ visible, onClose, activityId, activityTitl
                   <Pressable
                     key={reason}
                     onPress={() => setSelectedReason(reason)}
-                    style={[styles.reasonRow, active && styles.reasonRowActive]}
+                    style={({ pressed }) => [
+                      styles.reasonRow,
+                      active && styles.reasonRowActive,
+                      pressed && styles.pressedFaint,
+                    ]}
                   >
                     <View style={[styles.radio, active && styles.radioActive]}>
                       {active ? <View style={styles.radioDot} /> : null}
@@ -143,9 +154,10 @@ export default function ReportModal({ visible, onClose, activityId, activityTitl
               <Pressable
                 onPress={handleSubmit}
                 disabled={!selectedReason || submitting}
-                style={[
+                style={({ pressed }) => [
                   styles.submitButton,
                   (!selectedReason || submitting) && styles.submitButtonDisabled,
+                  pressed && styles.pressedFaint,
                 ]}
               >
                 {submitting ? (
@@ -267,6 +279,9 @@ const styles = StyleSheet.create({
   },
   submitButtonDisabled: {
     opacity: 0.4,
+  },
+  pressedFaint: {
+    opacity: 0.7,
   },
   submitButtonText: {
     color: colors.textOnOrange,

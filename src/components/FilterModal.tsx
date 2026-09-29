@@ -58,7 +58,11 @@ export default function FilterModal({ visible, onClose, value, onApply }: Props)
           <View style={styles.headerRow}>
             <MaterialCommunityIcons name="tune" size={18} color={colors.orange} />
             <Text style={styles.title}>Filter Lore</Text>
-            <Pressable onPress={onClose} hitSlop={8} style={styles.closeButton}>
+            <Pressable
+              onPress={onClose}
+              hitSlop={8}
+              style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
+            >
               <MaterialCommunityIcons name="close" size={18} color={colors.textMuted} />
             </Pressable>
           </View>
@@ -71,7 +75,11 @@ export default function FilterModal({ visible, onClose, value, onApply }: Props)
                 <Pressable
                   key={option.value}
                   onPress={() => setDraft((d) => ({ ...d, risk: toggle(d.risk, option.value) }))}
-                  style={[styles.chip, active && { borderColor: option.color, backgroundColor: `${option.color}26` }]}
+                  style={({ pressed }) => [
+                    styles.chip,
+                    active && { borderColor: option.color, backgroundColor: `${option.color}26` },
+                    pressed && styles.pressed,
+                  ]}
                 >
                   <View style={[styles.swatch, { backgroundColor: option.color }]} />
                   <Text style={styles.chipText}>{option.label}</Text>
@@ -88,7 +96,7 @@ export default function FilterModal({ visible, onClose, value, onApply }: Props)
                 <Pressable
                   key={option}
                   onPress={() => setDraft((d) => ({ ...d, kind: toggle(d.kind, option) }))}
-                  style={[styles.chip, active && styles.chipActive]}
+                  style={({ pressed }) => [styles.chip, active && styles.chipActive, pressed && styles.pressed]}
                 >
                   <Text style={styles.chipText}>{option}</Text>
                 </Pressable>
@@ -104,7 +112,7 @@ export default function FilterModal({ visible, onClose, value, onApply }: Props)
                 <Pressable
                   key={option}
                   onPress={() => setDraft((d) => ({ ...d, funType: toggle(d.funType, option) }))}
-                  style={[styles.chip, active && styles.chipActive]}
+                  style={({ pressed }) => [styles.chip, active && styles.chipActive, pressed && styles.pressed]}
                 >
                   <Text style={styles.chipText}>{option}</Text>
                 </Pressable>
@@ -115,7 +123,7 @@ export default function FilterModal({ visible, onClose, value, onApply }: Props)
           <View style={styles.actionRow}>
             <Pressable
               onPress={() => setDraft(EMPTY_FILTERS)}
-              style={styles.clearButton}
+              style={({ pressed }) => [styles.clearButton, pressed && styles.pressed]}
             >
               <Text style={styles.clearButtonText}>Clear</Text>
             </Pressable>
@@ -124,7 +132,7 @@ export default function FilterModal({ visible, onClose, value, onApply }: Props)
                 onApply(draft);
                 onClose();
               }}
-              style={styles.applyButton}
+              style={({ pressed }) => [styles.applyButton, pressed && styles.pressed]}
             >
               <Text style={styles.applyButtonText}>Apply</Text>
             </Pressable>
@@ -236,5 +244,8 @@ const styles = StyleSheet.create({
     color: colors.textOnOrange,
     fontSize: 14,
     ...fonts.heading,
+  },
+  pressed: {
+    opacity: 0.65,
   },
 });

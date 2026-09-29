@@ -79,11 +79,15 @@ export default function ResetPasswordScreen({ navigation }: RootStackScreenProps
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backButton} hitSlop={10}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
+          hitSlop={10}
+        >
           <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textPrimary} />
         </Pressable>
         <Text style={styles.title}>Reset Password</Text>
-        <View style={styles.backButton} />
+        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView
@@ -204,12 +208,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  headerSpacer: {
+    width: 38,
+    height: 38,
+  },
+  backButtonPressed: {
+    opacity: 0.6,
+  },
   title: {
     color: colors.textPrimary,
     fontSize: 16,
     ...fonts.heading,
   },
   content: {
+    flexGrow: 1,
+    justifyContent: 'center',
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
   },

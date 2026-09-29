@@ -46,7 +46,10 @@ export default function PillHeader({
         </View>
       )}
       {showFilter ? (
-        <Pressable onPress={onFilterPress} style={[styles.filterButton, shadow.soft]}>
+        <Pressable
+          onPress={onFilterPress}
+          style={({ pressed }) => [styles.filterButton, shadow.soft, pressed && styles.filterButtonPressed]}
+        >
           <MaterialCommunityIcons name="tune" size={19} color={colors.orange} />
         </Pressable>
       ) : null}
@@ -107,5 +110,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  filterButtonPressed: {
+    opacity: 0.6,
   },
 });

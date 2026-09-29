@@ -1,10 +1,11 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { Text } from '../components/Text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useScrollToTop } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ActivityCard from '../components/ActivityCard';
+import { ActivityCardSkeletonList } from '../components/Skeleton';
 import TopBar from '../components/TopBar';
 import PillHeader from '../components/PillHeader';
 import SectionPill from '../components/SectionPill';
@@ -112,7 +113,11 @@ export default function LoreScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <TopBar xp={xp} showSearch={false} />
+        <TopBar
+          xp={xp}
+          showSearch={false}
+          onNotificationsPress={() => showToast({ message: 'Notifications coming soon', tone: 'success' })}
+        />
         <PillHeader title="YOUR LORE" onFilterPress={() => setFilterModalVisible(true)} gradient />
         {filtersActive ? (
           <Pressable onPress={() => setFilters(EMPTY_FILTERS)} style={styles.activeFilterChip}>
@@ -147,9 +152,7 @@ export default function LoreScreen({ navigation }: Props) {
           }
           ListEmptyComponent={
             activitiesLoading ? (
-              <View style={styles.empty}>
-                <ActivityIndicator color={colors.orange} />
-              </View>
+              <ActivityCardSkeletonList />
             ) : (
               <View style={styles.empty}>
                 <MaterialCommunityIcons name="bookmark-outline" size={40} color={colors.textMuted} />
@@ -189,9 +192,7 @@ export default function LoreScreen({ navigation }: Props) {
           }
           ListEmptyComponent={
             completionsLoading ? (
-              <View style={styles.empty}>
-                <ActivityIndicator color={colors.orange} />
-              </View>
+              <ActivityCardSkeletonList />
             ) : (
               <View style={styles.empty}>
                 <MaterialCommunityIcons

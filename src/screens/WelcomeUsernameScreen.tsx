@@ -58,7 +58,12 @@ export default function WelcomeUsernameScreen({ navigation }: RootStackScreenPro
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={handleBack} disabled={leaving} style={styles.backButton} hitSlop={10}>
+        <Pressable
+          onPress={handleBack}
+          disabled={leaving}
+          style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
+          hitSlop={10}
+        >
           <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textPrimary} />
         </Pressable>
       </View>
@@ -124,6 +129,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  backButtonPressed: {
+    opacity: 0.6,
   },
   content: {
     flex: 1,

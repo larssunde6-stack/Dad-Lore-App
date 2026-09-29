@@ -68,7 +68,11 @@ export default function ActivityCarouselCard({
           onPress={onToggleSave}
           disabled={savePending}
           hitSlop={8}
-          style={[styles.iconBox, savePending && styles.iconBoxPending]}
+          style={({ pressed }) => [
+            styles.iconBox,
+            savePending && styles.iconBoxPending,
+            pressed && styles.iconBoxPressed,
+          ]}
         >
           {savePending ? (
             <ActivityIndicator size="small" color={colors.textSecondary} />
@@ -162,6 +166,9 @@ const styles = StyleSheet.create({
   },
   iconBoxPending: {
     opacity: 0.6,
+  },
+  iconBoxPressed: {
+    opacity: 0.5,
   },
   title: {
     color: colors.textPrimary,

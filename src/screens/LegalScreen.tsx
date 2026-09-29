@@ -88,11 +88,15 @@ export default function LegalScreen({ navigation }: RootStackScreenProps<'Legal'
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backButton} hitSlop={10}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
+          hitSlop={10}
+        >
           <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textPrimary} />
         </Pressable>
         <Text style={styles.title}>Privacy & Terms</Text>
-        <View style={styles.backButton} />
+        <View style={styles.headerSpacer} />
       </View>
 
       <View style={styles.segmentWrap}>
@@ -145,6 +149,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  headerSpacer: {
+    width: 38,
+    height: 38,
+  },
+  backButtonPressed: {
+    opacity: 0.6,
   },
   title: {
     color: colors.textPrimary,

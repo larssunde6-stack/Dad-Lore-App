@@ -93,7 +93,11 @@ export default function ActivityCard({
             hitSlop={10}
             onPress={onToggleSave}
             disabled={savePending}
-            style={[styles.saveButton, savePending && styles.saveButtonPending]}
+            style={({ pressed }) => [
+              styles.saveButton,
+              savePending && styles.saveButtonPending,
+              pressed && styles.saveButtonPressed,
+            ]}
           >
             {savePending ? (
               <ActivityIndicator size="small" color={colors.textMuted} />
@@ -214,6 +218,9 @@ const styles = StyleSheet.create({
   },
   saveButtonPending: {
     opacity: 0.6,
+  },
+  saveButtonPressed: {
+    opacity: 0.5,
   },
   completedBadge: {
     flexDirection: 'row',

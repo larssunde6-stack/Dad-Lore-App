@@ -58,7 +58,11 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
         <Text style={styles.errorText}>
           {error ? `Couldn't load lore: ${error}` : "That lore couldn't be found."}
         </Text>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backButton} hitSlop={10}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
+          hitSlop={10}
+        >
           <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textPrimary} />
         </Pressable>
       </SafeAreaView>
@@ -146,17 +150,29 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
           style={[styles.heroCard, { borderColor: riskColor[activity.riskLevel] }]}
         >
           <View style={styles.heroTop}>
-            <Pressable onPress={() => navigation.goBack()} style={styles.backButton} hitSlop={10}>
+            <Pressable
+              onPress={() => navigation.goBack()}
+              style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
+              hitSlop={10}
+            >
               <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textPrimary} />
             </Pressable>
             <View style={styles.heroRightButtons}>
-              <Pressable onPress={() => setReportVisible(true)} style={styles.backButton} hitSlop={10}>
+              <Pressable
+                onPress={() => setReportVisible(true)}
+                style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
+                hitSlop={10}
+              >
                 <MaterialCommunityIcons name="flag-outline" size={18} color={colors.textPrimary} />
               </Pressable>
               <Pressable
                 onPress={handleToggleSave}
                 disabled={savePending}
-                style={[styles.backButton, savePending && styles.backButtonPending]}
+                style={({ pressed }) => [
+                  styles.backButton,
+                  savePending && styles.backButtonPending,
+                  pressed && styles.backButtonPressed,
+                ]}
                 hitSlop={10}
               >
                 {savePending ? (
@@ -313,6 +329,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   backButtonPending: {
+    opacity: 0.6,
+  },
+  backButtonPressed: {
     opacity: 0.6,
   },
   heroRightButtons: {
