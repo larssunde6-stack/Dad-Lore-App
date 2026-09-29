@@ -169,6 +169,16 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
           style={styles.submitButton}
         />
 
+        {mode === 'Sign Up' ? (
+          <Text style={styles.legalText}>
+            By creating an account, you agree to our{' '}
+            <Text style={styles.legalLink} onPress={() => navigation.navigate('Legal')}>
+              Privacy Policy & Terms
+            </Text>
+            .
+          </Text>
+        ) : null}
+
         {mode === 'Log In' ? (
           <Pressable onPress={() => navigation.navigate('ResetPassword')} hitSlop={8}>
             <Text style={styles.linkText}>Forgot password?</Text>
@@ -268,5 +278,16 @@ const styles = StyleSheet.create({
   submitButton: {
     marginTop: spacing.sm,
     width: '100%',
+  },
+  legalText: {
+    color: colors.textMuted,
+    fontSize: 11.5,
+    textAlign: 'center',
+    lineHeight: 16,
+    marginTop: spacing.md,
+  },
+  legalLink: {
+    color: colors.orangeBright,
+    textDecorationLine: 'underline',
   },
 });

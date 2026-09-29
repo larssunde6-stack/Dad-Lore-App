@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -85,9 +86,10 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
   const { activities, refetch: refetchActivities } = useActivities();
   const { completions, xp: lorePoints, loading: statsLoading, refetch: refetchCompletions } =
     useCompletions();
-  const { isAnonymous, email, username, logOut, updateUsername } = useAuth();
+  const { isAnonymous, email, username, logOut, deleteAccount, updateUsername } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameDraft, setUsernameDraft] = useState('');
@@ -123,6 +125,27 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
     }
 
     showToast({ message: 'Logged out', tone: 'success' });
+  };
+
+  const confirmDeleteAccount = async () => {
+    setDeletingAccount(true);
+    const result = await deleteAccount();
+    setDeletingAccount(false);
+
+    if (result.status === 'error') {
+      showToast({ message: result.message, tone: 'error' });
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete account?',
+      'This permanently deletes your account and everything tied to it — saved lore, completed lore, and XP. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: confirmDeleteAccount },
+      ]
+    );
   };
 
   const handleStartEditUsername = () => {
@@ -330,14 +353,31 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
         </View>
 
         {!isAnonymous ? (
-          <PrimaryButton
-            label="Log Out"
-            icon="logout"
-            variant="outline"
-            onPress={handleLogOut}
-            loading={loggingOut}
-            style={styles.logoutButton}
-          />
+          <>
+            <PrimaryButton
+              label="Log Out"
+              icon="logout"
+              variant="outline"
+              onPress={handleLogOut}
+              loading={loggingOut}
+              style={styles.logoutButton}
+            />
+            <Pressable
+              onPress={handleDeleteAccount}
+              disabled={deletingAccount}
+              hitSlop={8}
+              style={({ pressed }) => [
+                styles.deleteAccountLink,
+                (pressed || deletingAccount) && styles.pressedFaint,
+              ]}
+            >
+              {deletingAccount ? (
+                <ActivityIndicator size="small" color={colors.textMuted} />
+              ) : (
+                <Text style={styles.deleteAccountText}>Delete Account</Text>
+              )}
+            </Pressable>
+          </>
         ) : null}
 
         <AccessibilityStatement />
@@ -555,5 +595,18 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     alignSelf: 'center',
+  },
+  deleteAccountLink: {
+    alignSelf: 'center',
+    marginTop: spacing.lg,
+    padding: spacing.xs,
+  },
+  deleteAccountText: {
+    color: colors.textMuted,
+    fontSize: 12.5,
+    textDecorationLine: 'underline',
+  },
+  pressedFaint: {
+    opacity: 0.6,
   },
 });

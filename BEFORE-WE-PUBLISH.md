@@ -8,30 +8,49 @@ don't delete them, so there's a record of what got fixed when.
 
 ## 🔴 Blockers — will get the app rejected or is a legal/compliance gap
 
-- [ ] **UGC moderation is client-side only.** "Create Your Own Activity"
-  ships public, auto-published, with real-time XP — but the only content
-  filter is `src/utils/moderation.ts`, a word-list check trivially
-  bypassed by calling the Supabase API directly. No server-side
-  enforcement exists. This is squarely App Store review guideline 1.2
-  territory. See `PRD.md` §5c and §10.
+- [x] **UGC moderation is client-side only.** Closed: `0009_server_side_moderation.sql`
+  adds a `blocked_terms` table + a `BEFORE INSERT/UPDATE` trigger on
+  `activities` that rejects the row outright if its title/blurb/tags match
+  a blocked term — can no longer be bypassed by calling the Supabase API
+  directly. `src/utils/moderation.ts`'s client-side check stays for instant
+  UX feedback; the trigger is the real enforcement. The seeded term list is
+  a starter set, not exhaustive — extend `blocked_terms` to match your
+  actual moderation policy before relying on it as your only defense.
 - [ ] **No way to block or mute an abusive account.** If someone spams
   low-quality or offensive activities, the only recourse today is
   manually deleting rows in the Supabase Table Editor. No in-app
   moderation tool, no account suspension.
-- [ ] **No account deletion flow.** Apple requires in-app account
-  deletion the moment any account system exists — real accounts landed
-  this session, so this is now a hard requirement, not a someday item.
-  See `PRD.md` §6/§11.
+- [x] **No account deletion flow.** Closed: `supabase/functions/delete-account`
+  (deploy with `supabase functions deploy delete-account`) deletes the
+  caller's own `auth.users` row via the service-role key, verified from
+  their own JWT. Every user-owned row cascades/anonymizes automatically via
+  existing foreign keys (`saved_lore`, `activity_completions` cascade;
+  `activities.created_by`, `reports.reporter_user_id` set null) — no manual
+  cleanup needed. Wired to a "Delete Account" link on `ProfileScreen.tsx`
+  (confirm dialog via `Alert.alert`, next to Log Out).
 - [ ] **Published-content-policy coverage is disclosure-only.** `PRIVACY.md`/
   `TERMS.md` say what's public and that it must follow community
-  guidelines, but there's no enforcement mechanism behind that promise
-  yet (same gap as the two items above).
+  guidelines — now backed by the server-side filter above, but there's
+  still no way to suspend a repeat offender's account (see the item above).
+- [x] **A genuinely dangerous activity was in the curated list.** Closed:
+  `0008_replace_risky_activities.sql` replaces "Drift Behind a Car with a
+  Rope" (real-world tow-surfing — a documented cause of serious injury and
+  death) with "Learn to Wakeboard", and "Go Spark Drifting" (fire hazard,
+  dubious legality) with "Ride an ATV Trail at Night" — both keep the same
+  `id` (so existing saves/completions aren't affected) and the same
+  risk/skill tier, just without content that reads as actively encouraging
+  a specific lethal stunt. `src/data/activities.ts` updated to match.
+- [x] **Privacy Policy wasn't linked at account creation.** Closed:
+  `AuthScreen.tsx`'s Sign Up form now links Privacy Policy & Terms directly
+  below the Create Account button, not just buried in Profile settings.
 - [ ] **Legal doc placeholders still unfilled**:
   - `PRIVACY.md` §8 and `TERMS.md` §9 — real contact email
   - `TERMS.md` §8 — your actual governing-law jurisdiction
   - Both docs are still explicitly marked "Draft, pending legal review" —
     have an actual lawyer look at them before submission, especially
     given the minors-inclusive audience (COPPA) and the UGC gaps above.
+  - **Can't be closed by an AI session** — these need real values only you
+    can supply.
 
 ## 🟡 Should fix before a public/wide launch (not necessarily a hard blocker)
 

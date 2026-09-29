@@ -16,6 +16,7 @@ type AuthContextValue = {
   signUp: (email: string, password: string) => Promise<AuthActionResult>;
   logIn: (email: string, password: string) => Promise<AuthActionResult>;
   logOut: () => Promise<AuthActionResult>;
+  deleteAccount: () => Promise<AuthActionResult>;
   requestPasswordReset: (email: string) => Promise<AuthActionResult>;
   confirmPasswordReset: (email: string, code: string, newPassword: string) => Promise<AuthActionResult>;
   updateUsername: (username: string) => Promise<AuthActionResult>;
@@ -136,6 +137,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return toResult(error);
   };
 
+  const deleteAccount = async (): Promise<AuthActionResult> => {
+    const { data, error } = await supabase.functions.invoke('delete-account');
+
+    if (error) {
+      return {
+        status: 'error',
+        code: 'delete_account_failed',
+        message: 'Could not delete your account. Check your connection and try again.',
+      };
+    }
+    if (data?.error) {
+      return { status: 'error', code: 'delete_account_failed', message: data.error };
+    }
+
+    // The auth user is gone server-side; clear the now-stale local session
+    // so onAuthStateChange bootstraps a fresh anonymous identity, same as logOut().
+    await supabase.auth.signOut();
+    return { status: 'ok' };
+  };
+
   const requestPasswordReset = async (email: string): Promise<AuthActionResult> => {
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     return toResult(error);
@@ -172,6 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     logIn,
     logOut,
+    deleteAccount,
     requestPasswordReset,
     confirmPasswordReset,
     updateUsername,

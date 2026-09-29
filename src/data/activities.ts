@@ -59,16 +59,16 @@ export const activities: Activity[] = [
   },
   {
     id: 'drift-behind-car-rope',
-    title: 'Drift Behind a Car with a Rope',
-    icon: 'car-side',
+    title: 'Learn to Wakeboard',
+    icon: 'waves',
     blurb:
-      'Tie a rope to a slow-moving car and drift side to side behind it on a skateboard. Do this only in a closed, empty lot with a quick-release rope, a helmet, and clear hand signals with the driver.',
-    duration: '45 min',
+      'Get towed behind a boat and try to stand up on your first pass — expect to eat it a few times before it clicks. Use a registered boat and driver, wear a life vest, and keep your knees bent on the pull-up.',
+    duration: '1 hr',
     loreRating: 5,
     riskLevel: 'red',
     kind: ['Skill', 'Fun'],
     funType: 'Type 1',
-    tags: ['High Speed', 'Needs a Spotter'],
+    tags: ['Water', 'High Speed'],
   },
   {
     id: 'shopping-cart-demolition-derby',
@@ -202,16 +202,16 @@ export const activities: Activity[] = [
   },
   {
     id: 'go-spark-drifting',
-    title: 'Go Spark Drifting',
-    icon: 'car-sports',
+    title: 'Ride an ATV Trail at Night',
+    icon: 'motorbike',
     blurb:
-      'Attach metal to the back of a car and drive slow circles in an empty lot at night to throw sparks. Only do this somewhere legal, away from dry grass, with a fire extinguisher on hand.',
-    duration: '1 hr',
+      'Book a guided night ride on marked trails with headlights and a helmet — the dark completely changes how familiar terrain feels. Stick to the guide\'s line and don\'t pass on blind corners.',
+    duration: '2 hrs',
     loreRating: 4,
     riskLevel: 'red',
     kind: ['Skill', 'Fun'],
     funType: 'Type 1',
-    tags: ['Sparks Fly', 'Night Activity'],
+    tags: ['Night Activity', 'Guided'],
   },
   {
     id: 'learn-how-to-drift',
