@@ -1,4 +1,5 @@
 import React from 'react';
+import * as Haptics from 'expo-haptics';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from './Text';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -50,7 +51,10 @@ export default function PillHeader({
       )}
       {showFilter ? (
         <Pressable
-          onPress={onFilterPress}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onFilterPress?.();
+          }}
           style={({ pressed }) => [styles.filterButton, shadow.soft, pressed && styles.filterButtonPressed]}
         >
           <MaterialCommunityIcons name="tune" size={19} color={palette.base} />

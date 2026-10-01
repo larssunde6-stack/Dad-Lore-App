@@ -1,4 +1,5 @@
 import React from 'react';
+import * as Haptics from 'expo-haptics';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from './Text';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -29,7 +30,8 @@ export default function TopBar({
   const rank = getRank(level);
   const rainbowBorder = useRainbowColor();
   const rainbowBg = useRainbowColor(0.1);
-  const { palette } = useAccent();
+  const { mode, palette } = useAccent();
+  const accentSynced = mode.type === 'rainbow';
 
   return (
     <View style={styles.row}>
@@ -38,7 +40,9 @@ export default function TopBar({
           styles.balanceChip,
           shadow.soft,
           rank.isRainbow
-            ? { borderColor: rainbowBorder, backgroundColor: rainbowBg }
+            ? accentSynced
+              ? { borderColor: palette.base, backgroundColor: palette.muted }
+              : { borderColor: rainbowBorder, backgroundColor: rainbowBg }
             : { borderColor: rank.color, backgroundColor: `${rank.color}1A` },
         ]}
       >
@@ -71,7 +75,10 @@ export default function TopBar({
       )}
 
       <Pressable
-        onPress={onNotificationsPress}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onNotificationsPress?.();
+        }}
         style={({ pressed }) => [styles.iconButton, shadow.soft, pressed && styles.iconButtonPressed]}
         hitSlop={8}
       >

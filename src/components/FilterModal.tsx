@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import * as Haptics from 'expo-haptics';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { Text } from './Text';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -133,13 +134,17 @@ export default function FilterModal({ visible, onClose, value, onApply }: Props)
 
           <View style={styles.actionRow}>
             <Pressable
-              onPress={() => setDraft(EMPTY_FILTERS)}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setDraft(EMPTY_FILTERS);
+              }}
               style={({ pressed }) => [styles.clearButton, pressed && styles.pressed]}
             >
               <Text style={styles.clearButtonText}>Clear</Text>
             </Pressable>
             <Pressable
               onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 onApply(draft);
                 onClose();
               }}

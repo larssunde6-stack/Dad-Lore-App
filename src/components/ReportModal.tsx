@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
+import * as Haptics from 'expo-haptics';
 import {
   ActivityIndicator,
   Animated,
@@ -76,6 +77,7 @@ export default function ReportModal({ visible, onClose, activityId, activityTitl
 
   const handleSubmit = async () => {
     if (!selectedReason || submitting) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSubmitting(true);
     setSubmitError(null);
 
@@ -137,7 +139,10 @@ export default function ReportModal({ visible, onClose, activityId, activityTitl
                 return (
                   <Pressable
                     key={reason}
-                    onPress={() => setSelectedReason(reason)}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setSelectedReason(reason);
+                    }}
                     style={({ pressed }) => [
                       styles.reasonRow,
                       active && { borderColor: palette.base, backgroundColor: palette.muted },

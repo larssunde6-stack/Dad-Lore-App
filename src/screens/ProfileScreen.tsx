@@ -119,6 +119,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
   };
 
   const handleMenuPress = (item: (typeof menuItems)[number]) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (item.route === 'Legal') {
       navigation.navigate('Legal');
       return;
@@ -207,7 +208,8 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
 
   const { level, progressPct, pointsToNext } = getLevel(lorePoints);
   const rank = getRank(level);
-  const { palette } = useAccent();
+  const { mode, palette } = useAccent();
+  const accentSynced = mode.type === 'rainbow';
   const rainbowBorder = useRainbowColor();
   const rainbowBg = useRainbowColor(0.13);
 
@@ -327,14 +329,16 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
               styles.rankBadge,
               shadow.soft,
               rank.isRainbow
-                ? { backgroundColor: rainbowBg, borderColor: rainbowBorder }
+                ? accentSynced
+                  ? { backgroundColor: palette.muted, borderColor: palette.base }
+                  : { backgroundColor: rainbowBg, borderColor: rainbowBorder }
                 : { backgroundColor: `${rank.color}22`, borderColor: rank.color },
             ]}
           >
             <MaterialCommunityIcons
               name={rank.isTopRank ? 'crown' : rank.isRainbow ? 'star-four-points' : 'shield-star-outline'}
               size={16}
-              color={rank.isRainbow ? colors.textPrimary : rank.color}
+              color={rank.isRainbow ? (accentSynced ? palette.base : colors.textPrimary) : rank.color}
             />
             <RankText rank={rank} style={styles.rankBadgeText} />
           </Animated.View>

@@ -1,4 +1,5 @@
 import React from 'react';
+import * as Haptics from 'expo-haptics';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from './Text';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,6 +16,12 @@ type Props = {
 export default function SegmentedControl({ options, value, onChange, gradient = true }: Props) {
   const { palette } = useAccent();
 
+  const handleChange = (option: string) => {
+    if (option === value) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onChange(option);
+  };
+
   return (
     <View style={styles.track}>
       {options.map((option) => {
@@ -24,7 +31,7 @@ export default function SegmentedControl({ options, value, onChange, gradient = 
           return (
             <Pressable
               key={option}
-              onPress={() => onChange(option)}
+              onPress={() => handleChange(option)}
               style={({ pressed }) => [styles.segmentGradientWrap, pressed && styles.pressed]}
             >
               <LinearGradient
@@ -42,7 +49,7 @@ export default function SegmentedControl({ options, value, onChange, gradient = 
         return (
           <Pressable
             key={option}
-            onPress={() => onChange(option)}
+            onPress={() => handleChange(option)}
             style={({ pressed }) => [
               styles.segment,
               active && { backgroundColor: palette.base },

@@ -48,6 +48,10 @@ function toggle<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 }
 
+function selectHaptic() {
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+}
+
 export default function CreateActivityScreen({ navigation }: RootStackScreenProps<'CreateActivity'>) {
   const { isAnonymous, userId, username, email } = useAuth();
   const { refetch } = useActivities();
@@ -210,7 +214,10 @@ export default function CreateActivityScreen({ navigation }: RootStackScreenProp
             return (
               <Pressable
                 key={option.name}
-                onPress={() => setIcon(option.name)}
+                onPress={() => {
+                  selectHaptic();
+                  setIcon(option.name);
+                }}
                 style={[
                   styles.iconButton,
                   active && { borderColor: palette.base, backgroundColor: palette.muted },
@@ -278,7 +285,10 @@ export default function CreateActivityScreen({ navigation }: RootStackScreenProp
             return (
               <Pressable
                 key={option.value}
-                onPress={() => setRiskLevel(option.value)}
+                onPress={() => {
+                  selectHaptic();
+                  setRiskLevel(option.value);
+                }}
                 style={[
                   styles.chip,
                   active && { borderColor: option.color, backgroundColor: `${option.color}26` },
@@ -298,7 +308,10 @@ export default function CreateActivityScreen({ navigation }: RootStackScreenProp
             return (
               <Pressable
                 key={option}
-                onPress={() => setKind((k) => toggle(k, option))}
+                onPress={() => {
+                  selectHaptic();
+                  setKind((k) => toggle(k, option));
+                }}
                 style={[styles.chip, active && { borderColor: palette.base, backgroundColor: palette.muted }]}
               >
                 <Text style={styles.chipText}>{option}</Text>
@@ -314,7 +327,10 @@ export default function CreateActivityScreen({ navigation }: RootStackScreenProp
             return (
               <Pressable
                 key={option}
-                onPress={() => setFunType(option)}
+                onPress={() => {
+                  selectHaptic();
+                  setFunType(option);
+                }}
                 style={[styles.chip, active && { borderColor: palette.base, backgroundColor: palette.muted }]}
               >
                 <Text style={styles.chipText}>{option}</Text>

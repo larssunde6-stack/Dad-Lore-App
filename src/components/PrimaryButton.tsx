@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import * as Haptics from 'expo-haptics';
 import { ActivityIndicator, Animated, Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { Text } from './Text';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -37,6 +38,12 @@ export default function PrimaryButton({
     }).start();
   };
 
+  const handlePress = () => {
+    if (disabled || loading) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress?.();
+  };
+
   const glow = {
     shadowColor: palette.glow,
     shadowOffset: { width: 0, height: 4 },
@@ -48,7 +55,7 @@ export default function PrimaryButton({
   return (
     <Animated.View style={[style, { transform: [{ scale }] }]}>
       <Pressable
-        onPress={onPress}
+        onPress={handlePress}
         onPressIn={() => animateTo(0.96)}
         onPressOut={() => animateTo(1)}
         disabled={disabled || loading}

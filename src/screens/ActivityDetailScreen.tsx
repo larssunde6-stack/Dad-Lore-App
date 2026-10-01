@@ -91,7 +91,6 @@ export default function ActivityDetailScreen({ route, navigation }: RootStackScr
     }
 
     setIsCompleting(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     if (isCompleted) {
       const { error: deleteError } = await supabase

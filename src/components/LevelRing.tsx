@@ -3,6 +3,7 @@ import { Animated, StyleSheet, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { colors } from '../theme/theme';
 import { useRainbowColor } from '../hooks/useRainbowColor';
+import { useAccent } from '../context/AccentContext';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -27,6 +28,8 @@ export default function LevelRing({
   const circumference = 2 * Math.PI * radius;
   const progress = useRef(new Animated.Value(0)).current;
   const rainbowStroke = useRainbowColor();
+  const { mode, palette } = useAccent();
+  const accentSynced = mode.type === 'rainbow';
 
   useEffect(() => {
     Animated.timing(progress, {
@@ -56,7 +59,7 @@ export default function LevelRing({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={rainbow ? rainbowStroke : color}
+          stroke={rainbow ? (accentSynced ? palette.base : rainbowStroke) : color}
           strokeWidth={strokeWidth}
           fill="none"
           strokeLinecap="round"

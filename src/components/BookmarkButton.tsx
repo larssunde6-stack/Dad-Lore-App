@@ -1,10 +1,11 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Animated, Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import BurstParticles from './BurstParticles';
 import { colors, radii } from '../theme/theme';
 import { useAccent } from '../context/AccentContext';
+import { useShake } from '../hooks/useShake';
 
 type Props = {
   saved?: boolean;
@@ -30,7 +31,7 @@ export default function BookmarkButton({
   style,
 }: Props) {
   const { palette } = useAccent();
-  const shake = useRef(new Animated.Value(0)).current;
+  const { rotate, trigger: triggerShake } = useShake();
   const [burstToken, setBurstToken] = useState(0);
   const [burstVisible, setBurstVisible] = useState(false);
 
@@ -39,23 +40,12 @@ export default function BookmarkButton({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onToggle?.();
 
-    shake.setValue(0);
-    Animated.sequence([
-      Animated.timing(shake, { toValue: 1, duration: 55, useNativeDriver: true }),
-      Animated.timing(shake, { toValue: -1, duration: 55, useNativeDriver: true }),
-      Animated.timing(shake, { toValue: 0.6, duration: 55, useNativeDriver: true }),
-      Animated.timing(shake, { toValue: 0, duration: 55, useNativeDriver: true }),
-    ]).start();
+    triggerShake();
 
     setBurstToken((t) => t + 1);
     setBurstVisible(true);
     setTimeout(() => setBurstVisible(false), 500);
   };
-
-  const rotate = shake.interpolate({
-    inputRange: [-1, 1],
-    outputRange: ['-14deg', '14deg'],
-  });
 
   const isActive = pending || saved;
 

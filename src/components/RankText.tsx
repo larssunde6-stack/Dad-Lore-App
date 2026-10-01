@@ -4,6 +4,7 @@ import { Text } from './Text';
 import { colors } from '../theme/theme';
 import { Rank } from '../utils/level';
 import { useRainbowColor } from '../hooks/useRainbowColor';
+import { useAccent } from '../context/AccentContext';
 
 // Animated.Text (RN's own, ref-forwarding version) rather than our custom
 // Text wrapper — Animated.createAnimatedComponent needs a real ref to the
@@ -20,6 +21,7 @@ type Props = {
 export default function RankText({ rank, style, numberOfLines }: Props) {
   const shimmer = useRef(new Animated.Value(0)).current;
   const rainbow = useRainbowColor();
+  const { mode, palette } = useAccent();
 
   useEffect(() => {
     if (!rank.isTopRank) return;
@@ -35,9 +37,15 @@ export default function RankText({ rank, style, numberOfLines }: Props) {
   }, [rank.isTopRank, shimmer]);
 
   if (rank.isRainbow) {
+    // When the app's accent itself is in rainbow mode, read the exact
+    // same color the rest of the app is painting with that frame
+    // instead of running an independent cycle — otherwise this label
+    // and every gradiented/accent element elsewhere visibly drift out
+    // of phase with each other.
+    const color = mode.type === 'rainbow' ? palette.base : rainbow;
     return (
       <Animated.Text
-        style={[baseStyle, style, { color: rainbow }]}
+        style={[baseStyle, style, { color }]}
         numberOfLines={numberOfLines}
         ellipsizeMode="tail"
       >

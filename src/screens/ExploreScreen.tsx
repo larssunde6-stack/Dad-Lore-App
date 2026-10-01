@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useScrollToTop } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import ActivityCarouselCard from '../components/ActivityCarouselCard';
 import { ActivityCarouselSkeletonList } from '../components/Skeleton';
 import TopBar from '../components/TopBar';
@@ -29,6 +30,7 @@ import { useActivities } from '../context/ActivitiesContext';
 import { useCompletions } from '../context/CompletionsContext';
 import { colors, fonts, pressSpring, radii, scrollPhysics, spacing } from '../theme/theme';
 import { useAccent } from '../context/AccentContext';
+import { useShake } from '../hooks/useShake';
 import { useSaved } from '../context/SavedContext';
 import { TabScreenProps } from '../navigation/types';
 
@@ -39,11 +41,13 @@ type AnimatedFabProps = {
   disabled?: boolean;
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   positionStyle?: ViewStyle;
+  shake?: boolean;
 };
 
-function AnimatedFab({ onPress, disabled, icon, positionStyle }: AnimatedFabProps) {
+function AnimatedFab({ onPress, disabled, icon, positionStyle, shake }: AnimatedFabProps) {
   const scale = useRef(new Animated.Value(1)).current;
   const { palette } = useAccent();
+  const { rotate, trigger: triggerShake } = useShake();
 
   const animateTo = (toValue: number) => {
     Animated.spring(scale, {
@@ -51,6 +55,12 @@ function AnimatedFab({ onPress, disabled, icon, positionStyle }: AnimatedFabProp
       ...pressSpring,
       useNativeDriver: true,
     }).start();
+  };
+
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (shake) triggerShake();
+    onPress();
   };
 
   return (
@@ -64,14 +74,16 @@ function AnimatedFab({ onPress, disabled, icon, positionStyle }: AnimatedFabProp
       ]}
     >
       <Pressable
-        onPress={onPress}
+        onPress={handlePress}
         onPressIn={() => animateTo(0.92)}
         onPressOut={() => animateTo(1)}
         disabled={disabled}
       >
-        <LinearGradient colors={palette.gradientFab} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
-          <MaterialCommunityIcons name={icon} size={26} color={palette.onAccent} />
-        </LinearGradient>
+        <Animated.View style={shake ? { transform: [{ rotate }] } : undefined}>
+          <LinearGradient colors={palette.gradientFab} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
+            <MaterialCommunityIcons name={icon} size={26} color={palette.onAccent} />
+          </LinearGradient>
+        </Animated.View>
       </Pressable>
     </Animated.View>
   );
@@ -219,6 +231,7 @@ export default function ExploreScreen({ navigation }: Props) {
         onPress={() => navigation.navigate('CreateActivity')}
         icon="plus"
         positionStyle={styles.createFabWrap}
+        shake
       />
 
       <AnimatedFab
