@@ -26,11 +26,14 @@ export default function RankText({ rank, style, numberOfLines }: Props) {
   useEffect(() => {
     if (!rank.isTopRank) return;
 
+    // One continuous sweep (0->1, looped) rather than a back-and-forth
+    // ping-pong — same shape as useRainbowColor's own loop, just with a
+    // 2-color white/purple stop set instead of a full hue sweep, so this
+    // reads as the same smooth "rainbow-style" animation restricted to
+    // the top rank's own palette.
+    shimmer.setValue(0);
     const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(shimmer, { toValue: 1, duration: 2000, useNativeDriver: false }),
-        Animated.timing(shimmer, { toValue: 0, duration: 2000, useNativeDriver: false }),
-      ])
+      Animated.timing(shimmer, { toValue: 1, duration: 4000, useNativeDriver: false })
     );
     loop.start();
     return () => loop.stop();
@@ -63,8 +66,8 @@ export default function RankText({ rank, style, numberOfLines }: Props) {
   }
 
   const color = shimmer.interpolate({
-    inputRange: [0, 1],
-    outputRange: [colors.textPrimary, colors.purpleBright],
+    inputRange: [0, 0.5, 1],
+    outputRange: [colors.textPrimary, colors.purpleBright, colors.textPrimary],
   });
 
   return (

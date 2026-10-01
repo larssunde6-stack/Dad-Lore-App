@@ -293,6 +293,7 @@ export default function ProfileScreen({ navigation }: TabScreenProps<'Profile'>)
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         decelerationRate={scrollPhysics.decelerationRate}
+        directionalLockEnabled
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={palette.base} />
         }

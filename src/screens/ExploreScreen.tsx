@@ -163,6 +163,7 @@ export default function ExploreScreen({ navigation }: Props) {
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           decelerationRate={scrollPhysics.decelerationRate}
+          directionalLockEnabled
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={palette.base} />

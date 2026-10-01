@@ -144,6 +144,7 @@ export default function LoreScreen({ navigation }: Props) {
           data={savedActivities}
           keyExtractor={(item) => item.id}
           decelerationRate={scrollPhysics.decelerationRate}
+          directionalLockEnabled
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
@@ -184,6 +185,7 @@ export default function LoreScreen({ navigation }: Props) {
           data={completedItems}
           keyExtractor={(item) => item.completionId}
           decelerationRate={scrollPhysics.decelerationRate}
+          directionalLockEnabled
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl

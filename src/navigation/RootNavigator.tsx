@@ -42,14 +42,19 @@ const tabIconActive: Record<keyof TabParamList, keyof typeof MaterialCommunityIc
 };
 
 const ORB_SIZE = 8;
-// How much of the gap between two tabs (as a fraction, 0-1) is spent
-// "at rest" before/after a transition — the tint color and orb opacity
-// are pinned to their exact resting values inside this window instead
-// of continuing to interpolate, so neither can ever be left showing a
-// barely-off residual value if the pager's reported position doesn't
-// land on a perfectly clean integer after a tap (as opposed to a
-// swipe) transition.
-const REST_SNAP = 0.08;
+const SPLASH_SIZE = 36;
+// How much of the gap between two tabs (as a fraction, 0-1) is actually
+// spent transitioning — color, orb scale, and orb opacity are all flat
+// at their resting values for the rest of the gap, so a dragged color
+// never smoothly blends/crossfades between tabs. Instead a tab snaps to
+// grey almost the instant you leave it, stays flat grey for most of the
+// gesture (the "color" only visibly exists in the traveling orb, like
+// liquid), and the destination only snaps to its accent color in the
+// last sliver of the approach — a hard "paint fill" rather than a fade.
+// This also keeps the earlier stuck-faint-label bug structurally
+// impossible: any post-settle floating point noise lands deep inside
+// the now much wider flat zone, nowhere near this boundary.
+const FILL_ZONE = 0.15;
 
 const TAB_BAR_PADDING_TOP = 8;
 const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 88 : 68;
@@ -61,6 +66,7 @@ const CONTENT_HEIGHT = TAB_BAR_HEIGHT - TAB_BAR_PADDING_TOP - TAB_BAR_PADDING_BO
 const COLUMN_TOP = TAB_BAR_PADDING_TOP + (CONTENT_HEIGHT - COLUMN_HEIGHT) / 2;
 const ICON_CENTER_Y = COLUMN_TOP + ICON_SIZE / 2;
 const ORB_TOP = ICON_CENTER_Y - ORB_SIZE / 2;
+const SPLASH_TOP = ICON_CENTER_Y - SPLASH_SIZE / 2;
 
 type PositionValue = MaterialTopTabBarProps['position'];
 
@@ -125,6 +131,7 @@ function CustomTabBar({ state, descriptors, navigation, position }: MaterialTopT
   const { palette } = useAccent();
   const [barWidth, setBarWidth] = useState(0);
   const prevIndexRef = useRef<number | null>(null);
+  const splashScale = useRef(new Animated.Value(0)).current;
   const numTabs = state.routes.length;
   const loreIndex = state.routes.findIndex((r) => r.name === 'Lore');
 
@@ -136,21 +143,34 @@ function CustomTabBar({ state, descriptors, navigation, position }: MaterialTopT
     if (prevIndexRef.current !== state.index) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       prevIndexRef.current = state.index;
+
+      // A one-shot "paint splash" burst on the newly-focused tab — jumps
+      // straight to it (no travel) and collapses via scale, never
+      // opacity, so it reads as a fill landing rather than a fade.
+      splashScale.setValue(0);
+      Animated.sequence([
+        Animated.spring(splashScale, { toValue: 1, friction: 5, useNativeDriver: true }),
+        Animated.delay(100),
+        Animated.timing(splashScale, { toValue: 0, duration: 150, useNativeDriver: true }),
+      ]).start();
     }
-  }, [state.index]);
+  }, [state.index, splashScale]);
 
   const handleLayout = (e: LayoutChangeEvent) => setBarWidth(e.nativeEvent.layout.width);
 
   const tabWidth = numTabs > 0 ? barWidth / numTabs : 0;
   const orbInputRange: number[] = [];
   const orbTranslateRange: number[] = [];
-  // Shrink-grow-shrink rather than a flat bounce: small right as it
-  // leaves a tab (still inside the invisible rest zone, so no visible
-  // pop), big at the midpoint ("condensing" the color it pulled out),
-  // small again as it settles into the next tab.
+  // Shrink-grow-shrink, with X stretching further than Y at the peak —
+  // a cheap squash/stretch cue so the orb reads as a liquid blob moving
+  // fast rather than a rigid ball: small right as it leaves a tab
+  // (still inside the invisible rest zone, so no visible pop), wide and
+  // squat at the midpoint ("condensing" the color it pulled out), small
+  // again as it settles into the next tab.
   const orbScaleInputRange: number[] = [];
-  const orbScaleRange: number[] = [];
-  // Opacity 0 at every resting tab (and within REST_SNAP of it) so the
+  const orbScaleXRange: number[] = [];
+  const orbScaleYRange: number[] = [];
+  // Opacity 0 at every resting tab (and within FILL_ZONE of it) so the
   // orb only exists during an actual transition, never sitting on a tab.
   const orbOpacityInputRange: number[] = [];
   const orbOpacityRange: number[] = [];
@@ -160,14 +180,16 @@ function CustomTabBar({ state, descriptors, navigation, position }: MaterialTopT
     orbTranslateRange.push((i + 0.5) * tabWidth - ORB_SIZE / 2);
 
     orbScaleInputRange.push(i);
-    orbScaleRange.push(0.6);
+    orbScaleXRange.push(0.6);
+    orbScaleYRange.push(0.6);
     orbOpacityInputRange.push(i);
     orbOpacityRange.push(0);
 
     if (i < numTabs - 1) {
-      orbScaleInputRange.push(i + REST_SNAP, i + 0.5, i + 1 - REST_SNAP);
-      orbScaleRange.push(0.8, 1.7, 0.8);
-      orbOpacityInputRange.push(i + REST_SNAP, i + 1 - REST_SNAP);
+      orbScaleInputRange.push(i + FILL_ZONE, i + 0.5, i + 1 - FILL_ZONE);
+      orbScaleXRange.push(0.9, 2.0, 0.9);
+      orbScaleYRange.push(0.8, 1.7, 0.8);
+      orbOpacityInputRange.push(i + FILL_ZONE, i + 1 - FILL_ZONE);
       orbOpacityRange.push(1, 1);
     }
   }
@@ -176,9 +198,13 @@ function CustomTabBar({ state, descriptors, navigation, position }: MaterialTopT
     inputRange: orbInputRange,
     outputRange: orbTranslateRange,
   });
-  const orbScale = position.interpolate({
+  const orbScaleX = position.interpolate({
     inputRange: orbScaleInputRange,
-    outputRange: orbScaleRange,
+    outputRange: orbScaleXRange,
+  });
+  const orbScaleY = position.interpolate({
+    inputRange: orbScaleInputRange,
+    outputRange: orbScaleYRange,
   });
   const orbOpacity = position.interpolate({
     inputRange: orbOpacityInputRange,
@@ -188,20 +214,42 @@ function CustomTabBar({ state, descriptors, navigation, position }: MaterialTopT
   return (
     <View style={styles.tabBar} onLayout={handleLayout}>
       {barWidth > 0 ? (
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            styles.orb,
-            { opacity: orbOpacity, transform: [{ translateX: orbTranslateX }, { scale: orbScale }] },
-          ]}
-        >
-          <LinearGradient
-            colors={palette.gradientFab}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.orbFill}
-          />
-        </Animated.View>
+        <>
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.orb,
+              {
+                opacity: orbOpacity,
+                transform: [{ translateX: orbTranslateX }, { scaleX: orbScaleX }, { scaleY: orbScaleY }],
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={palette.gradientFab}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.orbFill}
+            />
+          </Animated.View>
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.splash,
+              {
+                left: (state.index + 0.5) * tabWidth - SPLASH_SIZE / 2,
+                transform: [{ scale: splashScale }],
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={palette.gradientFab}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.splashFill}
+            />
+          </Animated.View>
+        </>
       ) : null}
 
       {state.routes.map((route, index) => {
@@ -209,24 +257,25 @@ function CustomTabBar({ state, descriptors, navigation, position }: MaterialTopT
         const focused = state.index === index;
         const label = (options.tabBarLabel as string | undefined) ?? route.name;
         const routeName = route.name as keyof TabParamList;
+        // Only the focused tab and its immediate neighbor(s) are ever
+        // reachable by the in-progress gesture — any tab further away is
+        // rendered with a literal, non-animated grey so it is
+        // structurally impossible for it to show a residual tint.
+        const isAdjacent = Math.abs(index - state.index) <= 1;
 
-        const tintColor = position.interpolate({
-          inputRange: [
-            index - 1,
-            index - 1 + REST_SNAP,
-            index,
-            index + 1 - REST_SNAP,
-            index + 1,
-          ],
-          outputRange: [
-            colors.textMuted,
-            colors.textMuted,
-            palette.base,
-            colors.textMuted,
-            colors.textMuted,
-          ],
-          extrapolate: 'clamp',
-        });
+        const tintColor = isAdjacent
+          ? position.interpolate({
+              inputRange: [index - 1, index - FILL_ZONE, index, index + FILL_ZONE, index + 1],
+              outputRange: [
+                colors.textMuted,
+                colors.textMuted,
+                palette.base,
+                colors.textMuted,
+                colors.textMuted,
+              ],
+              extrapolate: 'clamp',
+            })
+          : colors.textMuted;
 
         const onPress = () => {
           const event = navigation.emit({
@@ -372,6 +421,19 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   orbFill: {
+    width: '100%',
+    height: '100%',
+  },
+  splash: {
+    position: 'absolute',
+    top: SPLASH_TOP,
+    left: 0,
+    width: SPLASH_SIZE,
+    height: SPLASH_SIZE,
+    borderRadius: SPLASH_SIZE / 2,
+    overflow: 'hidden',
+  },
+  splashFill: {
     width: '100%',
     height: '100%',
   },
