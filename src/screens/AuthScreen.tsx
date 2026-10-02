@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from '../components/Text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -89,6 +89,10 @@ export default function AuthScreen({ navigation }: RootStackScreenProps<'Auth'>)
         showsVerticalScrollIndicator={false}
         decelerationRate={scrollPhysics.decelerationRate}
       >
+        <View style={styles.logoWrap}>
+          <Image source={require('../../assets/logo-mark.png')} style={styles.logoMark} resizeMode="contain" />
+        </View>
+
         <View style={styles.segmentWrap}>
           <SegmentedControl
             options={['Sign Up', 'Log In']}
@@ -228,6 +232,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
+  },
+  logoWrap: {
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  logoMark: {
+    width: 26,
+    height: 44,
   },
   segmentWrap: {
     marginTop: spacing.lg,

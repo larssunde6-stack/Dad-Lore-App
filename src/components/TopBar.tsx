@@ -1,6 +1,6 @@
 import React from 'react';
 import * as Haptics from 'expo-haptics';
-import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Image, Pressable, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from './Text';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import RankText from './RankText';
@@ -34,66 +34,80 @@ export default function TopBar({
   const accentSynced = mode.type === 'rainbow';
 
   return (
-    <View style={styles.row}>
-      <Animated.View
-        style={[
-          styles.balanceChip,
-          shadow.soft,
-          rank.isRainbow
-            ? accentSynced
-              ? { borderColor: palette.base, backgroundColor: palette.muted }
-              : { borderColor: rainbowBorder, backgroundColor: rainbowBg }
-            : { borderColor: rank.color, backgroundColor: `${rank.color}1A` },
-        ]}
-      >
-        <RankText rank={rank} style={styles.balanceText} numberOfLines={1} />
-      </Animated.View>
+    <View>
+      <View style={styles.logoRow}>
+        <Image source={require('../../assets/logo-wordmark.png')} style={styles.wordmark} resizeMode="contain" />
+      </View>
 
-      {showSearch ? (
-        <View style={[styles.searchBar, shadow.soft]}>
-          <MaterialCommunityIcons name="magnify" size={17} color={colors.textMuted} />
-          <TextInput
-            style={styles.searchInput}
-            value={searchValue}
-            onChangeText={onSearchChange}
-            placeholder={searchPlaceholder}
-            placeholderTextColor={colors.textMuted}
-            returnKeyType="search"
-          />
-          {searchValue.length > 0 ? (
-            <Pressable
-              onPress={() => onSearchChange?.('')}
-              hitSlop={8}
-              style={({ pressed }) => pressed && styles.iconButtonPressed}
-            >
-              <MaterialCommunityIcons name="close-circle-outline" size={16} color={colors.textMuted} />
-            </Pressable>
-          ) : null}
-        </View>
-      ) : (
-        <View style={styles.spacer} />
-      )}
+      <View style={styles.row}>
+        <Animated.View
+          style={[
+            styles.balanceChip,
+            shadow.soft,
+            rank.isRainbow
+              ? accentSynced
+                ? { borderColor: palette.base, backgroundColor: palette.muted }
+                : { borderColor: rainbowBorder, backgroundColor: rainbowBg }
+              : { borderColor: rank.color, backgroundColor: `${rank.color}1A` },
+          ]}
+        >
+          <RankText rank={rank} style={styles.balanceText} numberOfLines={1} />
+        </Animated.View>
 
-      <Pressable
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          onNotificationsPress?.();
-        }}
-        style={({ pressed }) => [styles.iconButton, shadow.soft, pressed && styles.iconButtonPressed]}
-        hitSlop={8}
-      >
-        <MaterialCommunityIcons name="bell-outline" size={18} color={colors.textPrimary} />
-        <View style={[styles.bellDot, { backgroundColor: palette.base }]} />
-      </Pressable>
+        {showSearch ? (
+          <View style={[styles.searchBar, shadow.soft]}>
+            <MaterialCommunityIcons name="magnify" size={17} color={colors.textMuted} />
+            <TextInput
+              style={styles.searchInput}
+              value={searchValue}
+              onChangeText={onSearchChange}
+              placeholder={searchPlaceholder}
+              placeholderTextColor={colors.textMuted}
+              returnKeyType="search"
+            />
+            {searchValue.length > 0 ? (
+              <Pressable
+                onPress={() => onSearchChange?.('')}
+                hitSlop={8}
+                style={({ pressed }) => pressed && styles.iconButtonPressed}
+              >
+                <MaterialCommunityIcons name="close-circle-outline" size={16} color={colors.textMuted} />
+              </Pressable>
+            ) : null}
+          </View>
+        ) : (
+          <View style={styles.spacer} />
+        )}
+
+        <Pressable
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onNotificationsPress?.();
+          }}
+          style={({ pressed }) => [styles.iconButton, shadow.soft, pressed && styles.iconButtonPressed]}
+          hitSlop={8}
+        >
+          <MaterialCommunityIcons name="bell-outline" size={18} color={colors.textPrimary} />
+          <View style={[styles.bellDot, { backgroundColor: palette.base }]} />
+        </Pressable>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  logoRow: {
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  wordmark: {
+    width: 57,
+    height: 30,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
   balanceChip: {
     flexDirection: 'row',
