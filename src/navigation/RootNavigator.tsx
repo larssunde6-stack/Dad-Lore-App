@@ -43,6 +43,10 @@ const tabIconActive: Record<keyof TabParamList, keyof typeof MaterialCommunityIc
 
 const ORB_SIZE = 8;
 const SPLASH_SIZE = 36;
+// The reveal window's fully-open size — comfortably bigger than
+// ICON_SIZE so the growing circular clip fully uncovers the icon
+// (rather than permanently cropping its edges) once open.
+const REVEAL_SIZE = 28;
 // How much of the gap between two tabs (as a fraction, 0-1) is actually
 // spent transitioning — color, orb scale, and orb opacity are all flat
 // at their resting values for the rest of the gap, so a dragged color
@@ -75,12 +79,22 @@ type PositionValue = MaterialTopTabBarProps['position'];
 // trick. Driven by the same continuous swipe `position` as everything
 // else in this bar, so it opens/closes in sync with taps AND live swipes,
 // and naturally reverses (closes) as you continue past the Lore tab.
-function LoreTabIcon({ position, index, focused, color }: {
+// Both faces always render grey — color comes solely from the shared
+// reveal overlay in CustomTabBar, never from this component, so there's
+// a single source of truth for "which tab is colored."
+function LoreTabIcon({ position, index, involved }: {
   position: PositionValue;
   index: number;
-  focused: boolean;
-  color: string;
+  involved: boolean;
 }) {
+  if (!involved) {
+    return (
+      <View style={styles.flipWrap}>
+        <MaterialCommunityIcons name={tabIcon.Lore} color={colors.textMuted} size={24} />
+      </View>
+    );
+  }
+
   const progress = position.interpolate({
     inputRange: [index - 1, index, index + 1],
     outputRange: [0, 1, 0],
@@ -96,12 +110,12 @@ function LoreTabIcon({ position, index, focused, color }: {
       <Animated.View
         style={[styles.flipFace, { opacity: frontOpacity, transform: [{ perspective: 800 }, { rotateY: frontRotate }] }]}
       >
-        <MaterialCommunityIcons name={tabIcon.Lore} color={focused ? color : colors.textMuted} size={24} />
+        <MaterialCommunityIcons name={tabIcon.Lore} color={colors.textMuted} size={24} />
       </Animated.View>
       <Animated.View
         style={[styles.flipFace, { opacity: backOpacity, transform: [{ perspective: 800 }, { rotateY: backRotate }] }]}
       >
-        <MaterialCommunityIcons name={tabIconActive.Lore} color={color} size={24} />
+        <MaterialCommunityIcons name={tabIconActive.Lore} color={colors.textMuted} size={24} />
       </Animated.View>
     </View>
   );
@@ -130,31 +144,43 @@ function TabBarItemButton({ onPress, children }: { onPress: () => void; children
 function CustomTabBar({ state, descriptors, navigation, position }: MaterialTopTabBarProps) {
   const { palette } = useAccent();
   const [barWidth, setBarWidth] = useState(0);
-  const prevIndexRef = useRef<number | null>(null);
-  const splashScale = useRef(new Animated.Value(0)).current;
+  // fromIndexRef holds "the tab we transitioned FROM" for whichever
+  // transition is currently in flight, and only gets reassigned when a
+  // NEW transition starts (not on every render) — so it stays correct
+  // for the tab genuinely being left for that transition's whole
+  // duration, letting label color "isInvolved" checks (below) key off
+  // the actual transition pair rather than off numeric distance from
+  // the final destination, which is what let a tab merely sitting
+  // between the old and new index flash colored as `position` swept
+  // past its own index en route (e.g. tapping Explore -> Profile would
+  // make Lore's label/icon flash since position passes through 1).
+  const fromIndexRef = useRef(state.index);
+  const lastSeenIndexRef = useRef(state.index);
+  const revealSize = useRef(new Animated.Value(0)).current;
   const numTabs = state.routes.length;
   const loreIndex = state.routes.findIndex((r) => r.name === 'Lore');
 
   useEffect(() => {
-    if (prevIndexRef.current === null) {
-      prevIndexRef.current = state.index;
+    if (lastSeenIndexRef.current === state.index && fromIndexRef.current === state.index) {
+      // Initial mount: the starting tab is "focused" with no transition
+      // to animate, so its reveal should just start fully open.
+      revealSize.setValue(REVEAL_SIZE);
       return;
     }
-    if (prevIndexRef.current !== state.index) {
+    if (lastSeenIndexRef.current !== state.index) {
+      fromIndexRef.current = lastSeenIndexRef.current;
+      lastSeenIndexRef.current = state.index;
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      prevIndexRef.current = state.index;
 
-      // A one-shot "paint splash" burst on the newly-focused tab — jumps
-      // straight to it (no travel) and collapses via scale, never
-      // opacity, so it reads as a fill landing rather than a fade.
-      splashScale.setValue(0);
-      Animated.sequence([
-        Animated.spring(splashScale, { toValue: 1, friction: 5, useNativeDriver: true }),
-        Animated.delay(100),
-        Animated.timing(splashScale, { toValue: 0, duration: 150, useNativeDriver: true }),
-      ]).start();
+      // A one-shot "paint fill" reveal on the newly-focused tab's real
+      // icon — jumps straight to it (no travel), grows once, and stays
+      // open for as long as that tab remains focused (no shrink-back:
+      // leaving the tab just moves this overlay away entirely, which
+      // reads as the old tab reverting to its always-grey base icon).
+      revealSize.setValue(0);
+      Animated.spring(revealSize, { toValue: REVEAL_SIZE, friction: 6, useNativeDriver: false }).start();
     }
-  }, [state.index, splashScale]);
+  }, [state.index, revealSize]);
 
   const handleLayout = (e: LayoutChangeEvent) => setBarWidth(e.nativeEvent.layout.width);
 
@@ -211,6 +237,9 @@ function CustomTabBar({ state, descriptors, navigation, position }: MaterialTopT
     outputRange: orbOpacityRange,
   });
 
+  const focusedRouteName = state.routes[state.index].name as keyof TabParamList;
+  const revealIconName = focusedRouteName === 'Lore' ? tabIconActive.Lore : tabIconActive[focusedRouteName];
+
   return (
     <View style={styles.tabBar} onLayout={handleLayout}>
       {barWidth > 0 ? (
@@ -232,23 +261,14 @@ function CustomTabBar({ state, descriptors, navigation, position }: MaterialTopT
               style={styles.orbFill}
             />
           </Animated.View>
-          <Animated.View
+          <View
             pointerEvents="none"
-            style={[
-              styles.splash,
-              {
-                left: (state.index + 0.5) * tabWidth - SPLASH_SIZE / 2,
-                transform: [{ scale: splashScale }],
-              },
-            ]}
+            style={[styles.reveal, { left: (state.index + 0.5) * tabWidth - SPLASH_SIZE / 2 }]}
           >
-            <LinearGradient
-              colors={palette.gradientFab}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.splashFill}
-            />
-          </Animated.View>
+            <Animated.View style={[styles.revealClip, { width: revealSize, height: revealSize }]}>
+              <MaterialCommunityIcons name={revealIconName} color={palette.base} size={ICON_SIZE} />
+            </Animated.View>
+          </View>
         </>
       ) : null}
 
@@ -257,13 +277,15 @@ function CustomTabBar({ state, descriptors, navigation, position }: MaterialTopT
         const focused = state.index === index;
         const label = (options.tabBarLabel as string | undefined) ?? route.name;
         const routeName = route.name as keyof TabParamList;
-        // Only the focused tab and its immediate neighbor(s) are ever
-        // reachable by the in-progress gesture — any tab further away is
-        // rendered with a literal, non-animated grey so it is
-        // structurally impossible for it to show a residual tint.
-        const isAdjacent = Math.abs(index - state.index) <= 1;
+        // Only the two tabs genuinely part of the current transition
+        // (the destination, and the one we just left) ever use the
+        // position-driven interpolation. A tab a skip-tap merely sweeps
+        // past numerically is never evaluated against `position` at
+        // all, so it can't flash colored no matter what value `position`
+        // takes on its way to the real destination.
+        const isInvolved = index === state.index || index === fromIndexRef.current;
 
-        const tintColor = isAdjacent
+        const tintColor = isInvolved
           ? position.interpolate({
               inputRange: [index - 1, index - FILL_ZONE, index, index + FILL_ZONE, index + 1],
               outputRange: [
@@ -293,11 +315,11 @@ function CustomTabBar({ state, descriptors, navigation, position }: MaterialTopT
           <TabBarItemButton key={route.key} onPress={onPress}>
             <View style={styles.iconWrap}>
               {routeName === 'Lore' && loreIndex >= 0 ? (
-                <LoreTabIcon position={position} index={loreIndex} focused={focused} color={palette.base} />
+                <LoreTabIcon position={position} index={loreIndex} involved={isInvolved} />
               ) : (
                 <MaterialCommunityIcons
                   name={focused ? tabIconActive[routeName] : tabIcon[routeName]}
-                  color={focused ? palette.base : colors.textMuted}
+                  color={colors.textMuted}
                   size={24}
                 />
               )}
@@ -424,18 +446,20 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  splash: {
+  reveal: {
     position: 'absolute',
     top: SPLASH_TOP,
     left: 0,
     width: SPLASH_SIZE,
     height: SPLASH_SIZE,
-    borderRadius: SPLASH_SIZE / 2,
-    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  splashFill: {
-    width: '100%',
-    height: '100%',
+  revealClip: {
+    borderRadius: 999,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   flipWrap: {
     width: 24,

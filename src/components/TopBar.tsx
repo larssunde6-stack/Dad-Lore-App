@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Animated, Image, Pressable, StyleSheet, View } from 'react-native';
 import { Text, TextInput } from './Text';
@@ -32,103 +32,117 @@ export default function TopBar({
   const rainbowBg = useRainbowColor(0.1);
   const { mode, palette } = useAccent();
   const accentSynced = mode.type === 'rainbow';
+  const [searchOpen, setSearchOpen] = useState(false);
 
-  return (
-    <View>
-      <View style={styles.logoRow}>
-        <Image source={require('../../assets/logo-wordmark.png')} style={styles.wordmark} resizeMode="contain" />
-      </View>
-
+  if (searchOpen) {
+    return (
       <View style={styles.row}>
-        <Animated.View
-          style={[
-            styles.balanceChip,
-            shadow.soft,
-            rank.isRainbow
-              ? accentSynced
-                ? { borderColor: palette.base, backgroundColor: palette.muted }
-                : { borderColor: rainbowBorder, backgroundColor: rainbowBg }
-              : { borderColor: rank.color, backgroundColor: `${rank.color}1A` },
-          ]}
-        >
-          <RankText rank={rank} style={styles.balanceText} numberOfLines={1} />
-        </Animated.View>
-
-        {showSearch ? (
-          <View style={[styles.searchBar, shadow.soft]}>
-            <MaterialCommunityIcons name="magnify" size={17} color={colors.textMuted} />
-            <TextInput
-              style={styles.searchInput}
-              value={searchValue}
-              onChangeText={onSearchChange}
-              placeholder={searchPlaceholder}
-              placeholderTextColor={colors.textMuted}
-              returnKeyType="search"
-            />
-            {searchValue.length > 0 ? (
-              <Pressable
-                onPress={() => onSearchChange?.('')}
-                hitSlop={8}
-                style={({ pressed }) => pressed && styles.iconButtonPressed}
-              >
-                <MaterialCommunityIcons name="close-circle-outline" size={16} color={colors.textMuted} />
-              </Pressable>
-            ) : null}
-          </View>
-        ) : (
-          <View style={styles.spacer} />
-        )}
-
+        <View style={[styles.searchBar, shadow.soft]}>
+          <MaterialCommunityIcons name="magnify" size={17} color={colors.textMuted} />
+          <TextInput
+            style={styles.searchInput}
+            value={searchValue}
+            onChangeText={onSearchChange}
+            placeholder={searchPlaceholder}
+            placeholderTextColor={colors.textMuted}
+            returnKeyType="search"
+            autoFocus
+          />
+        </View>
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            onNotificationsPress?.();
+            setSearchOpen(false);
+            onSearchChange?.('');
           }}
           style={({ pressed }) => [styles.iconButton, shadow.soft, pressed && styles.iconButtonPressed]}
           hitSlop={8}
         >
-          <MaterialCommunityIcons name="bell-outline" size={18} color={colors.textPrimary} />
-          <View style={[styles.bellDot, { backgroundColor: palette.base }]} />
+          <MaterialCommunityIcons name="close" size={18} color={colors.textPrimary} />
         </Pressable>
       </View>
+    );
+  }
+
+  return (
+    <View style={styles.row}>
+      <Animated.View
+        style={[
+          styles.balanceChip,
+          shadow.soft,
+          rank.isRainbow
+            ? accentSynced
+              ? { borderColor: palette.base, backgroundColor: palette.muted }
+              : { borderColor: rainbowBorder, backgroundColor: rainbowBg }
+            : { borderColor: rank.color, backgroundColor: `${rank.color}1A` },
+        ]}
+      >
+        <RankText rank={rank} style={styles.balanceText} numberOfLines={1} />
+      </Animated.View>
+
+      <View style={styles.wordmarkWrap} pointerEvents="none">
+        <Image source={require('../../assets/logo-wordmark.png')} style={styles.wordmark} resizeMode="contain" />
+      </View>
+
+      {showSearch ? (
+        <Pressable
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setSearchOpen(true);
+          }}
+          style={({ pressed }) => [styles.iconButton, shadow.soft, pressed && styles.iconButtonPressed]}
+          hitSlop={8}
+        >
+          <MaterialCommunityIcons name="magnify" size={18} color={colors.textPrimary} />
+        </Pressable>
+      ) : null}
+
+      <Pressable
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onNotificationsPress?.();
+        }}
+        style={({ pressed }) => [styles.iconButton, shadow.soft, pressed && styles.iconButtonPressed]}
+        hitSlop={8}
+      >
+        <MaterialCommunityIcons name="bell-outline" size={18} color={colors.textPrimary} />
+        <View style={[styles.bellDot, { backgroundColor: palette.base }]} />
+      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  logoRow: {
-    alignItems: 'center',
-    marginTop: spacing.sm,
-  },
-  wordmark: {
-    width: 57,
-    height: 30,
-  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: spacing.xs,
+    marginTop: spacing.sm,
+  },
+  wordmarkWrap: {
+    flex: 1,
+    alignItems: 'center',
+    marginLeft: spacing.sm,
+  },
+  wordmark: {
+    width: 42,
+    height: 22,
   },
   balanceChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    maxWidth: 118,
+    maxWidth: 110,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radii.pill,
     paddingVertical: 7,
     paddingHorizontal: 10,
-    marginRight: spacing.sm,
   },
   balanceText: {
     fontSize: 11,
     ...fonts.heading,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
-  },
-  spacer: {
-    flex: 1,
   },
   searchBar: {
     flex: 1,
@@ -140,6 +154,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     paddingVertical: 9,
     paddingHorizontal: 12,
+    marginRight: spacing.sm,
   },
   searchInput: {
     flex: 1,
